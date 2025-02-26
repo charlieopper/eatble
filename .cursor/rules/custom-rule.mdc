@@ -1,0 +1,580 @@
+---
+description: PRD
+globs: 
+---
+
+# Your rule content
+
+# eatABLE - Product Requirements Document
+
+## 1. Product Overview
+
+**Product Name:** eatABLE
+
+**Vision Statement:** To create a trusted platform where people with food allergies can find and share safe dining experiences, reducing anxiety and improving quality of life.
+
+**Target Users:**
+- People with food allergies and intolerances
+- Parents of children with allergies
+- Caregivers responsible for individuals with allergies
+- Health-conscious diners looking for specific dietary accommodations
+
+## 2. Core Features
+
+### 2.1 User Authentication & Profiles
+
+#### 2.1.1 Registration
+**Required Registration Fields:**
+- Email address (for authentication and communications)
+- Password (with appropriate strength requirements)
+- Username (for display in reviews and profile)
+- Allergen selections (multi-select from predefined list)
+
+**Registration Process:**
+- All fields required before account creation
+- Email verification required before full access
+- Password requirements: minimum 8 characters, mix of letters, numbers, and special characters
+- Username requirements: 3-20 characters, unique across platform
+- Allergen selection: Users must select at least one allergen or "None"
+
+**Authentication Methods:**
+- Email/Password
+- Google login
+- Facebook login
+
+#### 2.1.2 User Profile
+- Public profile showing:
+  * Username and location
+  * Profile photo with edit capability
+  * Member since date
+  * Number of reviews and connections
+  * "eatABLE Champion" badge for active reviewers
+  * Clear allergen display with simple toggles for updates
+  * Tabs for Connections, Reviews, and Favorite restaurants
+- Edit profile button prominently displayed
+- Allergen selection interface with simple checkboxes
+- Settings section for profile privacy controls
+- Activity feed showing recent reviews
+
+**Allergens List:**
+1. Peanuts
+2. Tree Nuts
+3. Dairy
+4. Eggs
+5. Wheat
+6. Gluten
+7. Fish
+8. Shellfish
+9. Soy
+10. Sesame
+
+### 2.2 Restaurant Search & Discovery
+- Location-based search (zip, city, current location)
+- Allergen filtering based on user preferences
+- Map view integrated with list view
+- Sort by relevance, rating, distance
+- Infinite scroll with 10-15 initial results on mobile, 15-20 on desktop
+- Load additional 10 results as user scrolls
+
+### 2.3 Restaurant Profiles
+- Basic information from Google Places API (name, location, hours, contact)
+- Binary indicators for allergen accommodations (not percentages)
+- Chef/Manager availability shown with icon + text when available
+- Allergen menu availability shown with icon + text
+- Photos (from users and integrated services)
+- Favorite functionality with heart icon
+- Menu information when available
+
+#### 2.3.1 Restaurant Reviews Display
+- Show 5 reviews initially with "Show more" option
+- Implement "Helpful" voting with thumbs up icon
+- Pin the most helpful review at the top of the review section
+- Sort remaining reviews by recency
+- Include reviewer name, date, rating, and allergen details with each review
+- Limit users to one review per restaurant
+
+#### 2.3.2 Review Integration
+- Display both Google reviews and eatABLE platform reviews
+- Clearly differentiate between the two sources (separate sections)
+- Show Google average rating alongside eatABLE rating
+- Include Google review count for context/credibility
+- Prioritize eatABLE reviews in the UI but make Google reviews easily accessible
+
+### 2.4 Review System
+
+#### 2.4.1 Review Form Interaction
+- Implement as a modal overlay on the restaurant details page
+- Trigger via prominent "Write a Review" button
+- Modal should include:
+  * Clear title ("Review [Restaurant Name]")
+  * Star rating input (interactive 1-5 stars like Yelp/Google)
+  * Two Yes/No questions for allergen accommodation:
+    1. "Were you able to speak directly with a manager or chef about your allergies?"
+    2. "Did the restaurant have an allergen menu or ingredient list available?"
+  * Text area for detailed review
+  * Submit and Cancel buttons
+- Background should be dimmed when modal is active
+- No URL change required (maintains restaurant details URL)
+- Closing options: X button, clicking outside modal, ESC key
+- Form state should be preserved if user accidentally closes
+- Success message should appear after submission
+
+#### 2.4.2 Review Text Validation
+- Minimum 20 characters required
+- Maximum 1000 characters allowed
+- Basic profanity filter using blocklist approach
+- No HTML or markdown allowed (plain text only)
+- Visual character counter during input
+
+## 3. Technical Specifications
+
+### 3.1 Frontend
+- React with Next.js
+- Responsive design (mobile, tablet, desktop)
+- UI component library for sleek, modern appearance
+- Component-based architecture
+
+### 3.2 Backend
+
+#### 3.2.1 Data Models
+
+**Restaurant Model Fields:**
+- id (unique identifier)
+- name
+- address (formatted and components)
+- location (lat/lng coordinates)
+- phone number
+- website
+- hours of operation
+- cuisineTypes (array)
+- photos (array of URLs)
+- placeId (Google Places reference)
+- averageRating (calculated from reviews)
+- reviewCount
+- allergenAccommodations
+  * chefManagerAvailable (boolean indicator)
+  * allergenMenuAvailable (boolean indicator)
+
+**Review Model Fields:**
+- id
+- restaurantId (reference)
+- userId (reference)
+- username (denormalized for display)
+- date
+- rating (1-5 stars)
+- allergenData
+  * chefManagerAvailable (boolean)
+  * allergenMenuAvailable (boolean)
+- reviewText
+- userAllergens (array of allergens relevant to this review)
+- helpfulCount (number of users who found review helpful)
+
+**User Model Fields:**
+- id
+- email
+- username
+- displayName (optional)
+- photoURL (optional)
+- location
+- joinDate
+- allergens (array of allergen ids)
+- favoriteRestaurants (array of restaurant ids)
+- reviewCount
+- connectionCount
+
+#### 3.2.2 Firebase Collections Structure
+```
+/users/{userId}
+  - Basic user data
+  - Allergen preferences
+
+/restaurants/{restaurantId}
+  - Basic restaurant data
+  - Aggregate ratings
+  - Allergen accommodation indicators
+
+/reviews/{reviewId}
+  - Review content
+  - Rating data
+  - User reference
+  - Restaurant reference
+
+/favorites/{userId}/restaurants/{restaurantId}
+  - Timestamp for when favorited
+
+/userConnections/{userId}/connections/{connectionId}
+  - Connection user reference
+  - Connection timestamp
+```
+
+#### 3.2.3 Caching Strategy
+- Implement basic caching for recently viewed restaurants (last 10-20)
+- Cache user's favorite restaurants automatically
+- Set 24-hour expiration for cached data
+- Clear visual indicators when displaying cached data
+- Provide refresh option for users to get updated data
+
+### 3.3 Integrations
+- Google Maps/Places API for restaurant data
+- Standard REST-like querying (not real-time updates)
+- Firebase Authentication
+- Firestore for database
+
+### 3.4 URL Structure
+
+**URL Parameter Strategy:**
+- Use path parameters for core identifiers: `/restaurant/[id]`
+- Use query parameters for filters and sorting
+- Implement kebab-case for all URL segments
+- Ensure all application state is reflected in URLs for shareability
+
+**Specific URL Patterns:**
+- Home: `/`
+- Restaurant Search: `/restaurants?loc=[location]&allergens=[list]&distance=[miles]&sort=[method]`
+- Restaurant Details: `/restaurant/[id]/[name-slug]`
+- Review Form: `/restaurant/[id]/review/new`
+- User Profile: `/profile/[userId]`
+- Authentication: `/auth/login` and `/auth/register`
+
+### 3.5 Navigation Behavior
+
+**Back Button Navigation Standards:**
+- Modals close first on back button press before actual navigation occurs
+- Search and filter state preserved when returning to search results
+- Scroll position maintained when navigating back
+- Use browser history API to manage modal states without changing URLs
+- URL parameters used for shareable search filters and sort options
+
+### 3.6 Error Handling & Edge Cases
+- When APIs are unavailable: Display cached data with timestamp, clear indication of offline mode, and retry mechanism
+- Limit users to one review per restaurant (check before showing review form)
+- Display restaurants with no eatABLE reviews normally, showing Google rating/reviews only
+- Handle cases where restaurant data is incomplete
+- Provide user-friendly error messages for all error states
+- Implement retry mechanisms for transient failures
+
+### 3.7 Performance Targets
+- Optimize for fastest possible load times (under 2 seconds target)
+- Implement loading indicators/spinners for all data fetching operations
+- Use code splitting and lazy loading for non-critical components
+- Optimize image loading with proper sizing and formats
+- Implement skeleton screens during content loading
+- Ensure smooth scrolling experience (60fps)
+- Monitor and optimize Firebase read/write operations
+
+### 3.8 Analytics Requirements
+- Track user engagement metrics (session duration, pages per visit)
+- Monitor review submission rate (reviews per user per week)
+- Track search-to-view conversion rate
+- Measure allergen filter usage
+- Monitor restaurant page views and review clicks
+- Track favorite restaurant actions
+- Measure user return rate and retention
+
+### 3.9 Deployment Strategy
+- Firebase Hosting (aligned with Firebase backend)
+- Simple GitHub integration for deployments
+- Implement staging environment for testing
+- Enable rollback capability for quick recovery from issues
+- Set up basic monitoring for critical errors
+- Implement automated backups of database
+
+### 3.10 Monetization Strategy
+- In-platform advertisements (future implementation)
+- Sponsored restaurant listings (premium placement in search results)
+- Boosted listings for partner restaurants (similar to Yelp model)
+- Restaurant-facing dashboard (future feature) for managing premium listings
+
+### 3.11 Accessibility Requirements
+- Comply with WCAG 2.1 Level AA standards
+- Implement proper semantic HTML structure
+- Ensure sufficient color contrast for all text and UI elements
+- Provide text alternatives for all non-text content
+- Ensure keyboard navigability throughout the application
+- Support screen readers with proper ARIA attributes
+- Make interactive elements easy to identify and use
+- Test with common assistive technologies
+
+### 3.12 Legal & Compliance
+- Privacy Policy to clearly state:
+  * User data collection and usage practices
+  * Explicit disclaimer about crowd-sourced, anecdotal nature of reviews
+  * No fact-checking or verification of user-submitted content
+  * Restaurant information sourced from Google Places API
+  * User's rights regarding their data
+- Terms of Service to include:
+  * User responsibilities regarding review accuracy
+  * Prohibited content guidelines
+  * Account termination conditions
+  * Intellectual property rights
+- Compliance with:
+  * GDPR for European users
+  * CCPA for California residents
+  * COPPA for age restrictions
+
+## 4. User Interface Specifications
+
+### 4.1 Global UI Components
+
+#### 4.1.1 Header
+- Logo on left with eatABLE branding
+- Search bar in center (on larger screens)
+- User menu on right with:
+  * Profile picture/avatar (if logged in)
+  * "Write a Review" button
+  * Login/Register links (if not logged in)
+- Fixed position on scroll
+- Collapses to simpler version on mobile
+
+#### 4.1.2 Bottom Navigation (Mobile)
+- Four main sections:
+  * Search (magnifying glass icon)
+  * Reviews (star icon)
+  * Favorites (heart icon)
+  * Profile (user icon)
+- Active state clearly indicated
+- Fixed to bottom of screen
+
+#### 4.1.3 Loading States
+- Skeleton screens for content areas
+- Subtle loading spinner for actions
+- Progress indicators for multi-step processes
+- Placeholder content during data fetching
+
+### 4.2 Homepage Design
+
+#### 4.2.1 Hero Section
+- Prominent search bar
+- Background with appetizing food imagery
+- Clear value proposition headline
+- Quick allergen filter selection
+
+#### 4.2.2 Recent Activity
+- Recently added reviews from community
+- Nearby allergen-friendly restaurants
+- Call to action to start searching or create account
+
+### 4.3 Restaurant Search Page
+
+#### 4.3.1 Search Controls
+- Location input with autocomplete
+- Distance selector (dropdown)
+- Sort options (dropdown)
+- Filter options (expandable panel)
+- Allergen selection checkboxes
+
+#### 4.3.2 Search Results Layout
+- Left side: Scrollable list of restaurant cards (45% width on desktop)
+- Right side: Interactive map (55% width on desktop)
+- Full-width list with map toggle button (mobile)
+- Infinite scroll behavior (load more as user scrolls)
+
+#### 4.3.3 Restaurant Card Design
+- Restaurant name with rating stars
+- Cuisine tags
+- Allergen accommodation indicators (chef, menu icons)
+- Featured review snippet
+- Restaurant image
+- Distance and operating hours
+- Favorite button (heart icon)
+
+### 4.4 Restaurant Detail Page
+
+#### 4.4.1 Restaurant Header
+- Restaurant name and rating
+- Cuisine types (tags)
+- Address with map link
+- Phone number
+- Hours of operation
+- Website link
+- Photo gallery
+
+#### 4.4.2 Allergen Accommodations
+- Chef/Manager availability indicator
+- Allergen menu availability indicator
+- Additional allergen information
+
+#### 4.4.3 Review Sections
+- eatABLE reviews section (primary)
+- Google reviews section (secondary)
+- Write review button
+- Sorting options for reviews
+
+#### 4.4.4 Map Integration
+- Small map showing location
+- Directions button
+- Nearby establishments
+
+### 4.5 Review Form
+
+#### 4.5.1 Modal Design
+- Clean, focused interface
+- Simple step progression
+- Clear submission button
+
+#### 4.5.2 Rating Inputs
+- Interactive 5-star rating (tap/click to select)
+- Yes/No radio buttons for allergen questions
+- Character counter for text input
+- Clear error messaging
+
+### 4.6 User Profile Page
+
+#### 4.6.1 Profile Header
+- User photo (large)
+- Username and location
+- Member since date
+- Review count and connections
+- Edit profile button
+
+#### 4.6.2 Allergen Management
+- Visual grid of allergens
+- Simple toggle interface
+- Update button
+
+#### 4.6.3 Content Tabs
+- Reviews tab (default)
+- Favorites tab
+- Connections tab
+- Activity tab
+
+## 5. Implementation Phases
+
+### 5.1 Phase 1: MVP Core Features
+- User authentication (email, Google, Facebook)
+- Restaurant search with Google Places integration
+- Basic restaurant profiles with allergen indicators
+- Review submission and display
+- User profiles with allergen preferences
+
+### 5.2 Phase 2: Engagement Features
+- Favorite restaurants functionality
+- Review helpfulness voting
+- Enhanced filtering options
+- Improved restaurant details
+- Offline caching support
+
+### 5.3 Phase 3: Monetization & Growth
+- In-app advertising framework
+- Sponsored restaurant listings
+- Enhanced analytics
+- User referral program
+- Restaurant owner dashboard (future)
+
+## 6. Success Metrics
+
+### 6.1 Key Performance Indicators
+- Active users (weekly and monthly)
+- Reviews submitted per week
+- Restaurants searched
+- Reviews per restaurant
+- User retention rate
+- Session duration
+- Screen flow completion rates
+
+### 6.2 Business Goals
+- Reach 10,000 active users within 6 months
+- Achieve 50,000 restaurant reviews within first year
+- Develop partnerships with restaurant chains
+- Create engaged community of allergen-sensitive diners
+
+## 7. Component Implementation Details
+
+### 7.1 Star Rating Component
+```jsx
+// Implementation should include:
+// - Interactive stars (clickable/hoverable)
+// - Support for half-star ratings in display
+// - Clear visual feedback
+// - Accessibility considerations
+```
+
+### 7.2 Allergen Selection Component
+```jsx
+// Implementation should include:
+// - Grid of allergen options
+// - Toggle selection mechanism
+// - Visual indicator of selected state
+// - Clear iconography
+```
+
+### 7.3 Restaurant Card Component
+```jsx
+// Implementation should include:
+// - Consistent sizing
+// - Responsive image handling
+// - Proper text truncation
+// - Clear call-to-action areas
+// - Loading state
+```
+
+### 7.4 Map Component
+```jsx
+// Implementation should include:
+// - Proper Google Maps integration
+// - Custom marker styling
+// - Responsive sizing
+// - Efficient marker rendering
+// - Clustering for dense areas
+```
+
+### 7.5 Review Form Component
+```jsx
+// Implementation should include:
+// - Proper validation
+// - Error messaging
+// - Form state preservation
+// - Submission handling
+// - Success/failure feedback
+```
+
+## 8. API Integration Details
+
+### 8.1 Google Places API
+- Use Places API for restaurant search
+- Implement autocomplete for location search
+- Fetch restaurant details, photos, and reviews
+- Cache responses to minimize API calls
+- Implement proper error handling for rate limiting
+
+### 8.2 Firebase Authentication
+- Configure providers (email/password, Google, Facebook)
+- Implement secure authentication flows
+- Handle token refresh and session management
+- Support password reset functionality
+- Implement account recovery options
+
+### 8.3 Firestore Operations
+- Use batched writes for related updates
+- Implement efficient querying patterns
+- Set up proper indexing for common queries
+- Use transactions for critical operations
+- Monitor quota usage and optimize
+
+## 9. Testing Requirements
+
+### 9.1 Unit Testing
+- Test all utility functions
+- Test individual components in isolation
+- Mock external dependencies
+
+### 9.2 Integration Testing
+- Test component interactions
+- Test form submissions
+- Test authentication flows
+
+### 9.3 End-to-End Testing
+- Test critical user journeys
+- Test across different browsers
+- Test responsive behaviors
+
+### 9.4 Performance Testing
+- Test load times
+- Test infinite scroll performance
+- Test map rendering performance
+
+### 9.5 Accessibility Testing
+- Validate WCAG 2.1 AA compliance
+- Test with screen readers
+- Test keyboard navigation
+

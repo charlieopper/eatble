@@ -23,7 +23,7 @@ describe('AllergenSelector', () => {
         onAllergenChange={mockOnChange} 
       />
     );
-    const peanutButton = screen.getByRole('button', { name: /🥜 Peanuts/i });
+    const peanutButton = screen.getByRole('button', { name: /Peanuts/i });
     expect(peanutButton).toHaveClass('bg-primary');
   });
 
@@ -34,7 +34,7 @@ describe('AllergenSelector', () => {
         onAllergenChange={mockOnChange} 
       />
     );
-    fireEvent.click(screen.getByRole('button', { name: /🥜 Peanuts/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Peanuts/i }));
     expect(mockOnChange).toHaveBeenCalledWith(['peanuts']);
   });
 }); 

@@ -18,5 +18,12 @@ const app = initializeApp(firebaseConfig);
 
 // Export Firebase services
 export const auth = getAuth(app);
+
+// Configure Google provider
 export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
+
+// Configure Facebook provider
 export const facebookProvider = new FacebookAuthProvider(); 
