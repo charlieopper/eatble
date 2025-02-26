@@ -4,13 +4,13 @@ import { getAuth } from "firebase/auth";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyD27CXgIOOzddupt3VIptop-R9tVVxB-ZU",
-  authDomain: "eatable-21edf.firebaseapp.com",
-  projectId: "eatable-21edf",
-  storageBucket: "eatable-21edf.appspot.com",
-  messagingSenderId: "453116360096",
-  appId: "1:453116360096:web:385779605892ab708aa0c5",
-  measurementId: "G-JZC4SK261L"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
