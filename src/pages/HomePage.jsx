@@ -13,6 +13,7 @@ import { facebookProvider } from './firebaseImport';
 import { onAuthStateChanged, signInWithPopup } from 'firebase/auth';
 import toast, { Toaster } from 'react-hot-toast';
 import { doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import Footer from '../components/layout/Footer';
 
 // Add this utility function at the top of your component
 const safeLocalStorage = {
@@ -192,22 +193,13 @@ export default function HomePage() {
   };
 
   // Function to handle search
-  const handleSearch = () => {
-    // Validate search criteria
-    if (!location) {
-      alert('Please enter a location to search');
-      return;
-    }
-    
-    // Create search params
-    const searchParams = new URLSearchParams();
-    if (location) searchParams.append('location', location);
-    if (restaurantName) searchParams.append('name', restaurantName);
-    if (selectedDistance !== 'Select Distance') searchParams.append('distance', selectedDistance);
-    if (selectedAllergens.length > 0) searchParams.append('allergens', selectedAllergens.join(','));
-    
-    // Navigate to search results page with params
-    navigate(`/restaurants?${searchParams.toString()}`);
+  const handleSearch = (location, allergens) => {
+    navigate('/restaurants', { 
+      state: { 
+        location,
+        allergens 
+      }
+    });
   };
 
   // Function to handle registration
@@ -836,7 +828,7 @@ export default function HomePage() {
             <AllergenSelector selectedAllergens={selectedAllergens} toggleAllergen={toggleAllergen} />
             
             <button 
-              onClick={handleSearch}
+              onClick={() => handleSearch(location, selectedAllergens)}
               style={{
                 width: '100%',
                 backgroundColor: '#ef4444',
@@ -1697,47 +1689,7 @@ export default function HomePage() {
         )}
         
         {/* Bottom Navigation - Mobile Optimized */}
-        <nav style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: 'white',
-          borderTop: '1px solid #eaeaea',
-          zIndex: 50
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-around',
-            alignItems: 'center',
-            height: '64px'
-          }}>
-            {[
-              { icon: <Home size={20} />, label: 'Home', path: '/' },
-              { icon: <Search size={20} />, label: 'Search', path: '/restaurants' },
-              { icon: <Star size={20} />, label: 'Reviews', path: '/reviews' },
-              { icon: <Heart size={20} />, label: 'Favorites', path: '/favorites' },
-              { icon: <User size={20} />, label: 'Profile', path: '/profile' }
-            ].map((item, index) => (
-              <Link 
-                key={index}
-                to={item.path} 
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flex: 1,
-                  color: '#4b5563',
-                  textDecoration: 'none'
-                }}
-              >
-                {item.icon}
-                <span style={{ fontSize: '12px', marginTop: '4px' }}>{item.label}</span>
-              </Link>
-            ))}
-          </div>
-        </nav>
+        <Footer activePage="Home" />
 
         {/* Add a small test button somewhere in your UI */}
         <button 
