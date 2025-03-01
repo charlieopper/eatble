@@ -1,18 +1,25 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import { FavoritesProvider } from './context/FavoritesContext';
 import HomePage from './pages/HomePage';
 import SearchPage from './pages/SearchPage';
+import FavoritesPage from './pages/FavoritesPage';
 import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   return (
-    <ErrorBoundary>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/restaurants" element={<SearchPage />} />
-        <Route path="/restaurants/search" element={<SearchPage />} />
-      </Routes>
-    </ErrorBoundary>
+    <FavoritesProvider>
+      <Toaster position="top-center" />
+      <ErrorBoundary>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/restaurants" element={<SearchPage />} />
+          <Route path="/restaurants/search" element={<SearchPage />} />
+          <Route path="/favorites" element={<FavoritesPage />} />
+        </Routes>
+      </ErrorBoundary>
+    </FavoritesProvider>
   );
 }
 

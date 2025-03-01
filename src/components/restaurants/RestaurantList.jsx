@@ -1,22 +1,21 @@
 import React from 'react';
 import RestaurantCard from './RestaurantCard';
 
-const RestaurantList = ({ restaurants = [], isLoading = false }) => {
+export default function RestaurantList({ restaurants, isLoading, onSelectRestaurant }) {
   if (isLoading) {
     return (
       <div style={{ 
         display: 'flex', 
         justifyContent: 'center', 
-        alignItems: 'center', 
         padding: '40px 0' 
       }}>
-        <div style={{
-          width: '40px',
-          height: '40px',
-          borderRadius: '50%',
-          border: '2px solid #e5e7eb',
-          borderTopColor: '#22c55e',
-          animation: 'spin 1s linear infinite'
+        <div style={{ 
+          width: '40px', 
+          height: '40px', 
+          border: '4px solid rgba(0, 0, 0, 0.1)', 
+          borderLeftColor: '#3b82f6', 
+          borderRadius: '50%', 
+          animation: 'spin 1s linear infinite' 
         }}></div>
       </div>
     );
@@ -26,26 +25,26 @@ const RestaurantList = ({ restaurants = [], isLoading = false }) => {
     return (
       <div style={{ 
         textAlign: 'center', 
-        padding: '40px 0',
+        padding: '40px 20px',
+        color: '#6b7280'
       }}>
-        <p style={{ color: '#6b7280' }}>No restaurants found matching your criteria.</p>
+        <p>No restaurants found. Try adjusting your search criteria.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {restaurants.map((restaurant, index) => (
+    <div>
+      {restaurants.map(restaurant => (
         <RestaurantCard 
-          key={restaurant.id || index} 
+          key={restaurant.id} 
           restaurant={restaurant} 
+          onClick={onSelectRestaurant}
         />
       ))}
     </div>
   );
-};
-
-export default RestaurantList;
+}
 
 // Bottom Navigation
 const BottomNavigation = () => {

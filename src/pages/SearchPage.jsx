@@ -278,7 +278,8 @@ export default function SearchPage() {
         {/* Restaurant List */}
         <RestaurantList 
           restaurants={restaurants} 
-          isLoading={isLoading} 
+          isLoading={isLoading}
+          onSelectRestaurant={setSelectedRestaurantDetail}
         />
       </main>
 

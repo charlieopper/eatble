@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Heart, Star, ChefHat, FileText } from 'lucide-react';
+import { useFavorites } from '../../context/FavoritesContext';
 
 // Placeholder restaurant image URL
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fDB8fHww&w=1000&q=80";
 
-const RestaurantCard = ({ restaurant }) => {
-  const [isFavorite, setIsFavorite] = useState(false);
+const RestaurantCard = ({ restaurant, onClick }) => {
+  const { name, image, cuisines, eatableReview, accommodations } = restaurant;
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   if (!restaurant) {
     return <div style={{ padding: '16px', backgroundColor: 'white', borderRadius: '8px', margin: '8px 0' }}>Loading restaurant data...</div>;
@@ -14,17 +16,12 @@ const RestaurantCard = ({ restaurant }) => {
   // Destructure with default values
   const {
     id,
-    name = 'Restaurant',
-    image,
-    cuisines = [],
     hours = 'Hours not available',
     phone = 'Phone not available',
     address = '123 Main St, San Francisco, CA 94105', // Placeholder address
     website,
-    eatableReview = { rating: 0, reviewCount: 0, quote: 'No reviews yet' },
     googleReview = { rating: 0, reviewCount: 0, quote: 'No reviews yet' },
     allergens = [],
-    accommodations = { chefAvailable: false, allergenMenu: false }
   } = restaurant;
 
   // Create map URL for the address
@@ -161,6 +158,7 @@ const RestaurantCard = ({ restaurant }) => {
     <div style={cardStyle}
     onMouseEnter={handleMouseEnter}
     onMouseLeave={handleMouseLeave}
+    onClick={() => onClick && onClick(restaurant)}
     >
       {/* Left column - Image and hours/contact */}
       <div style={{ 
@@ -232,12 +230,12 @@ const RestaurantCard = ({ restaurant }) => {
             style={btnStyle}
             onClick={(e) => {
               e.stopPropagation();
-              setIsFavorite(!isFavorite);
+              toggleFavorite(restaurant);
             }}
           >
             <Heart 
-              color={isFavorite ? "#EB4D4D" : "currentColor"}
-              fill={isFavorite ? "#EB4D4D" : "none"}
+              color={isFavorite(id) ? "#EB4D4D" : "currentColor"}
+              fill={isFavorite(id) ? "#EB4D4D" : "none"}
               size={20}
             />
           </button>

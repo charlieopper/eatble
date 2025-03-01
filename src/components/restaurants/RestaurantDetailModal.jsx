@@ -1,22 +1,13 @@
 import React from 'react';
-import { X, Star, Clock, Phone, Globe, MapPin, Heart } from 'lucide-react';
-import { formatPhoneNumber, formatTime } from '../../utils/format';
-import { getAllergenEmoji } from '../../utils/allergens';
-import { useFavorites } from '../../hooks/useFavorites';
-import defaultImage from '../../assets/eatable-icon.png';
+import { X, Heart, MapPin, Phone, Globe, Clock, ChefHat, FileText } from 'lucide-react';
+import { useFavorites } from '../../context/FavoritesContext';
 
 export default function RestaurantDetailModal({ restaurant, onClose }) {
-  const { toggleFavorite, isFavorite } = useFavorites(restaurant.place_id);
-
-  const allergenCounts = restaurant.eatableReviews?.reduce((acc, review) => {
-    review.allergens.forEach(allergen => {
-      acc[allergen] = (acc[allergen] || 0) + 1;
-    });
-    return acc;
-  }, {});
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const defaultImage = 'https://source.unsplash.com/random/800x600/?restaurant';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-xl">
         {/* Close button */}
         <button
@@ -29,17 +20,17 @@ export default function RestaurantDetailModal({ restaurant, onClose }) {
         {/* Restaurant image */}
         <div className="relative h-64">
           <img
-            src={restaurant.photos?.[0]?.getUrl() || defaultImage}
+            src={restaurant.image || defaultImage}
             alt={restaurant.name}
             className="w-full h-full object-cover"
           />
           <button
-            onClick={() => toggleFavorite()}
+            onClick={() => toggleFavorite(restaurant)}
             className="absolute top-4 left-4 p-2 bg-white rounded-full shadow-md"
           >
             <Heart
               className={`w-6 h-6 ${
-                isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'
+                isFavorite(restaurant.id) ? 'fill-red-500 text-red-500' : 'text-gray-400'
               }`}
             />
           </button>
@@ -48,139 +39,89 @@ export default function RestaurantDetailModal({ restaurant, onClose }) {
         {/* Restaurant details */}
         <div className="p-6">
           <h2 className="text-2xl font-bold mb-2">{restaurant.name}</h2>
-
-          {/* Google Reviews */}
-          <div className="flex items-center mb-2">
-            <Star className="text-yellow-400 w-5 h-5" />
-            <span className="ml-1">
-              {restaurant.rating} ({restaurant.user_ratings_total} Google reviews)
-            </span>
-          </div>
-
-          {/* Eatable Reviews */}
-          {restaurant.eatableRating && (
-            <div className="flex items-center mb-4 text-blue-600">
-              <Star className="w-5 h-5" />
-              <span className="ml-1">
-                {restaurant.eatableRating} ({restaurant.eatableReviews?.length} eatable reviews)
+          
+          <div className="flex flex-wrap gap-2 mb-4">
+            {restaurant.cuisines?.map((cuisine, index) => (
+              <span key={index} className="px-2 py-1 bg-gray-100 rounded-md text-sm">
+                {cuisine}
               </span>
-            </div>
-          )}
-
-          {/* Cuisine Type & Price Level */}
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-gray-600">
-              {restaurant.types?.[0]?.replace(/_/g, ' ')}
-            </span>
-            <span className="text-gray-400">•</span>
-            <span className="text-gray-600">
-              {'$'.repeat(restaurant.price_level || 1)}
-            </span>
+            ))}
           </div>
-
-          {/* Address */}
-          <div className="flex items-start mb-4 text-gray-600">
-            <MapPin className="w-5 h-5 mr-2 mt-1 flex-shrink-0" />
-            <span>{restaurant.formatted_address}</span>
-          </div>
-
-          {/* Hours */}
-          {restaurant.opening_hours && (
-            <div className="mb-4">
-              <h3 className="font-semibold mb-2">Hours</h3>
-              <ul className="space-y-1 text-gray-600">
-                {restaurant.opening_hours.weekday_text?.map((day, index) => (
-                  <li key={index}>{day}</li>
-                ))}
-              </ul>
+          
+          {/* Contact and hours */}
+          <div className="space-y-3 mb-6">
+            <div className="flex items-start">
+              <MapPin className="w-5 h-5 text-gray-500 mr-2 mt-0.5" />
+              <span>{restaurant.address || "123 Main St, San Francisco, CA 94110"}</span>
             </div>
-          )}
-
-          {/* Contact */}
-          <div className="space-y-2 mb-6">
-            {restaurant.formatted_phone_number && (
-              <div className="flex items-center text-gray-600">
-                <Phone className="w-5 h-5 mr-2 flex-shrink-0" />
-                <a href={`tel:${restaurant.formatted_phone_number}`}>
-                  {formatPhoneNumber(restaurant.formatted_phone_number)}
-                </a>
+            
+            {restaurant.phone && (
+              <div className="flex items-center">
+                <Phone className="w-5 h-5 text-gray-500 mr-2" />
+                <span>{restaurant.phone}</span>
               </div>
             )}
+            
             {restaurant.website && (
-              <div className="flex items-center text-gray-600">
-                <Globe className="w-5 h-5 mr-2 flex-shrink-0" />
-                <a
-                  href={restaurant.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="truncate hover:text-blue-600"
-                >
-                  {new URL(restaurant.website).hostname}
+              <div className="flex items-center">
+                <Globe className="w-5 h-5 text-gray-500 mr-2" />
+                <a href={`https://${restaurant.website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                  {restaurant.website}
                 </a>
               </div>
             )}
+            
+            {restaurant.hours && (
+              <div className="flex items-center">
+                <Clock className="w-5 h-5 text-gray-500 mr-2" />
+                <span>{restaurant.hours}</span>
+              </div>
+            )}
           </div>
-
-          {/* Allergens */}
-          {Object.entries(allergenCounts || {}).length > 0 && (
-            <div className="mb-6">
-              <h3 className="font-semibold mb-2">Reported Allergens</h3>
-              <div className="flex flex-wrap gap-2">
-                {Object.entries(allergenCounts).map(([allergen, count]) => (
-                  <div
-                    key={allergen}
-                    className="flex items-center px-3 py-1 bg-gray-100 rounded-full text-sm"
-                  >
-                    <span className="mr-1">{getAllergenEmoji(allergen)}</span>
-                    <span>{allergen}</span>
-                    <span className="ml-1 text-gray-500">({count})</span>
-                  </div>
-                ))}
+          
+          {/* Allergen accommodations */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-3">Allergen Accommodations</h3>
+            <div className="flex flex-wrap gap-4">
+              <div className={`flex items-center ${restaurant.accommodations?.chefAvailable ? 'text-green-600' : 'text-gray-400'}`}>
+                <ChefHat className="w-5 h-5 mr-2" />
+                <span>{restaurant.accommodations?.chefAvailable ? 'Chef available' : 'No chef available'}</span>
+              </div>
+              <div className={`flex items-center ${restaurant.accommodations?.allergenMenu ? 'text-green-600' : 'text-gray-400'}`}>
+                <FileText className="w-5 h-5 mr-2" />
+                <span>{restaurant.accommodations?.allergenMenu ? 'Allergen menu' : 'No allergen menu'}</span>
               </div>
             </div>
-          )}
-
+          </div>
+          
           {/* Reviews */}
-          {restaurant.eatableReviews?.length > 0 && (
-            <div>
-              <h3 className="font-semibold mb-2">Eatable Reviews</h3>
-              <div className="space-y-4">
-                {restaurant.eatableReviews.map((review, index) => (
-                  <div key={index} className="border-t pt-4">
-                    <div className="flex justify-between mb-1">
-                      <span className="font-medium">{review.user}</span>
-                      <span className="text-gray-500 text-sm">
-                        {new Date(review.date).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center mb-2">
-                      {Array(5).fill(0).map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`w-4 h-4 ${
-                            i < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <p className="text-gray-600">{review.text}</p>
-                    {review.allergens.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {review.allergens.map((allergen) => (
-                          <span
-                            key={allergen}
-                            className="inline-flex items-center px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full"
-                          >
-                            {getAllergenEmoji(allergen)} {allergen}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
+          <div>
+            <h3 className="text-lg font-semibold mb-3">Reviews</h3>
+            
+            {/* eatABLE Review */}
+            {restaurant.eatableReview && (
+              <div className="mb-4">
+                <div className="flex items-center mb-2">
+                  <span className="text-yellow-500 mr-1">★</span>
+                  <span className="font-medium">{restaurant.eatableReview.rating.toFixed(1)}</span>
+                  <span className="text-gray-500 text-sm ml-1">({restaurant.eatableReview.reviewCount} eatABLE reviews)</span>
+                </div>
+                <p className="text-gray-700">{restaurant.eatableReview.quote}</p>
               </div>
-            </div>
-          )}
+            )}
+            
+            {/* Google Review */}
+            {restaurant.googleReview && (
+              <div>
+                <div className="flex items-center mb-2">
+                  <span className="text-yellow-500 mr-1">★</span>
+                  <span className="font-medium">{restaurant.googleReview.rating.toFixed(1)}</span>
+                  <span className="text-gray-500 text-sm ml-1">({restaurant.googleReview.reviewCount} Google reviews)</span>
+                </div>
+                <p className="text-gray-700">{restaurant.googleReview.quote}</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
