@@ -8,6 +8,8 @@ import MapView from '../components/map/MapView';
 import Footer from '../components/layout/Footer';
 import restaurantService from '../services/restaurantService';
 import googleLogo from '../assets/google-g-logo.png';
+import Map from '../components/map/Map';
+import RestaurantCard from '../components/restaurants/RestaurantCard';
 
 export default function SearchPage() {
   const location = useLocation();
@@ -28,6 +30,7 @@ export default function SearchPage() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [showManualLoadMore, setShowManualLoadMore] = useState(false);
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
+  const [userLocation, setUserLocation] = useState(null);
 
   // Function to load initial restaurants
   const loadRestaurants = useCallback(async () => {
@@ -474,11 +477,14 @@ export default function SearchPage() {
         {viewMode === 'list' ? (
           // List View
           <>
-            <RestaurantList 
-              restaurants={restaurants} 
-              isLoading={isLoading}
-              onSelectRestaurant={setSelectedRestaurantDetail}
-            />
+            <div className="restaurant-list">
+              {restaurants.map(restaurant => (
+                <RestaurantCard 
+                  key={restaurant.id || restaurant.place_id} 
+                  restaurant={restaurant} 
+                />
+              ))}
+            </div>
 
             {/* Infinite Scroll Sentinel */}
             <div 
@@ -532,31 +538,12 @@ export default function SearchPage() {
           </>
         ) : (
           // Map View
-          <div style={{ height: 'calc(100vh - 250px)', marginBottom: '20px' }}>
-            {isLoading ? (
-              <div style={{ 
-                height: '100%', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                backgroundColor: '#f9fafb',
-                borderRadius: '8px'
-              }}>
-                <div style={{ 
-                  width: '40px', 
-                  height: '40px', 
-                  border: '4px solid rgba(0, 0, 0, 0.1)', 
-                  borderLeftColor: '#3b82f6', 
-                  borderRadius: '50%', 
-                  animation: 'spin 1s linear infinite' 
-                }}></div>
-              </div>
-            ) : (
-              <MapView 
-                restaurants={restaurants}
-                onSelectRestaurant={setSelectedRestaurantDetail}
-              />
-            )}
+          <div className="map-container">
+            <Map 
+              restaurants={restaurants} 
+              userLocation={userLocation}
+              height="400px"
+            />
           </div>
         )}
       </main>

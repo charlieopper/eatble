@@ -176,6 +176,9 @@ const RestaurantCard = ({ restaurant, onClick }) => {
   // Add this console log at the top of your component to debug
   console.log("Google logo path:", googleLogoUrl);
 
+  // Add this near the top of your component
+  console.log("Restaurant allergens:", allergens);
+
   return (
     <div 
       style={cardStyle}
@@ -418,12 +421,53 @@ const RestaurantCard = ({ restaurant, onClick }) => {
         {/* Allergens */}
         {allergens && allergens.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '12px' }}>
-            {allergens.map((allergen, index) => (
-              <span key={index} style={allergenTagStyle}>
-                {allergen.icon && <span style={{ marginRight: '4px' }}>{allergen.icon}</span>}
-                {typeof allergen === 'string' ? allergen : allergen.name}
-              </span>
-            ))}
+            {allergens.map((allergen, index) => {
+              console.log("Allergen item:", allergen);
+              return (
+                <span 
+                  key={index} 
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    padding: '4px 8px',
+                    backgroundColor: '#ccfbf1',
+                    border: '1px solid #99f6e4',
+                    borderRadius: '9999px',
+                    fontSize: '12px',
+                    color: TEAL_COLOR,
+                    marginRight: '4px',
+                    marginBottom: '4px'
+                  }}
+                >
+                  {allergen.icon && (
+                    <span style={{ marginRight: '4px' }}>
+                      {allergen.icon}
+                    </span>
+                  )}
+                  {typeof allergen === 'string' ? allergen : allergen.name}
+                  
+                  {allergen.rating && (
+                    <span 
+                      style={{
+                        marginLeft: '4px',
+                        backgroundColor: '#0d9488',
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: '18px',
+                        height: '18px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '10px',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      {allergen.rating.average}
+                    </span>
+                  )}
+                </span>
+              );
+            })}
           </div>
         )}
       </div>

@@ -9,6 +9,12 @@ export interface Restaurant {
   placeId: string;
   ratings: RatingAggregate;
   allergenAccommodations: AllergenAccommodations;
+  allergenRatings?: {
+    [allergen: string]: {
+      count: number;
+      average: number;
+    }
+  };
 }
 
 interface Address {

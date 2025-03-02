@@ -1,3 +1,5 @@
+import { getAllergenEmoji, ensureAllergenRatings } from '../utils/allergens';
+
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 export const searchRestaurants = async (location, radius = 5000) => {
@@ -116,8 +118,8 @@ const deg2rad = (deg) => {
   return deg * (Math.PI/180);
 };
 
-// Enhanced search function that gets detailed information
-export const searchRestaurantsWithDetails = async (location, radius = 8047) => { // Default 5 miles in meters
+// Modify the searchRestaurantsWithDetails function to process allergen ratings
+export const searchRestaurantsWithDetails = async (location, radius = 8047) => {
   try {
     const basicResults = await searchRestaurants(location, radius);
     
@@ -127,13 +129,23 @@ export const searchRestaurantsWithDetails = async (location, radius = 8047) => {
         try {
           const details = await getRestaurantDetails(restaurant.place_id);
           
+          // Generate mock reviews
+          const mockReviews = generateMockReviews(restaurant.name);
+          
+          // Calculate allergen ratings from reviews
+          const allergenRatings = calculateAllergenRatings(mockReviews);
+          
+          // Transform allergens to include ratings
+          const processedAllergens = processAllergens(allergenRatings);
+          
           // Merge basic and detailed information
           return {
             ...restaurant,
             ...details,
-            // Add mock eatable data for now
-            eatableRating: Math.round((Math.random() * 2 + 3) * 10) / 10, // Random rating between 3-5
-            eatableReviews: generateMockReviews(restaurant.name)
+            eatableRating: Math.round((Math.random() * 2 + 3) * 10) / 10,
+            eatableReviews: mockReviews,
+            allergenRatings: allergenRatings,
+            allergens: processedAllergens
           };
         } catch (error) {
           console.error(`Error getting details for ${restaurant.name}:`, error);
@@ -142,14 +154,34 @@ export const searchRestaurantsWithDetails = async (location, radius = 8047) => {
       })
     );
     
-    console.log('Basic results:', basicResults);
-    console.log('Detailed results:', detailedResults);
-    
     return detailedResults;
   } catch (error) {
     console.error('Error in searchRestaurantsWithDetails:', error);
     throw error;
   }
+};
+
+// Helper function to process allergens with ratings
+const processAllergens = (allergenRatings) => {
+  const allergens = ['Peanuts', 'Tree Nuts', 'Dairy', 'Eggs', 'Wheat', 'Soy', 'Fish', 'Shellfish', 'Sesame', 'Gluten'];
+  
+  // Select a random subset of allergens for this restaurant
+  const selectedAllergens = allergens
+    .filter(() => Math.random() > 0.6)
+    .slice(0, Math.floor(Math.random() * 4) + 1); // 1-4 allergens per restaurant
+  
+  return selectedAllergens.map(allergen => {
+    const rating = allergenRatings[allergen] || {
+      count: Math.floor(Math.random() * 5) + 1,
+      average: Math.round((Math.random() * 3 + 2) * 10) / 10 // Random rating between 2-5
+    };
+    
+    return {
+      name: allergen,
+      icon: getAllergenEmoji(allergen),
+      rating: rating
+    };
+  });
 };
 
 // Helper function to generate mock reviews with allergens
@@ -173,6 +205,106 @@ const generateMockReviews = (restaurantName) => {
   });
 };
 
+// Add a function to calculate allergen ratings from reviews
+const calculateAllergenRatings = (reviews) => {
+  const allergenRatings = {};
+  
+  reviews.forEach(review => {
+    if (!review.allergens || !review.allergens.length) return;
+    
+    review.allergens.forEach(allergen => {
+      if (!allergenRatings[allergen]) {
+        allergenRatings[allergen] = {
+          count: 0,
+          total: 0,
+          average: 0
+        };
+      }
+      
+      allergenRatings[allergen].count += 1;
+      allergenRatings[allergen].total += review.rating;
+      allergenRatings[allergen].average = 
+        allergenRatings[allergen].total / allergenRatings[allergen].count;
+    });
+  });
+  
+  // Clean up the object to only include count and average
+  Object.keys(allergenRatings).forEach(allergen => {
+    delete allergenRatings[allergen].total;
+    // Round average to 1 decimal place
+    allergenRatings[allergen].average = 
+      Math.round(allergenRatings[allergen].average * 10) / 10;
+  });
+  
+  return allergenRatings;
+};
+
+// Update the restaurant data processing to include allergen ratings
+const processRestaurantData = (restaurant) => {
+  // Generate mock reviews if needed
+  const reviews = restaurant.eatableReviews || generateMockReviews(restaurant.name);
+  
+  // Calculate allergen ratings
+  const allergenRatings = calculateAllergenRatings(reviews);
+  
+  // Ensure consistent coordinate format
+  let coordinates = {};
+  
+  if (restaurant.geometry && restaurant.geometry.location) {
+    // Handle Google Places API format
+    if (typeof restaurant.geometry.location.lat === 'function') {
+      coordinates = {
+        lat: restaurant.geometry.location.lat(),
+        lng: restaurant.geometry.location.lng()
+      };
+    } else {
+      coordinates = {
+        lat: restaurant.geometry.location.lat,
+        lng: restaurant.geometry.location.lng
+      };
+    }
+  } else if (restaurant.lat && restaurant.lng) {
+    // Handle our custom format
+    coordinates = {
+      lat: restaurant.lat,
+      lng: restaurant.lng
+    };
+  } else {
+    // Generate random coordinates in San Francisco if none exist
+    coordinates = {
+      lat: 37.7749 + (Math.random() - 0.5) * 0.03,
+      lng: -122.4194 + (Math.random() - 0.5) * 0.03
+    };
+  }
+  
+  // Update the restaurant object
+  return {
+    ...restaurant,
+    ...coordinates,
+    // Ensure geometry.location is also set for Google Maps compatibility
+    geometry: {
+      ...restaurant.geometry,
+      location: {
+        lat: coordinates.lat,
+        lng: coordinates.lng,
+        // Add these methods for compatibility with Google Maps API
+        lat: function() { return coordinates.lat; },
+        lng: function() { return coordinates.lng; }
+      }
+    },
+    allergenRatings,
+    // Transform allergens array to include ratings
+    allergens: restaurant.allergens ? 
+      restaurant.allergens.map(allergen => {
+        const name = typeof allergen === 'string' ? allergen : allergen.name;
+        const icon = typeof allergen === 'string' ? getAllergenEmoji(allergen) : allergen.icon;
+        const rating = allergenRatings[name] || null;
+        
+        return { name, icon, rating };
+      }) : []
+  };
+};
+
 // Function to load more results using pagination token
 export const loadMoreRestaurants = async (location, radius, pageToken) => {
   try {
@@ -194,12 +326,22 @@ export const loadMoreRestaurants = async (location, radius, pageToken) => {
               try {
                 const details = await getRestaurantDetails(restaurant.place_id);
                 
+                // Generate mock reviews
+                const mockReviews = generateMockReviews(restaurant.name);
+                
+                // Calculate allergen ratings from reviews
+                const allergenRatings = calculateAllergenRatings(mockReviews);
+                
+                // Transform allergens to include ratings
+                const processedAllergens = processAllergens(allergenRatings);
+                
                 return {
                   ...restaurant,
                   ...details,
-                  // Add mock eatable data
                   eatableRating: Math.round((Math.random() * 2 + 3) * 10) / 10,
-                  eatableReviews: generateMockReviews(restaurant.name)
+                  eatableReviews: mockReviews,
+                  allergenRatings: allergenRatings,
+                  allergens: processedAllergens
                 };
               } catch (error) {
                 console.error(`Error getting details for ${restaurant.name}:`, error);
@@ -246,8 +388,16 @@ const sampleRestaurants = [
       quote: 'Excellent food and atmosphere. Highly recommend for a nice evening out.'
     },
     allergens: [
-      { name: 'Peanuts', icon: '🥜' },
-      { name: 'Tree nuts', icon: '🌰' }
+      { 
+        name: 'Peanuts', 
+        icon: '🥜',
+        rating: { count: 3, average: 4.7 } 
+      },
+      { 
+        name: 'Tree nuts', 
+        icon: '🌰',
+        rating: { count: 2, average: 5.0 }
+      }
     ],
     accommodations: {
       chefAvailable: true,
@@ -276,8 +426,16 @@ const sampleRestaurants = [
       quote: 'Delicious burgers and friendly staff. A bit pricey but worth it.'
     },
     allergens: [
-      { name: 'Gluten', icon: '🌾' },
-      { name: 'Dairy', icon: '🥛' }
+      { 
+        name: 'Gluten', 
+        icon: '🌾',
+        rating: { count: 2, average: 4.0 } 
+      },
+      { 
+        name: 'Dairy', 
+        icon: '🥛',
+        rating: { count: 4, average: 3.5 }
+      }
     ],
     accommodations: {
       chefAvailable: true,
@@ -539,21 +697,16 @@ const restaurantService = {
     
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
-    const paginatedResults = sampleRestaurants.slice(startIndex, endIndex);
     
-    // Log the results for debugging
-    console.log('Restaurant service returning:', {
-      restaurants: paginatedResults,
-      totalCount: sampleRestaurants.length,
-      hasMore: endIndex < sampleRestaurants.length,
-      startIndex,
-      endIndex
-    });
+    // Apply allergen ratings to all restaurants
+    const processedRestaurants = ensureAllergenRatings(sampleRestaurants);
+    
+    const paginatedResults = processedRestaurants.slice(startIndex, endIndex);
     
     return {
       restaurants: paginatedResults,
-      totalCount: sampleRestaurants.length,
-      hasMore: endIndex < sampleRestaurants.length
+      totalCount: processedRestaurants.length,
+      hasMore: endIndex < processedRestaurants.length
     };
   },
   
@@ -563,7 +716,9 @@ const restaurantService = {
     await new Promise(resolve => setTimeout(resolve, 500));
     
     const restaurant = sampleRestaurants.find(r => r.id === parseInt(id));
-    return restaurant || null;
+    
+    // Apply allergen ratings to the restaurant
+    return restaurant ? ensureAllergenRatings([restaurant])[0] : null;
   },
   
   // Search restaurants by query
@@ -580,14 +735,17 @@ const restaurantService = {
       );
     });
     
+    // Apply allergen ratings to filtered restaurants
+    const processedRestaurants = ensureAllergenRatings(filteredRestaurants);
+    
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
-    const paginatedResults = filteredRestaurants.slice(startIndex, endIndex);
+    const paginatedResults = processedRestaurants.slice(startIndex, endIndex);
     
     return {
       restaurants: paginatedResults,
-      totalCount: filteredRestaurants.length,
-      hasMore: endIndex < filteredRestaurants.length
+      totalCount: processedRestaurants.length,
+      hasMore: endIndex < processedRestaurants.length
     };
   }
 };

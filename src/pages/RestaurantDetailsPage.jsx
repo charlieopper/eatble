@@ -855,7 +855,8 @@ export default function RestaurantDetailsPage() {
                 <span 
                   key={index}
                   style={{ 
-                    display: 'inline-block',
+                    display: 'inline-flex',
+                    alignItems: 'center',
                     padding: '4px 8px',
                     backgroundColor: '#ccfbf1',
                     border: '1px solid #99f6e4',
@@ -863,7 +864,8 @@ export default function RestaurantDetailsPage() {
                     fontSize: '12px',
                     color: TEAL_COLOR,
                     marginRight: '4px',
-                    marginBottom: '4px'
+                    marginBottom: '4px',
+                    position: 'relative'
                   }}
                 >
                   {allergen.icon && (
@@ -872,6 +874,27 @@ export default function RestaurantDetailsPage() {
                     </span>
                   )}
                   {typeof allergen === 'string' ? allergen : allergen.name}
+                  
+                  {allergen.rating && (
+                    <span 
+                      style={{
+                        marginLeft: '4px',
+                        backgroundColor: '#0d9488',
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: '20px',
+                        height: '20px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '11px',
+                        fontWeight: 'bold'
+                      }}
+                      title={`Average rating: ${allergen.rating.average} from ${allergen.rating.count} review${allergen.rating.count !== 1 ? 's' : ''}`}
+                    >
+                      {allergen.rating.average}
+                    </span>
+                  )}
                 </span>
               ))}
             </div>

@@ -41,6 +41,18 @@ export const mockRestaurants = [
         date: "2023-06-20T14:30:00Z",
         allergens: ["Tree Nuts", "Dairy"]
       }
+    ],
+    allergens: [
+      { 
+        name: "Gluten", 
+        icon: "🌾", 
+        rating: { count: 2, average: 4.5 } 
+      },
+      { 
+        name: "Dairy", 
+        icon: "🥛", 
+        rating: { count: 3, average: 3.7 } 
+      }
     ]
   },
   {
@@ -75,6 +87,18 @@ export const mockRestaurants = [
         text: "Best sushi in town! They're very careful with seafood allergies.",
         date: "2023-07-10T18:45:00Z",
         allergens: ["Fish", "Shellfish"]
+      }
+    ],
+    allergens: [
+      { 
+        name: "Gluten", 
+        icon: "🌾", 
+        rating: { count: 2, average: 4.5 } 
+      },
+      { 
+        name: "Dairy", 
+        icon: "🥛", 
+        rating: { count: 3, average: 3.7 } 
       }
     ]
   },
@@ -119,6 +143,18 @@ export const mockRestaurants = [
         date: "2023-05-12T13:15:00Z",
         allergens: ["Peanuts"]
       }
+    ],
+    allergens: [
+      { 
+        name: "Gluten", 
+        icon: "🌾", 
+        rating: { count: 2, average: 4.5 } 
+      },
+      { 
+        name: "Dairy", 
+        icon: "🥛", 
+        rating: { count: 3, average: 3.7 } 
+      }
     ]
   },
   {
@@ -153,6 +189,18 @@ export const mockRestaurants = [
         text: "Great burgers but the buns contain sesame.",
         date: "2023-03-22T17:30:00Z",
         allergens: ["Sesame", "Gluten"]
+      }
+    ],
+    allergens: [
+      { 
+        name: "Gluten", 
+        icon: "🌾", 
+        rating: { count: 2, average: 4.5 } 
+      },
+      { 
+        name: "Dairy", 
+        icon: "🥛", 
+        rating: { count: 3, average: 3.7 } 
       }
     ]
   },
@@ -197,6 +245,18 @@ export const mockRestaurants = [
         date: "2023-07-05T13:20:00Z",
         allergens: ["Wheat", "Gluten"]
       }
+    ],
+    allergens: [
+      { 
+        name: "Gluten", 
+        icon: "🌾", 
+        rating: { count: 2, average: 4.5 } 
+      },
+      { 
+        name: "Dairy", 
+        icon: "🥛", 
+        rating: { count: 3, average: 3.7 } 
+      }
     ]
   },
   {
@@ -231,6 +291,18 @@ export const mockRestaurants = [
         text: "Great pizza but be careful if you have dairy allergies.",
         date: "2023-05-30T19:15:00Z",
         allergens: ["Dairy", "Gluten"]
+      }
+    ],
+    allergens: [
+      { 
+        name: "Gluten", 
+        icon: "🌾", 
+        rating: { count: 2, average: 4.5 } 
+      },
+      { 
+        name: "Dairy", 
+        icon: "🥛", 
+        rating: { count: 3, average: 3.7 } 
       }
     ]
   }
