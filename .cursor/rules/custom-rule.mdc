@@ -578,3 +578,5 @@ globs:
 - Test with screen readers
 - Test keyboard navigation
 
+###always use domaind driven design!!! this is vital to maintaining an easy to follow and efficient platform
+

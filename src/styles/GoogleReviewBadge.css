@@ -1,0 +1,55 @@
+.google-review-container {
+  border-radius: 8px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  margin-bottom: 16px;
+}
+
+.google-review-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.google-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.google-g-logo {
+  width: 18px;
+  height: 18px;
+}
+
+.google-review-text {
+  font-weight: 500;
+  color: #202124;
+}
+
+.rating-stars {
+  display: flex;
+  align-items: center;
+}
+
+.star {
+  color: #dadce0;
+}
+
+.star.filled {
+  color: #fbbc04;
+}
+
+.review-count {
+  margin-left: 4px;
+  color: #5f6368;
+  font-size: 14px;
+}
+
+.review-quote {
+  font-style: italic;
+  color: #5f6368;
+  margin: 0;
+  font-size: 14px;
+} 

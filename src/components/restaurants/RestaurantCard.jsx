@@ -1,13 +1,25 @@
 import React, { useState } from 'react';
 import { Heart, Star, ChefHat, FileText } from 'lucide-react';
 import { useFavorites } from '../../context/FavoritesContext';
+import { useNavigate } from 'react-router-dom';
 
 // Placeholder restaurant image URL
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fDB8fHww&w=1000&q=80";
 
+// Use teal color for allergen indicators, chef available, and eatABLE stars
+const TEAL_COLOR = "#0d9488";
+
+// With this URL that points to the Google "G" icon
+const googleLogoUrl = "https://www.gstatic.com/images/branding/product/1x/googleg_48dp.png";
+
 const RestaurantCard = ({ restaurant, onClick }) => {
   const { name, image, cuisines, eatableReview, accommodations } = restaurant;
   const { isFavorite, toggleFavorite } = useFavorites();
+  const navigate = useNavigate();
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseEnter = () => setIsHovered(true);
+  const handleMouseLeave = () => setIsHovered(false);
 
   if (!restaurant) {
     return <div style={{ padding: '16px', backgroundColor: 'white', borderRadius: '8px', margin: '8px 0' }}>Loading restaurant data...</div>;
@@ -28,6 +40,11 @@ const RestaurantCard = ({ restaurant, onClick }) => {
   const mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(address)}`;
 
   // Use inline styles to ensure they're applied regardless of Tailwind
+  const cardHoverStyle = {
+    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+    backgroundColor: '#f9fafb'
+  };
+
   const cardStyle = {
     backgroundColor: 'white',
     border: '1px solid #ddd',
@@ -38,12 +55,8 @@ const RestaurantCard = ({ restaurant, onClick }) => {
     transition: 'box-shadow 0.2s',
     cursor: 'pointer',
     display: 'flex',
-    flexDirection: 'row'
-  };
-
-  const cardHoverStyle = {
-    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-    backgroundColor: '#f9fafb'
+    flexDirection: 'row',
+    ...(isHovered ? cardHoverStyle : {})
   };
 
   const flexRowStyle = {
@@ -110,7 +123,7 @@ const RestaurantCard = ({ restaurant, onClick }) => {
     display: 'flex',
     alignItems: 'center',
     fontSize: '14px',
-    color: '#16a34a',
+    color: TEAL_COLOR,
     marginRight: '12px'
   };
 
@@ -130,35 +143,48 @@ const RestaurantCard = ({ restaurant, onClick }) => {
   const quoteStyle = {
     fontSize: '14px',
     fontStyle: 'italic',
-    color: '#4b5563'
+    color: '#4b5563',
+    margin: '0'
   };
 
   const allergenTagStyle = {
     display: 'inline-block',
     padding: '4px 8px',
-    backgroundColor: '#ecfdf5',
-    border: '1px solid #d1fae5',
+    backgroundColor: '#ccfbf1',
+    border: '1px solid #99f6e4',
     borderRadius: '9999px',
     fontSize: '12px',
-    color: '#059669',
+    color: TEAL_COLOR,
     marginRight: '4px',
     marginBottom: '4px'
   };
-  
-  // Handle mouse events for hover effect
-  const handleMouseEnter = (e) => {
-    Object.assign(e.currentTarget.style, cardHoverStyle);
-  };
-  
-  const handleMouseLeave = (e) => {
-    Object.assign(e.currentTarget.style, cardStyle);
+
+  const renderGoogleRating = (rating, reviewCount) => {
+    return (
+      <div className="google-rating">
+        <img 
+          src={googleLogoUrl} 
+          alt="Google" 
+          style={{ width: '16px', height: '16px', marginRight: '8px' }}
+        />
+        <span className="rating">{rating}</span>
+        <span className="count">({reviewCount})</span>
+      </div>
+    );
   };
 
+  // Add this console log at the top of your component to debug
+  console.log("Google logo path:", googleLogoUrl);
+
   return (
-    <div style={cardStyle}
-    onMouseEnter={handleMouseEnter}
-    onMouseLeave={handleMouseLeave}
-    onClick={() => onClick && onClick(restaurant)}
+    <div 
+      style={cardStyle}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onClick={(e) => {
+        e.stopPropagation();
+        navigate(`/restaurant/${id}`);
+      }}
     >
       {/* Left column - Image and hours/contact */}
       <div style={{ 
@@ -244,15 +270,99 @@ const RestaurantCard = ({ restaurant, onClick }) => {
         {/* Accommodations */}
         <div style={{ display: 'flex', marginTop: '12px', marginBottom: '8px' }}>
           {accommodations?.chefAvailable && (
-            <div style={accommodationStyle}>
+            <div 
+              style={{...accommodationStyle, position: 'relative'}}
+              onMouseEnter={(e) => {
+                const tooltip = e.currentTarget.querySelector('.tooltip');
+                if (tooltip) tooltip.style.display = 'block';
+              }}
+              onMouseLeave={(e) => {
+                const tooltip = e.currentTarget.querySelector('.tooltip');
+                if (tooltip) tooltip.style.display = 'none';
+              }}
+            >
               <ChefHat size={16} style={{ marginRight: '4px' }} />
               <span>Chef available</span>
+              <div 
+                className="tooltip"
+                style={{
+                  display: 'none',
+                  position: 'absolute',
+                  bottom: '100%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  backgroundColor: '#27272a',
+                  color: 'white',
+                  padding: '6px 10px',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  whiteSpace: 'nowrap',
+                  zIndex: 10,
+                  marginBottom: '8px',
+                  boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                }}
+              >
+                One or more users has reported chef availability
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '0',
+                  height: '0',
+                  borderLeft: '6px solid transparent',
+                  borderRight: '6px solid transparent',
+                  borderTop: '6px solid #27272a'
+                }}></div>
+              </div>
             </div>
           )}
           {accommodations?.allergenMenu && (
-            <div style={accommodationStyle}>
+            <div 
+              style={{...accommodationStyle, position: 'relative'}}
+              onMouseEnter={(e) => {
+                const tooltip = e.currentTarget.querySelector('.tooltip');
+                if (tooltip) tooltip.style.display = 'block';
+              }}
+              onMouseLeave={(e) => {
+                const tooltip = e.currentTarget.querySelector('.tooltip');
+                if (tooltip) tooltip.style.display = 'none';
+              }}
+            >
               <FileText size={16} style={{ marginRight: '4px' }} />
               <span>Allergen menu</span>
+              <div 
+                className="tooltip"
+                style={{
+                  display: 'none',
+                  position: 'absolute',
+                  bottom: '100%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  backgroundColor: '#27272a',
+                  color: 'white',
+                  padding: '6px 10px',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  whiteSpace: 'nowrap',
+                  zIndex: 10,
+                  marginBottom: '8px',
+                  boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                }}
+              >
+                One or more users has reported an allergen menu
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '0',
+                  height: '0',
+                  borderLeft: '6px solid transparent',
+                  borderRight: '6px solid transparent',
+                  borderTop: '6px solid #27272a'
+                }}></div>
+              </div>
             </div>
           )}
         </div>
@@ -267,8 +377,8 @@ const RestaurantCard = ({ restaurant, onClick }) => {
                 <Star
                   key={i}
                   size={12}
-                  color={i < Math.floor(eatableReview?.rating || 0) ? "#22c55e" : "#d1d5db"}
-                  fill={i < Math.floor(eatableReview?.rating || 0) ? "#22c55e" : "none"}
+                  color={i < Math.floor(eatableReview?.rating || 0) ? TEAL_COLOR : "#d1d5db"}
+                  fill={i < Math.floor(eatableReview?.rating || 0) ? TEAL_COLOR : "none"}
                 />
               ))}
             </div>
@@ -282,7 +392,11 @@ const RestaurantCard = ({ restaurant, onClick }) => {
         {/* Google Review */}
         <div style={{ marginTop: '12px', marginBottom: '12px' }}>
           <div style={reviewHeaderStyle}>
-            <span style={{ fontWeight: 'bold', marginRight: '8px' }}>G</span>
+            <img 
+              src={googleLogoUrl} 
+              alt="Google" 
+              style={{ width: '16px', height: '16px', marginRight: '8px' }}
+            />
             <span style={{ fontWeight: '600', fontSize: '14px', marginRight: '8px' }}>Google Review</span>
             <div style={{ display: 'flex' }}>
               {[...Array(5)].map((_, i) => (

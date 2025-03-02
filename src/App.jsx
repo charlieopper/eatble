@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage';
 import SearchPage from './pages/SearchPage';
 import FavoritesPage from './pages/FavoritesPage';
 import ErrorBoundary from './components/ErrorBoundary';
+import RestaurantDetailsPage from './pages/RestaurantDetailsPage';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="/restaurants" element={<SearchPage />} />
           <Route path="/restaurants/search" element={<SearchPage />} />
           <Route path="/favorites" element={<FavoritesPage />} />
+          <Route path="/restaurant/:id" element={<RestaurantDetailsPage />} />
         </Routes>
       </ErrorBoundary>
     </FavoritesProvider>

@@ -222,4 +222,374 @@ export const loadMoreRestaurants = async (location, radius, pageToken) => {
     console.error('Error loading more restaurants:', error);
     throw error;
   }
-}; 
+};
+
+// Add more sample restaurants
+const sampleRestaurants = [
+  {
+    id: 1,
+    name: 'Zunchi Cafe',
+    image: 'https://source.unsplash.com/random/800x600/?restaurant,cafe',
+    cuisines: ['French', 'Italian'],
+    hours: 'Open until 11PM Fri',
+    phone: '(415) 552-2622',
+    website: 'zunchicafe.com',
+    address: '123 Main St, San Francisco, CA 94105',
+    eatableReview: {
+      rating: 5,
+      reviewCount: 42,
+      quote: 'Food was 10/10 and the chef took great care of our son who is allergic to peanuts and tree nuts'
+    },
+    googleReview: {
+      rating: 4,
+      reviewCount: 87,
+      quote: 'Excellent food and atmosphere. Highly recommend for a nice evening out.'
+    },
+    allergens: [
+      { name: 'Peanuts', icon: '🥜' },
+      { name: 'Tree nuts', icon: '🌰' }
+    ],
+    accommodations: {
+      chefAvailable: true,
+      allergenMenu: true
+    },
+    lat: 37.7749 + (Math.random() - 0.5) * 0.03,
+    lng: -122.4194 + (Math.random() - 0.5) * 0.03,
+  },
+  {
+    id: 2,
+    name: 'Sideshow Kitchen',
+    image: 'https://source.unsplash.com/random/800x600/?restaurant,burger',
+    cuisines: ['American', 'Burgers'],
+    hours: 'Open until 10PM',
+    phone: '(415) 555-1234',
+    website: 'sideshowkitchen.com',
+    address: '456 Market St, San Francisco, CA 94105',
+    eatableReview: {
+      rating: 4,
+      reviewCount: 34,
+      quote: 'Great gluten-free options and very knowledgeable about cross-contamination'
+    },
+    googleReview: {
+      rating: 4,
+      reviewCount: 65,
+      quote: 'Delicious burgers and friendly staff. A bit pricey but worth it.'
+    },
+    allergens: [
+      { name: 'Gluten', icon: '🌾' },
+      { name: 'Dairy', icon: '🥛' }
+    ],
+    accommodations: {
+      chefAvailable: true,
+      allergenMenu: false
+    },
+    lat: 37.7749 + (Math.random() - 0.5) * 0.03,
+    lng: -122.4194 + (Math.random() - 0.5) * 0.03,
+  },
+  {
+    id: 3,
+    name: 'Sakura Sushi',
+    image: 'https://source.unsplash.com/random/800x600/?sushi,japanese',
+    cuisines: ['Japanese', 'Sushi'],
+    hours: 'Open until 9:30PM',
+    phone: '(415) 555-8765',
+    website: 'sakurasf.com',
+    address: '789 Geary St, San Francisco, CA 94102',
+    eatableReview: {
+      rating: 4.5,
+      reviewCount: 28,
+      quote: 'They have a dedicated gluten-free menu and the staff is very knowledgeable about shellfish allergies'
+    },
+    googleReview: {
+      rating: 4.3,
+      reviewCount: 112,
+      quote: 'Fresh fish and great service. One of the best sushi spots in the city.'
+    },
+    allergens: [
+      { name: 'Shellfish', icon: '🦐' },
+      { name: 'Gluten', icon: '🌾' }
+    ],
+    accommodations: {
+      chefAvailable: true,
+      allergenMenu: true
+    },
+    lat: 37.7749 + (Math.random() - 0.5) * 0.03,
+    lng: -122.4194 + (Math.random() - 0.5) * 0.03,
+  },
+  {
+    id: 4,
+    name: 'Green Garden',
+    image: 'https://source.unsplash.com/random/800x600/?vegan,restaurant',
+    cuisines: ['Vegan', 'Vegetarian'],
+    hours: 'Open until 8PM',
+    phone: '(415) 555-2468',
+    website: 'greengardensf.com',
+    address: '321 Valencia St, San Francisco, CA 94103',
+    eatableReview: {
+      rating: 5,
+      reviewCount: 56,
+      quote: 'Perfect for dairy allergies, everything is plant-based and they are careful about nut allergies too'
+    },
+    googleReview: {
+      rating: 4.7,
+      reviewCount: 89,
+      quote: 'Amazing vegan food that even non-vegans will love. Great atmosphere too.'
+    },
+    allergens: [
+      { name: 'Dairy', icon: '🥛' },
+      { name: 'Tree nuts', icon: '🌰' }
+    ],
+    accommodations: {
+      chefAvailable: false,
+      allergenMenu: true
+    },
+    lat: 37.7749 + (Math.random() - 0.5) * 0.03,
+    lng: -122.4194 + (Math.random() - 0.5) * 0.03,
+  },
+  {
+    id: 5,
+    name: 'Taco Fiesta',
+    image: 'https://source.unsplash.com/random/800x600/?mexican,tacos',
+    cuisines: ['Mexican', 'Tex-Mex'],
+    hours: 'Open until 10PM',
+    phone: '(415) 555-7890',
+    website: 'tacofiestasf.com',
+    address: '567 Mission St, San Francisco, CA 94105',
+    eatableReview: {
+      rating: 3.5,
+      reviewCount: 23,
+      quote: 'They can accommodate gluten-free diets but be careful about cross-contamination with corn'
+    },
+    googleReview: {
+      rating: 4.2,
+      reviewCount: 156,
+      quote: 'Authentic Mexican flavors and great margaritas. The street tacos are a must-try.'
+    },
+    allergens: [
+      { name: 'Gluten', icon: '🌾' },
+      { name: 'Corn', icon: '🌽' }
+    ],
+    accommodations: {
+      chefAvailable: false,
+      allergenMenu: false
+    },
+    lat: 37.7749 + (Math.random() - 0.5) * 0.03,
+    lng: -122.4194 + (Math.random() - 0.5) * 0.03,
+  },
+  {
+    id: 6,
+    name: 'Pasta Paradise',
+    image: 'https://source.unsplash.com/random/800x600/?italian,pasta',
+    cuisines: ['Italian', 'Mediterranean'],
+    hours: 'Open until 10:30PM',
+    phone: '(415) 555-3456',
+    website: 'pastaparadisesf.com',
+    address: '789 Columbus Ave, San Francisco, CA 94133',
+    eatableReview: {
+      rating: 4.8,
+      reviewCount: 45,
+      quote: 'They have excellent gluten-free pasta options and the staff is very knowledgeable about celiac disease'
+    },
+    googleReview: {
+      rating: 4.5,
+      reviewCount: 132,
+      quote: 'Authentic Italian cuisine with generous portions. The homemade pasta is incredible.'
+    },
+    allergens: [
+      { name: 'Gluten', icon: '🌾' },
+      { name: 'Dairy', icon: '🥛' }
+    ],
+    accommodations: {
+      chefAvailable: true,
+      allergenMenu: true
+    },
+    lat: 37.7749 + (Math.random() - 0.5) * 0.03,
+    lng: -122.4194 + (Math.random() - 0.5) * 0.03,
+  },
+  {
+    id: 7,
+    name: 'Spice Route',
+    image: 'https://source.unsplash.com/random/800x600/?indian,curry',
+    cuisines: ['Indian', 'Pakistani'],
+    hours: 'Open until 11PM',
+    phone: '(415) 555-9876',
+    website: 'spiceroutesf.com',
+    address: '456 Valencia St, San Francisco, CA 94103',
+    eatableReview: {
+      rating: 4.2,
+      reviewCount: 38,
+      quote: 'Great for dairy allergies as they can make most dishes without cream or ghee'
+    },
+    googleReview: {
+      rating: 4.4,
+      reviewCount: 178,
+      quote: 'Flavorful curries and excellent naan bread. The lamb vindaloo is outstanding.'
+    },
+    allergens: [
+      { name: 'Dairy', icon: '🥛' },
+      { name: 'Nuts', icon: '🌰' }
+    ],
+    accommodations: {
+      chefAvailable: true,
+      allergenMenu: false
+    },
+    lat: 37.7749 + (Math.random() - 0.5) * 0.03,
+    lng: -122.4194 + (Math.random() - 0.5) * 0.03,
+  },
+  {
+    id: 8,
+    name: 'Ocean Breeze',
+    image: 'https://source.unsplash.com/random/800x600/?seafood,restaurant',
+    cuisines: ['Seafood', 'American'],
+    hours: 'Open until 9:30PM',
+    phone: '(415) 555-6543',
+    website: 'oceanbreezeseafood.com',
+    address: '123 Embarcadero, San Francisco, CA 94111',
+    eatableReview: {
+      rating: 4.6,
+      reviewCount: 52,
+      quote: 'They take shellfish allergies very seriously and have separate preparation areas'
+    },
+    googleReview: {
+      rating: 4.3,
+      reviewCount: 145,
+      quote: 'Fresh seafood with a view of the bay. The clam chowder is a must-try.'
+    },
+    allergens: [
+      { name: 'Shellfish', icon: '🦐' },
+      { name: 'Fish', icon: '🐟' }
+    ],
+    accommodations: {
+      chefAvailable: true,
+      allergenMenu: true
+    },
+    lat: 37.7749 + (Math.random() - 0.5) * 0.03,
+    lng: -122.4194 + (Math.random() - 0.5) * 0.03,
+  },
+  {
+    id: 9,
+    name: 'Golden Dragon',
+    image: 'https://source.unsplash.com/random/800x600/?chinese,restaurant',
+    cuisines: ['Chinese', 'Dim Sum'],
+    hours: 'Open until 10PM',
+    phone: '(415) 555-8765',
+    website: 'goldendragonsf.com',
+    address: '789 Grant Ave, San Francisco, CA 94108',
+    eatableReview: {
+      rating: 3.8,
+      reviewCount: 29,
+      quote: 'They can accommodate soy allergies but be careful about cross-contamination'
+    },
+    googleReview: {
+      rating: 4.1,
+      reviewCount: 210,
+      quote: 'Authentic dim sum and great service. The xiao long bao is exceptional.'
+    },
+    allergens: [
+      { name: 'Soy', icon: '🫘' },
+      { name: 'Gluten', icon: '🌾' }
+    ],
+    accommodations: {
+      chefAvailable: false,
+      allergenMenu: false
+    },
+    lat: 37.7749 + (Math.random() - 0.5) * 0.03,
+    lng: -122.4194 + (Math.random() - 0.5) * 0.03,
+  },
+  {
+    id: 10,
+    name: 'Burger Bliss',
+    image: 'https://source.unsplash.com/random/800x600/?burger,restaurant',
+    cuisines: ['American', 'Burgers'],
+    hours: 'Open until 11PM',
+    phone: '(415) 555-2345',
+    website: 'burgerblisssf.com',
+    address: '456 Haight St, San Francisco, CA 94117',
+    eatableReview: {
+      rating: 4.7,
+      reviewCount: 63,
+      quote: 'They have excellent gluten-free buns and a dedicated fryer for allergen-free fries'
+    },
+    googleReview: {
+      rating: 4.6,
+      reviewCount: 189,
+      quote: 'Best burgers in the city. The truffle fries are amazing too.'
+    },
+    allergens: [
+      { name: 'Gluten', icon: '🌾' },
+      { name: 'Dairy', icon: '🥛' }
+    ],
+    accommodations: {
+      chefAvailable: true,
+      allergenMenu: true
+    },
+    lat: 37.7749 + (Math.random() - 0.5) * 0.03,
+    lng: -122.4194 + (Math.random() - 0.5) * 0.03,
+  }
+];
+
+// Mock API service
+const restaurantService = {
+  // Get restaurants with pagination
+  getRestaurants: async (page = 1, limit = 5) => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    console.log('getRestaurants called with page:', page, 'limit:', limit);
+    
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedResults = sampleRestaurants.slice(startIndex, endIndex);
+    
+    // Log the results for debugging
+    console.log('Restaurant service returning:', {
+      restaurants: paginatedResults,
+      totalCount: sampleRestaurants.length,
+      hasMore: endIndex < sampleRestaurants.length,
+      startIndex,
+      endIndex
+    });
+    
+    return {
+      restaurants: paginatedResults,
+      totalCount: sampleRestaurants.length,
+      hasMore: endIndex < sampleRestaurants.length
+    };
+  },
+  
+  // Get a single restaurant by ID
+  getRestaurantById: async (id) => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const restaurant = sampleRestaurants.find(r => r.id === parseInt(id));
+    return restaurant || null;
+  },
+  
+  // Search restaurants by query
+  searchRestaurants: async (query, page = 1, limit = 5) => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const filteredRestaurants = sampleRestaurants.filter(restaurant => {
+      const searchTerm = query.toLowerCase();
+      return (
+        restaurant.name.toLowerCase().includes(searchTerm) ||
+        restaurant.cuisines.some(cuisine => cuisine.toLowerCase().includes(searchTerm)) ||
+        (restaurant.address && restaurant.address.toLowerCase().includes(searchTerm))
+      );
+    });
+    
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedResults = filteredRestaurants.slice(startIndex, endIndex);
+    
+    return {
+      restaurants: paginatedResults,
+      totalCount: filteredRestaurants.length,
+      hasMore: endIndex < filteredRestaurants.length
+    };
+  }
+};
+
+export default restaurantService; 

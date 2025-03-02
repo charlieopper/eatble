@@ -1,0 +1,15 @@
+/* Google branding styles */
+.google-g-logo {
+  width: auto;
+  height: auto;
+  max-width: 20px;
+  max-height: 20px;
+  object-fit: contain;
+}
+
+.google-branding {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+} 

@@ -2,7 +2,7 @@ import React from 'react';
 import RestaurantCard from './RestaurantCard';
 
 export default function RestaurantList({ restaurants, isLoading, onSelectRestaurant }) {
-  if (isLoading) {
+  if (isLoading && (!restaurants || restaurants.length === 0)) {
     return (
       <div style={{ 
         display: 'flex', 
