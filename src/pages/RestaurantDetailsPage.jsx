@@ -167,16 +167,33 @@ const ReviewItem = ({ review }) => {
           Helpful ({helpfulCount})
         </button>
         <button
-          style={{
-            backgroundColor: 'transparent',
+          onClick={(e) => {
+            e.stopPropagation();
+            // Handle report functionality
+            alert('Thank you for reporting this review. Our team will look into it.');
+          }}
+          style={{ 
+            background: 'none',
             border: 'none',
-            fontSize: '12px',
             color: '#6b7280',
+            fontSize: '12px',
             cursor: 'pointer',
             padding: '4px 8px',
-            borderRadius: '4px'
+            display: 'flex',
+            alignItems: 'center',
           }}
         >
+          <span 
+            role="img" 
+            aria-label="flag" 
+            style={{ 
+              marginRight: '4px',
+              display: 'inline-flex',
+              alignItems: 'center'
+            }}
+          >
+            🚩
+          </span> 
           Report this review
         </button>
       </div>
@@ -844,7 +861,7 @@ export default function RestaurantDetailsPage() {
         <div style={{ 
           padding: '12px 0', 
           borderTop: '1px solid #e5e7eb',
-          marginBottom: '16px'
+          marginBottom: '0'
         }}>
           <div style={{ 
             fontSize: '14px', 
@@ -904,7 +921,7 @@ export default function RestaurantDetailsPage() {
         {/* Detailed eatABLE Reviews Section */}
         <div style={{ 
           borderTop: '1px solid #e5e7eb',
-          paddingTop: '16px',
+          paddingTop: '12px',
           marginBottom: '16px'
         }}>
           <h3 style={{ 

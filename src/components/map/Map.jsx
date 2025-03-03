@@ -9,6 +9,12 @@ const Map = ({ restaurants, userLocation, height = '400px' }) => {
   const [mapError, setMapError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const navigateRef = useRef();
+
+  // Update the useEffect to store navigate in the ref instead of window
+  useEffect(() => {
+    navigateRef.current = navigate;
+  }, [navigate]);
 
   // Load Google Maps API and initialize the map
   useEffect(() => {
@@ -25,7 +31,8 @@ const Map = ({ restaurants, userLocation, height = '400px' }) => {
           zoom: 13,
           mapTypeControl: false,
           streetViewControl: false,
-          fullscreenControl: false
+          fullscreenControl: false,
+          mapId: import.meta.env.VITE_GOOGLE_MAPS_ID || 'DEFAULT_MAP_ID' // Added Map ID to fix the error
         });
         
         setMap(mapInstance);
@@ -50,9 +57,19 @@ const Map = ({ restaurants, userLocation, height = '400px' }) => {
       });
     
     return () => {
-      // Clean up markers when component unmounts
+      console.log('Cleaning up markers');
       markers.forEach(marker => {
-        if (marker) marker.setMap(null);
+        if (marker) {
+          console.log('Removing marker and listeners');
+          // Remove event listeners
+          if (marker.listeners) {
+            marker.listeners.forEach(listener => {
+              window.google.maps.event.removeListener(listener);
+            });
+          }
+          // Remove marker from map
+          marker.setMap(null);
+        }
       });
     };
   }, [userLocation]);
@@ -67,6 +84,7 @@ const Map = ({ restaurants, userLocation, height = '400px' }) => {
       markers.forEach(marker => {
         if (marker) marker.setMap(null);
       });
+      
       const newMarkers = [];
       
       // Create custom marker icon with a red pin
@@ -101,17 +119,8 @@ const Map = ({ restaurants, userLocation, height = '400px' }) => {
         return canvas.toDataURL();
       };
       
-      // Create info window for hover previews
-      const infoWindow = new window.google.maps.InfoWindow();
-      
-      // Create a variable to track if we're hovering over the info window
-      let isHoveringInfoWindow = false;
-      
-      // Check if AdvancedMarkerElement is available
-      const useAdvancedMarker = window.google.maps.marker && window.google.maps.marker.AdvancedMarkerElement;
-      
-      // Add restaurant markers
-      restaurants.forEach((restaurant, index) => {
+      // Add restaurant markers with simple click navigation
+      restaurants.forEach((restaurant) => {
         if (!restaurant) return;
         
         // Get coordinates from restaurant
@@ -147,118 +156,25 @@ const Map = ({ restaurants, userLocation, height = '400px' }) => {
           return;
         }
         
-        let marker;
+        // Create simple marker with only click functionality
+        const marker = new window.google.maps.Marker({
+          position,
+          map,
+          title: restaurant.name,
+          icon: {
+            url: createCustomMarker(),
+            scaledSize: new window.google.maps.Size(24, 36),
+            anchor: new window.google.maps.Point(12, 36)
+          },
+          zIndex: 1
+        });
         
-        if (useAdvancedMarker) {
-          // Create an advanced marker element
-          const markerImage = document.createElement('img');
-          markerImage.src = createCustomMarker();
-          markerImage.style.width = '24px';
-          markerImage.style.height = '36px';
-          
-          marker = new window.google.maps.marker.AdvancedMarkerElement({
-            position,
-            map,
-            title: restaurant.name,
-            content: markerImage
-          });
-          
-          // Add click handler to navigate to restaurant details
-          marker.addListener('click', () => {
-            const restaurantId = restaurant.id || restaurant.place_id;
-            window.location.href = `/restaurant/${restaurantId}`;
-          });
-          
-          // For AdvancedMarkerElement, we need to handle hover differently
-          marker.addListener('mouseover', () => {
-            infoWindow.setContent(createInfoWindowContent(restaurant));
-            infoWindow.open(map, marker);
-            
-            // Add mouseout event listener to the info window DOM element
-            setTimeout(() => {
-              const infoWindowElement = document.querySelector('.gm-style-iw-a');
-              if (infoWindowElement) {
-                infoWindowElement.addEventListener('mouseover', () => {
-                  isHoveringInfoWindow = true;
-                });
-                
-                infoWindowElement.addEventListener('mouseout', () => {
-                  isHoveringInfoWindow = false;
-                  // Give a small delay before closing to allow moving between pin and info window
-                  setTimeout(() => {
-                    if (!isHoveringInfoWindow) {
-                      infoWindow.close();
-                    }
-                  }, 300);
-                });
-              }
-            }, 100);
-          });
-          
-          marker.addListener('mouseout', () => {
-            // Give a small delay before closing to allow moving between pin and info window
-            setTimeout(() => {
-              if (!isHoveringInfoWindow) {
-                infoWindow.close();
-              }
-            }, 300);
-          });
-        } else {
-          // Fall back to regular Marker if AdvancedMarkerElement is not available
-          marker = new window.google.maps.Marker({
-            position,
-            map,
-            title: restaurant.name,
-            icon: {
-              url: createCustomMarker(),
-              scaledSize: new window.google.maps.Size(24, 36),
-              anchor: new window.google.maps.Point(12, 36)
-            },
-            zIndex: 1
-          });
-          
-          // Add hover handler to show preview
-          marker.addListener('mouseover', () => {
-            infoWindow.setContent(createInfoWindowContent(restaurant));
-            infoWindow.open(map, marker);
-            
-            // Add mouseout event listener to the info window DOM element
-            setTimeout(() => {
-              const infoWindowElement = document.querySelector('.gm-style-iw-a');
-              if (infoWindowElement) {
-                infoWindowElement.addEventListener('mouseover', () => {
-                  isHoveringInfoWindow = true;
-                });
-                
-                infoWindowElement.addEventListener('mouseout', () => {
-                  isHoveringInfoWindow = false;
-                  // Give a small delay before closing to allow moving between pin and info window
-                  setTimeout(() => {
-                    if (!isHoveringInfoWindow) {
-                      infoWindow.close();
-                    }
-                  }, 300);
-                });
-              }
-            }, 100);
-          });
-          
-          // Close info window when mouse leaves the marker (but not if hovering info window)
-          marker.addListener('mouseout', () => {
-            // Give a small delay before closing to allow moving between pin and info window
-            setTimeout(() => {
-              if (!isHoveringInfoWindow) {
-                infoWindow.close();
-              }
-            }, 300);
-          });
-          
-          // Add click handler to navigate to restaurant details
-          marker.addListener('click', () => {
-            const restaurantId = restaurant.id || restaurant.place_id;
-            window.location.href = `/restaurant/${restaurantId}`;
-          });
-        }
+        // Simple click handler with direct navigation
+        marker.addListener('click', () => {
+          const restaurantId = restaurant.id || restaurant.place_id;
+          // Use window.location directly instead of React Router
+          window.location.assign(`/restaurant/${restaurantId}`);
+        });
         
         newMarkers.push(marker);
       });
@@ -293,136 +209,26 @@ const Map = ({ restaurants, userLocation, height = '400px' }) => {
       console.error('Error updating markers:', error);
       setMapError('Error displaying restaurant markers. Please refresh the page.');
     }
-  }, [map, restaurants, navigate]);
+  }, [map, restaurants]);
 
-  // Helper function to create info window content
-  const createInfoWindowContent = (restaurant) => {
-    if (!restaurant) return '';
-    
-    try {
-      const { name, cuisines, eatableReview, googleReview, allergens, accommodations, image, photos } = restaurant;
-      const restaurantId = restaurant.id || restaurant.place_id;
-      
-      // Get image URL (try different possible sources)
-      let imageUrl = image;
-      if (!imageUrl && photos && photos.length > 0) {
-        // If using Google Photos object
-        if (typeof photos[0].getUrl === 'function') {
-          imageUrl = photos[0].getUrl();
-        } else if (photos[0].url) {
-          imageUrl = photos[0].url;
-        } else {
-          imageUrl = photos[0];
-        }
+  // At the top of the component, add this event handler setup
+  useEffect(() => {
+    // Create a custom event handler for restaurant navigation
+    const handleRestaurantNavigation = (event) => {
+      const { restaurantId } = event.detail;
+      if (restaurantId && navigate) {
+        navigate(`/restaurant/${restaurantId}`);
       }
-      // Fallback to a placeholder if no image is available
-      if (!imageUrl) {
-        imageUrl = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fDB8fHww&w=1000&q=80";
-      }
-      
-      // Format cuisines
-      const cuisineText = Array.isArray(cuisines) ? cuisines.join(', ') : '';
-      
-      // Format ratings
-      const eatableRating = eatableReview?.rating || restaurant.eatableRating || 0;
-      const googleRating = googleReview?.rating || restaurant.rating || 0;
-      
-      // Create more compact allergen tags HTML
-      const allergenTags = allergens && allergens.length > 0 
-        ? allergens.slice(0, 3).map(allergen => { // Limit to 3 allergens to save space
-            if (!allergen) return '';
-            
-            const allergenName = typeof allergen === 'string' ? allergen : allergen.name;
-            const allergenIcon = typeof allergen === 'string' ? '' : allergen.icon;
-            const ratingHtml = allergen.rating 
-              ? `<span style="margin-left:2px;background-color:#0d9488;color:white;border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;">${allergen.rating.average}</span>` 
-              : '';
-            
-            return `
-              <span style="display:inline-flex;align-items:center;padding:2px 6px;background-color:#ccfbf1;border:1px solid #99f6e4;border-radius:9999px;font-size:11px;color:#0d9488;margin-right:3px;margin-bottom:3px;">
-                ${allergenIcon ? `<span style="margin-right:2px;">${allergenIcon}</span>` : ''}
-                ${allergenName}
-                ${ratingHtml}
-              </span>
-            `;
-          }).join('') 
-        : '';
-      
-      // Create more compact accommodations HTML
-      const accommodationsHtml = `
-        <div style="display:flex;margin-top:4px;margin-bottom:4px;">
-          ${accommodations?.chefAvailable ? 
-            `<div style="display:flex;align-items:center;font-size:11px;color:#0d9488;margin-right:8px;">
-              <span style="margin-right:2px;">👨‍🍳</span> Chef available
-            </div>` : ''}
-          ${accommodations?.allergenMenu ? 
-            `<div style="display:flex;align-items:center;font-size:11px;color:#0d9488;">
-              <span style="margin-right:2px;">📋</span> Allergen menu
-            </div>` : ''}
-        </div>
-      `;
-      
-      // Create the HTML content for the info window with optimized layout and make entire card clickable
-      return `
-        <div 
-          style="width:250px;padding:8px;font-family:Arial,sans-serif;cursor:pointer;transition:transform 0.1s ease;border-radius:4px;"
-          onmouseover="this.style.transform='scale(1.01)';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)';" 
-          onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none';"
-          onclick="window.location.href='/restaurant/${restaurantId}';"
-        >
-          <div style="display:flex;margin-bottom:4px;align-items:center;">
-            <!-- Restaurant Info -->
-            <div style="flex:1;max-width:170px;padding-right:8px;">
-              <div style="font-weight:bold;font-size:15px;margin-bottom:2px;line-height:1.2;">${name}</div>
-              ${cuisineText ? `<div style="font-size:11px;color:#6b7280;margin-bottom:2px;">${cuisineText}</div>` : ''}
-            </div>
-            
-            <!-- Larger Restaurant Image -->
-            <div style="width:60px;height:60px;overflow:hidden;border-radius:4px;flex-shrink:0;">
-              <img 
-                src="${imageUrl}" 
-                alt="${name}" 
-                style="width:100%;height:100%;object-fit:cover;"
-                onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fDB8fHww&w=1000&q=80';"
-              />
-            </div>
-          </div>
-          
-          <!-- Make other elements slightly more compact to compensate for larger image -->
-          <div style="display:flex;align-items:center;margin-bottom:3px;">
-            <div style="display:flex;align-items:center;margin-right:10px;">
-              <span style="margin-right:2px;">⭐</span>
-              <span style="font-weight:bold;font-size:13px;">${eatableRating.toFixed(1)}</span>
-              <span style="color:#6b7280;font-size:11px;margin-left:2px;">eatABLE</span>
-            </div>
-            
-            <div style="display:flex;align-items:center;">
-              <span style="margin-right:2px;">⭐</span>
-              <span style="font-weight:bold;font-size:13px;">${googleRating.toFixed(1)}</span>
-              <span style="color:#6b7280;font-size:11px;margin-left:2px;">Google</span>
-            </div>
-          </div>
-          
-          ${accommodationsHtml}
-          
-          ${allergenTags ? `
-            <div style="margin-top:3px;margin-bottom:3px;">
-              <div style="display:flex;flex-wrap:wrap;">
-                ${allergenTags}
-              </div>
-            </div>
-          ` : ''}
-          
-          <div style="font-size:10px;color:#6b7280;margin-top:3px;text-align:center;background-color:#f3f4f6;padding:2px;border-radius:4px;">
-            Click for more details
-          </div>
-        </div>
-      `;
-    } catch (error) {
-      console.error('Error creating info window content:', error);
-      return `<div>Error displaying restaurant information</div>`;
-    }
-  };
+    };
+
+    // Add the event listener
+    window.addEventListener('navigateToRestaurant', handleRestaurantNavigation);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('navigateToRestaurant', handleRestaurantNavigation);
+    };
+  }, [navigate]);
 
   return (
     <div 
@@ -435,6 +241,34 @@ const Map = ({ restaurants, userLocation, height = '400px' }) => {
         position: 'relative'
       }}
     >
+      {isLoading && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'rgba(255, 255, 255, 0.8)',
+          zIndex: 10
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ 
+              border: '4px solid #f3f4f6',
+              borderTop: '4px solid #0d9488',
+              borderRadius: '50%',
+              width: '30px',
+              height: '30px',
+              margin: '0 auto 8px auto',
+              animation: 'spin 1s linear infinite'
+            }} />
+            <div>Loading map...</div>
+          </div>
+        </div>
+      )}
+      
       {mapError && (
         <div style={{
           position: 'absolute',
@@ -472,6 +306,20 @@ const Map = ({ restaurants, userLocation, height = '400px' }) => {
           </button>
         </div>
       )}
+      
+      {/* Add a small attribution for Google Maps */}
+      <div style={{
+        position: 'absolute',
+        bottom: '5px',
+        right: '5px',
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        padding: '2px 5px',
+        borderRadius: '3px',
+        fontSize: '10px',
+        zIndex: 5
+      }}>
+        ©Google Maps
+      </div>
     </div>
   );
 };
