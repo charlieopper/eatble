@@ -7,6 +7,7 @@ import SearchPage from './pages/SearchPage';
 import FavoritesPage from './pages/FavoritesPage';
 import ErrorBoundary from './components/ErrorBoundary';
 import RestaurantDetailsPage from './pages/RestaurantDetailsPage';
+import ReviewsPage from './pages/ReviewsPage';
 
 function App() {
   const [googleMapsLoaded, setGoogleMapsLoaded] = useState(false);
@@ -54,6 +55,7 @@ function App() {
           <Route path="/restaurants/search" element={<SearchPage />} />
           <Route path="/favorites" element={<FavoritesPage />} />
           <Route path="/restaurant/:id" element={<RestaurantDetailsPage />} />
+          <Route path="/reviews" element={<ReviewsPage />} />
         </Routes>
       </ErrorBoundary>
     </FavoritesProvider>
