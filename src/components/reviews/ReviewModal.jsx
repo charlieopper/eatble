@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Star, Info } from 'lucide-react';
 import { AllergenSelector } from '../allergens/AllergenSelector.jsx';
+import { reviewService } from '../../services/reviewService';
+import toast from 'react-hot-toast';
 
-export default function ReviewModal({ isOpen, onClose, restaurantName }) {
+export default function ReviewModal({ isOpen, onClose, restaurantName, restaurantId, onReviewSubmitted }) {
   const [selectedAllergens, setSelectedAllergens] = useState([]);
   const [chefAvailable, setChefAvailable] = useState(null);
   const [allergenMenuAvailable, setAllergenMenuAvailable] = useState(null);
@@ -10,6 +12,7 @@ export default function ReviewModal({ isOpen, onClose, restaurantName }) {
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Helper component for tooltip
   const InfoTooltip = ({ text, isVisible, onClose }) => (
@@ -88,22 +91,43 @@ export default function ReviewModal({ isOpen, onClose, restaurantName }) {
     );
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (selectedAllergens.length === 0) {
       setError('Please select at least one allergen');
       return;
     }
+
+    if (!rating) {
+      setError('Please provide a rating');
+      return;
+    }
     
-    // TODO: Submit review
-    console.log({
-      allergens: selectedAllergens,
-      chefAvailable,
-      allergenMenuAvailable,
-      rating,
-      reviewText
-    });
+    setIsSubmitting(true);
+    setError('');
+    
+    try {
+      await reviewService.submitReview(restaurantId, {
+        allergens: selectedAllergens,
+        chefAvailable: chefAvailable === true,
+        allergenMenuAvailable: allergenMenuAvailable === true,
+        rating,
+        reviewText
+      });
+      
+      toast.success('Review submitted successfully!');
+      if (onReviewSubmitted) {
+        onReviewSubmitted();
+      }
+      onClose();
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      setError('Failed to submit review. Please try again.');
+      toast.error('Failed to submit review');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const toggleAllergen = (allergenName) => {
@@ -363,6 +387,7 @@ export default function ReviewModal({ isOpen, onClose, restaurantName }) {
           {/* Submit Button */}
           <button
             type="submit"
+            disabled={isSubmitting}
             style={{
               width: '100%',
               padding: '12px',
@@ -372,10 +397,11 @@ export default function ReviewModal({ isOpen, onClose, restaurantName }) {
               borderRadius: '6px',
               fontSize: '16px',
               fontWeight: '500',
-              cursor: 'pointer'
+              cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              opacity: isSubmitting ? 0.7 : 1
             }}
           >
-            Submit Review
+            {isSubmitting ? 'Submitting...' : 'Submit Review'}
           </button>
         </form>
       </div>

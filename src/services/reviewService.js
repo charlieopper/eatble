@@ -5,7 +5,7 @@
 const STORAGE_KEY = 'eatable_user_reviews';
 
 // Get all reviews for the current user
-export const getUserReviews = () => {
+const getUserReviews = () => {
   try {
     const storedReviews = localStorage.getItem(STORAGE_KEY);
     return storedReviews ? JSON.parse(storedReviews) : [];
@@ -16,7 +16,7 @@ export const getUserReviews = () => {
 };
 
 // Add a new review
-export const addReview = (review) => {
+const addReview = (review) => {
   try {
     const reviews = getUserReviews();
     const newReview = {
@@ -36,7 +36,7 @@ export const addReview = (review) => {
 };
 
 // Delete a review
-export const deleteReview = (reviewId) => {
+const deleteReview = (reviewId) => {
   try {
     const reviews = getUserReviews();
     const updatedReviews = reviews.filter(review => review.id !== reviewId);
@@ -49,7 +49,7 @@ export const deleteReview = (reviewId) => {
 };
 
 // Update a review
-export const updateReview = (reviewId, updatedData) => {
+const updateReview = (reviewId, updatedData) => {
   try {
     const reviews = getUserReviews();
     const updatedReviews = reviews.map(review => 
@@ -63,9 +63,37 @@ export const updateReview = (reviewId, updatedData) => {
   }
 };
 
-export default {
+// Submit review to Firebase (mock implementation)
+const submitReview = async (restaurantId, reviewData) => {
+  try {
+    console.log('Mock submitting review to Firebase:', { restaurantId, reviewData });
+    
+    // Create a mock review ID
+    const reviewId = `mock-review-${Date.now()}`;
+    
+    // Also save to localStorage for persistence
+    addReview({
+      id: reviewId,
+      restaurantId,
+      ...reviewData
+    });
+    
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    return reviewId;
+  } catch (error) {
+    console.error('Error submitting review:', error);
+    throw error;
+  }
+};
+
+export const reviewService = {
   getUserReviews,
   addReview,
   deleteReview,
-  updateReview
-}; 
+  updateReview,
+  submitReview
+};
+
+export default reviewService; 

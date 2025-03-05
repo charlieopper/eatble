@@ -59,3 +59,5 @@ globs:
 *   Avoid runaway implementations by maintaining a structured, controlled approach.
     
 *   When using Claude 3.7, DO NOT enable _YOLO_ mode or _terminal-auto-execution_ (auto/turbo). This ensures you can safely interrupt the process if it starts to misbehave.
+
+*   Please think step by step about whether there exists a less over-engineered and yet simpler, more elegant, and more robust solution to the problem that accords with KISS and DRY principles. Present it to me with your degree of confidence from 1 to 10 and its rationale, but do not modify code yet.
