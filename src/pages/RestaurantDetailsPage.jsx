@@ -8,6 +8,7 @@ import {
 import { useFavorites } from '../context/FavoritesContext';
 import restaurantService from '../services/restaurantService';
 import Footer from '../components/layout/Footer';
+import ReviewModal from '../components/reviews/ReviewModal';
 
 // Placeholder restaurant image URL
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fDB8fHww&w=1000&q=80";
@@ -223,6 +224,7 @@ export default function RestaurantDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [images, setImages] = useState([]);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   useEffect(() => {
     const loadRestaurant = async () => {
@@ -538,7 +540,7 @@ export default function RestaurantDetailsPage() {
             </div>
           </div>
           <button
-            onClick={() => {/* Add review functionality would go here */}}
+            onClick={() => setIsReviewModalOpen(true)}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -1092,6 +1094,12 @@ export default function RestaurantDetailsPage() {
       </div>
 
       <Footer activePage="Search" />
+
+      <ReviewModal
+        isOpen={isReviewModalOpen}
+        onClose={() => setIsReviewModalOpen(false)}
+        restaurantName={restaurant?.name}
+      />
     </div>
   );
 } 

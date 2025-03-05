@@ -73,4 +73,31 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Desktop: Show tooltip on hover */
+@media (hover: hover) {
+  .tooltip-container .tooltip {
+    display: none;
+  }
+  
+  .tooltip-container:hover .tooltip {
+    display: block;
+  }
+}
+
+/* Mobile: Show tooltip on tap, hide when tapping outside */
+@media (hover: none) {
+  .tooltip-container .tooltip {
+    display: none;
+  }
+  
+  .tooltip-container:focus-within .tooltip {
+    display: block;
+  }
+  
+  /* Allow clicking outside to dismiss */
+  .tooltip-container button:focus {
+    outline: none;
+  }
 } 
