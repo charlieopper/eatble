@@ -602,189 +602,6 @@ export default function RestaurantDetailsPage() {
           </button>
         </div>
 
-        {/* eatABLE Review */}
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center',
-            marginBottom: '4px'
-          }}>
-            <span style={{ marginRight: '8px' }}>🍴</span>
-            <span style={{ 
-              fontWeight: '600', 
-              fontSize: '14px', 
-              marginRight: '8px' 
-            }}>
-              eatABLE Rating
-            </span>
-            <div style={{ display: 'flex' }}>
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  size={12}
-                  color={i < Math.floor(restaurant.eatableReview?.rating || 0) ? TEAL_COLOR : "#d1d5db"}
-                  fill={i < Math.floor(restaurant.eatableReview?.rating || 0) ? TEAL_COLOR : "none"}
-                />
-              ))}
-            </div>
-            <span style={{ 
-              fontSize: '12px', 
-              color: '#6b7280', 
-              marginLeft: '8px' 
-            }}>
-              ({restaurant.eatableReview?.reviewCount || 0})
-            </span>
-          </div>
-          <p style={{ 
-            fontSize: '14px', 
-            fontStyle: 'italic', 
-            color: '#4b5563',
-            margin: '0'
-          }}>
-            "{restaurant.eatableReview?.quote || 'No review available'}"
-          </p>
-        </div>
-
-        {/* Google Review */}
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center',
-            marginBottom: '4px'
-          }}>
-            <img 
-              src={googleLogoUrl}
-              alt="Google" 
-              className="google-g-logo" 
-              width="18" 
-              height="18" 
-              style={{ marginRight: '8px' }}
-            />
-            <span style={{ 
-              fontWeight: '600', 
-              fontSize: '14px', 
-              marginRight: '8px' 
-            }}>
-              Google Review
-            </span>
-            <div style={{ display: 'flex' }}>
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  size={12}
-                  color={i < Math.floor(restaurant.googleReview?.rating || 0) ? "#facc15" : "#d1d5db"}
-                  fill={i < Math.floor(restaurant.googleReview?.rating || 0) ? "#facc15" : "none"}
-                />
-              ))}
-            </div>
-            <span style={{ 
-              fontSize: '12px', 
-              color: '#6b7280', 
-              marginLeft: '8px' 
-            }}>
-              ({restaurant.googleReview?.reviewCount || 0})
-            </span>
-          </div>
-          <p style={{ 
-            fontSize: '14px', 
-            fontStyle: 'italic', 
-            color: '#4b5563',
-            margin: '0'
-          }}>
-            "{restaurant.googleReview?.quote || 'No review available'}"
-          </p>
-        </div>
-
-        {/* Restaurant Details */}
-        {/* Allergies Reviewed */}
-        <div style={{ marginBottom: '24px' }}>
-          <h3 style={{ 
-            fontSize: '18px', 
-            fontWeight: '600',
-            marginBottom: '12px'
-          }}>
-            Allergies Reviewed
-          </h3>
-          <div style={{ 
-            display: 'flex', 
-            flexWrap: 'wrap',
-            gap: '8px'
-          }}>
-            {restaurant.allergens?.map(allergen => (
-              <div 
-                key={allergen.name}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  backgroundColor: '#f0fdfa',
-                  border: `1px solid ${TEAL_COLOR}`,
-                  borderRadius: '9999px',
-                  padding: '4px 12px',
-                  fontSize: '14px'
-                }}
-              >
-                <span style={{ marginRight: '4px' }}>{allergen.emoji}</span>
-                <span>{allergen.name}</span>
-                <span style={{ 
-                  marginLeft: '6px',
-                  backgroundColor: TEAL_COLOR,
-                  color: 'white',
-                  borderRadius: '9999px',
-                  padding: '2px 6px',
-                  fontSize: '12px',
-                  fontWeight: '500'
-                }}>
-                  {allergen.count}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        <div style={{ marginBottom: '24px' }}>
-          <div style={{ 
-            display: 'flex', 
-            flexDirection: 'column',
-            gap: '12px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <Clock size={18} style={{ marginRight: '12px', color: '#6b7280' }} />
-              <span>Open until 11PM Fri</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <Phone size={18} style={{ marginRight: '12px', color: '#6b7280' }} />
-              <a 
-                href={`tel:${restaurant.phone}`}
-                style={{ color: '#2563eb', textDecoration: 'none' }}
-              >
-                (415) 552-2622
-              </a>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <MapPin size={18} style={{ marginRight: '12px', color: '#6b7280' }} />
-              <a 
-                href={`https://maps.google.com/?q=${restaurant.address}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: '#2563eb', textDecoration: 'none' }}
-              >
-                123 Main St, San Francisco, CA 94105
-              </a>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <Globe size={18} style={{ marginRight: '12px', color: '#6b7280' }} />
-              <a 
-                href={restaurant.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: '#2563eb', textDecoration: 'none' }}
-              >
-                zunchicafe.com
-              </a>
-            </div>
-          </div>
-        </div>
-
         {/* Accommodations */}
         <div style={{ 
           display: 'flex', 
@@ -900,6 +717,229 @@ export default function RestaurantDetailsPage() {
                 }}></div>
               </div>
             </div>
+          )}
+        </div>
+
+        {/* eatABLE Review */}
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center',
+            marginBottom: '4px'
+          }}>
+            <span style={{ marginRight: '8px' }}>🍴</span>
+            <span style={{ 
+              fontWeight: '600', 
+              fontSize: '14px', 
+              marginRight: '8px' 
+            }}>
+              eatABLE Rating
+            </span>
+            <div style={{ display: 'flex' }}>
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  size={12}
+                  color={i < Math.floor(restaurant.eatableReview?.rating || 0) ? TEAL_COLOR : "#d1d5db"}
+                  fill={i < Math.floor(restaurant.eatableReview?.rating || 0) ? TEAL_COLOR : "none"}
+                />
+              ))}
+            </div>
+            <span style={{ 
+              fontSize: '12px', 
+              color: '#6b7280', 
+              marginLeft: '8px' 
+            }}>
+              ({restaurant.eatableReview?.reviewCount || 0})
+            </span>
+          </div>
+          <p style={{ 
+            fontSize: '14px', 
+            fontStyle: 'italic', 
+            color: '#4b5563',
+            margin: '0'
+          }}>
+            "{restaurant.eatableReview?.quote || 'No review available'}"
+          </p>
+        </div>
+
+        {/* Google Review */}
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center',
+            marginBottom: '4px'
+          }}>
+            <img 
+              src={googleLogoUrl}
+              alt="Google" 
+              className="google-g-logo" 
+              width="18" 
+              height="18" 
+              style={{ marginRight: '8px' }}
+            />
+            <span style={{ 
+              fontWeight: '600', 
+              fontSize: '14px', 
+              marginRight: '8px' 
+            }}>
+              Google Review
+            </span>
+            <div style={{ display: 'flex' }}>
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  size={12}
+                  color={i < Math.floor(restaurant.googleReview?.rating || 0) ? "#facc15" : "#d1d5db"}
+                  fill={i < Math.floor(restaurant.googleReview?.rating || 0) ? "#facc15" : "none"}
+                />
+              ))}
+            </div>
+            <span style={{ 
+              fontSize: '12px', 
+              color: '#6b7280', 
+              marginLeft: '8px' 
+            }}>
+              ({restaurant.googleReview?.reviewCount || 0})
+            </span>
+          </div>
+          <p style={{ 
+            fontSize: '14px', 
+            fontStyle: 'italic', 
+            color: '#4b5563',
+            margin: '0'
+          }}>
+            "{restaurant.googleReview?.quote || 'No review available'}"
+          </p>
+        </div>
+
+        {/* Allergens - with updated heading */}
+        {restaurant.allergens && restaurant.allergens.length > 0 && (
+          <div style={{ 
+            borderTop: '1px solid #e5e7eb',
+            paddingTop: '12px',
+            marginBottom: '16px'
+          }}>
+            <h3 style={{ 
+              fontSize: '16px', 
+              fontWeight: '600',
+              marginBottom: '8px'
+            }}>
+              Allergies Reviewed
+            </h3>
+            <div style={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: '8px'
+            }}>
+              {restaurant.allergens.map((allergen, index) => (
+                <span 
+                  key={index}
+                  style={{ 
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    padding: '4px 8px',
+                    backgroundColor: '#ccfbf1',
+                    border: '1px solid #99f6e4',
+                    borderRadius: '9999px',
+                    fontSize: '12px',
+                    color: TEAL_COLOR,
+                    marginRight: '4px',
+                    marginBottom: '4px',
+                    position: 'relative'
+                  }}
+                >
+                  {allergen.icon && (
+                    <span style={{ marginRight: '4px' }}>
+                      {allergen.icon}
+                    </span>
+                  )}
+                  {typeof allergen === 'string' ? allergen : allergen.name}
+                  
+                  {allergen.rating && (
+                    <span 
+                      style={{
+                        marginLeft: '4px',
+                        backgroundColor: '#0d9488',
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: '20px',
+                        height: '20px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '11px',
+                        fontWeight: 'bold'
+                      }}
+                      title={`Average rating: ${allergen.rating.average} from ${allergen.rating.count} review${allergen.rating.count !== 1 ? 's' : ''}`}
+                    >
+                      {allergen.rating.average}
+                    </span>
+                  )}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Contact Information */}
+        <div style={{ 
+          padding: '12px 0', 
+          borderTop: '1px solid #e5e7eb',
+          marginBottom: '12px'
+        }}>
+          <div style={{ 
+            fontSize: '14px', 
+            color: '#4b5563',
+            marginBottom: '8px'
+          }}>
+            {restaurant.hours || 'Hours not available'}
+          </div>
+          
+          <a 
+            href={`tel:${restaurant.phone}`} 
+            style={{ 
+              color: '#2563eb', 
+              textDecoration: 'none',
+              fontSize: '14px',
+              display: 'block',
+              marginBottom: '8px'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {restaurant.phone || 'Phone not available'}
+          </a>
+          
+          <a 
+            href={mapUrl} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{ 
+              color: '#2563eb', 
+              textDecoration: 'none',
+              fontSize: '14px',
+              display: 'block',
+              marginBottom: '8px'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {restaurant.address || 'Address not available'}
+          </a>
+          
+          {restaurant.website && (
+            <a 
+              href={restaurant.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ 
+                color: '#2563eb', 
+                textDecoration: 'none',
+                fontSize: '14px',
+                display: 'block'
+              }}
+            >
+              {restaurant.website}
+            </a>
           )}
         </div>
 
