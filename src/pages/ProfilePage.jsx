@@ -402,7 +402,8 @@ export default function ProfilePage() {
                       width: '150px',
                       height: '150px',
                       margin: '0 auto',
-                      marginBottom: '16px'
+                      marginBottom: '16px',
+                      paddingTop: '16px'
                     }}>
                       <img
                         src={user?.photoURL || defaultAvatar}
@@ -497,8 +498,7 @@ export default function ProfilePage() {
                   borderRadius: '8px',
                   padding: '2px',
                   maxWidth: '300px',
-                  margin: '0 auto',
-                  marginBottom: '24px'
+                  margin: '0 auto 24px auto'
                 }}>
                   <button 
                     onClick={() => setActiveTab('reviews')}
@@ -540,7 +540,12 @@ export default function ProfilePage() {
 
                 {/* Tab Content */}
                 {activeTab === 'reviews' ? (
-                  <div className="space-y-4">
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '16px'
+                  }}>
                     {mockReviews.map((review) => (
                       <div key={review.id} className="bg-white rounded-lg shadow-sm p-4">
                         <div className="flex justify-between items-start mb-2">
@@ -574,7 +579,12 @@ export default function ProfilePage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '16px'
+                  }}>
                     {favoriteRestaurants.map((restaurant) => (
                       <a href={`/restaurant/${restaurant.id}`} key={restaurant.id}>
                         <div className="bg-white rounded-lg shadow-sm p-4 flex items-center gap-4 hover:bg-gray-50">
