@@ -9,6 +9,8 @@ import toast from 'react-hot-toast';
 import { Bell, ChevronRight, Edit, LogOut, Settings, Star, User } from 'lucide-react';
 import { LoginLogoutButton } from '../components/auth/LoginLogoutButton';
 import { AuthButtons } from '../components/auth/AuthButtons';
+import ReviewCard from '../components/reviews/ReviewCard';
+import { getAllergenEmoji } from '../utils/allergenUtils';
 
 // Mock favorite restaurants
 const favoriteRestaurants = [
@@ -240,22 +242,6 @@ export default function ProfilePage() {
     color: TEAL_COLOR,
     marginRight: '4px'
   };
-
-  function getAllergenEmoji(allergen) {
-    const emojis = {
-      'Peanuts': '🥜',
-      'Tree Nuts': '',
-      'Dairy': '🥛',
-      'Eggs': '🥚',
-      'Wheat': '🌾',
-      'Gluten': '🥖',
-      'Fish': '🐟',
-      'Shellfish': '🦐',
-      'Soy': '🫘',
-      'Sesame': '🌱'
-    };
-    return emojis[allergen] || '';
-  }
 
   const handleImageError = (e) => {
     e.target.src = defaultAvatar;
@@ -552,42 +538,9 @@ export default function ProfilePage() {
 
                 {/* Tab Content */}
                 {activeTab === 'reviews' ? (
-                  <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '16px'
-                  }}>
+                  <div className="flex flex-col gap-4">
                     {mockReviews.map((review) => (
-                      <div key={review.id} className="bg-white rounded-lg shadow-sm p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <a href={`/restaurant/${review.id}`} className="font-semibold hover:text-blue-600">
-                            {review.restaurantName}
-                          </a>
-                          <span className="text-sm text-gray-500">
-                            {new Date(review.date).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <div className="flex mb-2">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-4 h-4 ${i < review.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`}
-                            />
-                          ))}
-                        </div>
-                        <p className="text-gray-700 mb-3">{review.text}</p>
-                        <div className="flex flex-wrap gap-2">
-                          {review.allergens.map((allergen) => (
-                            <span
-                              key={allergen}
-                              className="px-2 py-1 rounded-full text-xs bg-green-50 text-green-700 border border-green-200"
-                            >
-                              {allergen === "Peanuts" ? "🥜" : allergen === "Tree nuts" ? "🌰" : "🥛"} {allergen}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
+                      <ReviewCard key={review.id} review={review} />
                     ))}
                   </div>
                 ) : (
