@@ -244,8 +244,15 @@ export default function ProfilePage() {
   function getAllergenEmoji(allergen) {
     const emojis = {
       'Peanuts': '🥜',
-      'Tree nuts': '🌰',
-      'Shellfish': '🦐'
+      'Tree Nuts': '',
+      'Dairy': '🥛',
+      'Eggs': '🥚',
+      'Wheat': '🌾',
+      'Gluten': '🥖',
+      'Fish': '🐟',
+      'Shellfish': '🦐',
+      'Soy': '🫘',
+      'Sesame': '🌱'
     };
     return emojis[allergen] || '';
   }
@@ -269,6 +276,24 @@ export default function ProfilePage() {
   const handleAllergenChange = (allergens) => {
     setHasUnsavedChanges(true);
   };
+
+  const renderAllergen = (allergen) => (
+    <span
+      key={allergen}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        backgroundColor: '#e0f2f1',
+        padding: '4px 12px',
+        borderRadius: '16px',
+        margin: '4px',
+        fontSize: '14px'
+      }}
+    >
+      <span style={{ marginRight: '8px', fontSize: '16px' }}>{getAllergenEmoji(allergen)}</span>
+      {allergen}
+    </span>
+  );
 
   const mainContent = () => {
     console.log('Rendering mainContent with userData:', userData);
