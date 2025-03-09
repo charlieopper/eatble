@@ -72,38 +72,60 @@ export default function ReviewCard({ review }) {
     padding: '16px',
   };
 
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString();
+  };
+
   return (
-    <div 
-      style={cardStyle}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <div style={cardStyle}>
       <div style={contentStyle}>
-        <div className="flex justify-between items-start mb-2">
-          <div>
-            <div 
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleRestaurantClick();
-              }}
-              className="text-xl font-semibold text-gray-900 hover:text-gray-700 cursor-pointer"
-            >
-              {review.restaurantName}
-            </div>
-            <div className="flex mt-2 mb-3">
-              {renderStars(review.rating)}
-            </div>
-          </div>
-          <span className="text-gray-500 text-sm">
-            {new Date(review.date).toLocaleDateString()}
+        {/* Header with restaurant name and date */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          marginBottom: '8px'
+        }}>
+          <h3 
+            onClick={handleRestaurantClick}
+            style={{
+              fontSize: '18px',
+              fontWeight: '600',
+              margin: '0',
+              cursor: 'pointer',
+              color: isHovered ? '#0d9488' : 'inherit'
+            }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
+            {review.restaurantName}
+          </h3>
+          <span style={{ 
+            fontSize: '14px',
+            color: '#666666'
+          }}>
+            {formatDate(review.date)}
           </span>
         </div>
 
-        <p className="text-gray-700 text-lg mb-4 leading-relaxed">
+        {/* Stars */}
+        <div style={{ 
+          display: 'flex',
+          marginBottom: '12px'
+        }}>
+          {renderStars(review.rating)}
+        </div>
+
+        {/* Review text */}
+        <p style={{ 
+          margin: '0 0 12px 0',
+          lineHeight: '1.5'
+        }}>
           {review.text}
         </p>
 
+        {/* Allergens */}
         <div style={{ 
           display: 'flex',
           flexDirection: 'row',
