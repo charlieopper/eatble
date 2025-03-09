@@ -11,24 +11,7 @@ import { LoginLogoutButton } from '../components/auth/LoginLogoutButton';
 import { AuthButtons } from '../components/auth/AuthButtons';
 import ReviewCard from '../components/reviews/ReviewCard';
 import { getAllergenEmoji } from '../utils/allergenUtils';
-
-// Mock favorite restaurants
-const favoriteRestaurants = [
-  {
-    id: "zunchi-cafe",
-    name: "Zunchi Cafe",
-    image: "/placeholder.svg?height=100&width=100",
-    cuisines: ["French", "Italian"],
-    rating: 4.8,
-  },
-  {
-    id: "namastey-palace",
-    name: "Namastey Palace",
-    image: "/placeholder.svg?height=100&width=100",
-    cuisines: ["Indian", "Vegetarian"],
-    rating: 4.5,
-  },
-];
+import RestaurantCard from '../components/restaurants/RestaurantCard';
 
 // Mock reviews data
 const mockReviews = [
@@ -157,6 +140,29 @@ export default function ProfilePage() {
     }
   }, [user]);
 
+  // Debug logs for user data fetching
+  useEffect(() => {
+    console.log('ProfilePage - Current userData:', userData);
+    console.log('ProfilePage - Favorite restaurants:', userData?.favoriteRestaurants);
+    console.log('ProfilePage - User document structure:', {
+      uid: userData?.uid,
+      email: userData?.email,
+      favorites: userData?.favoriteRestaurants
+    });
+  }, [userData]);
+
+  // Debug log when tab changes
+  useEffect(() => {
+    console.log('Active tab changed to:', activeTab);
+    if (activeTab === 'favorites') {
+      console.log('Favorites data available:', {
+        userData: !!userData,
+        favoriteRestaurants: userData?.favoriteRestaurants,
+        count: userData?.favoriteRestaurants?.length || 0
+      });
+    }
+  }, [activeTab, userData]);
+
   const handleSaveAllergens = async () => {
     console.log('Starting save process...');
     setIsUpdating(true);
@@ -282,6 +288,10 @@ export default function ProfilePage() {
       {allergen}
     </span>
   );
+
+  // Calculate counts from actual data
+  const reviewCount = mockReviews.length;
+  const favoriteCount = userData?.favoriteRestaurants?.length || 0;
 
   const mainContent = () => {
     console.log('Rendering mainContent with userData:', userData);
@@ -478,11 +488,11 @@ export default function ProfilePage() {
                         marginBottom: '24px'
                       }}>
                         <div>
-                          <span style={{ fontWeight: 'bold' }}>{userData?.reviewCount || 0}</span>
+                          <span style={{ fontWeight: 'bold' }}>{reviewCount}</span>
                           <span style={{ color: '#666', marginLeft: '4px' }}>Reviews</span>
                         </div>
                         <div>
-                          <span style={{ fontWeight: 'bold' }}>{userData?.favoriteRestaurants?.length || 0}</span>
+                          <span style={{ fontWeight: 'bold' }}>{favoriteCount}</span>
                           <span style={{ color: '#666', marginLeft: '4px' }}>Favorites</span>
                         </div>
                       </div>
@@ -546,47 +556,32 @@ export default function ProfilePage() {
                     ))}
                   </div>
                 ) : (
-                  <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '16px'
-                  }}>
-                    {favoriteRestaurants.map((restaurant) => (
-                      <a href={`/restaurant/${restaurant.id}`} key={restaurant.id}>
-                        <div className="bg-white rounded-lg shadow-sm p-4 flex items-center gap-4 hover:bg-gray-50">
-                          <div className="relative h-16 w-16 rounded-md overflow-hidden bg-gray-100">
-                            <img
-                              src={restaurant.image}
-                              alt={restaurant.name}
-                              className="h-full w-full object-cover"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-semibold">{restaurant.name}</h3>
-                            <div className="flex gap-2 mb-1">
-                              {restaurant.cuisines.map((cuisine) => (
-                                <span key={cuisine} className="text-xs bg-gray-100 px-2 py-0.5 rounded">
-                                  {cuisine}
-                                </span>
-                              ))}
-                            </div>
-                            <div className="flex items-center">
-                              {[...Array(5)].map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`w-3 h-3 ${
-                                    i < Math.floor(restaurant.rating) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"
-                                  }`}
-                                />
-                              ))}
-                              <span className="ml-1 text-sm">{restaurant.rating}</span>
-                            </div>
-                          </div>
-                          <ChevronRight className="h-5 w-5 text-gray-400" />
-                        </div>
-                      </a>
-                    ))}
+                  <div className="favorites-container" style={{ padding: '16px' }}>
+                    {console.log('Rendering favorites section:', {
+                      hasFavorites: !!userData?.favoriteRestaurants,
+                      favoritesCount: userData?.favoriteRestaurants?.length,
+                      favorites: userData?.favoriteRestaurants
+                    })}
+                    
+                    {userData?.favoriteRestaurants?.map((restaurant) => {
+                      console.log('Processing restaurant:', restaurant);
+                      return (
+                        <RestaurantCard 
+                          key={restaurant.id}
+                          restaurant={restaurant}
+                        />
+                      );
+                    })}
+                    
+                    {(!userData?.favoriteRestaurants || userData.favoriteRestaurants.length === 0) && (
+                      <p style={{ 
+                        textAlign: 'center', 
+                        color: '#666',
+                        marginTop: '20px' 
+                      }}>
+                        No favorite restaurants yet
+                      </p>
+                    )}
                   </div>
                 )}
 

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getAllergenEmoji } from '../../utils/allergenUtils';
 
@@ -22,15 +21,15 @@ export default function ReviewCard({ review }) {
 
   const renderStars = (rating) => {
     return [...Array(5)].map((_, index) => (
-      <Star
+      <span
         key={index}
-        size={24}
-        className={`w-6 h-6 ${
-          index < rating 
-            ? "text-yellow-400 fill-yellow-400" 
-            : "text-gray-200"
-        }`}
-      />
+        style={{
+          color: index < rating ? '#fbbf24' : '#d1d5db',
+          fontSize: '20px'
+        }}
+      >
+        ★
+      </span>
     ));
   };
 
