@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { AllergenSelector } from '../components/allergens/AllergenSelector';
 import Footer from '../components/layout/Footer';
 import { Link } from 'react-router-dom';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import toast from 'react-hot-toast';
 import { Bell, ChevronRight, Edit, LogOut, Settings, Star, User } from 'lucide-react';
@@ -128,7 +128,7 @@ export default function ProfilePage() {
           
           // Create the user document
           try {
-            await updateDoc(docRef, defaultUserData);
+            await setDoc(docRef, defaultUserData);
             console.log('Created new user document');
           } catch (err) {
             console.error('Failed to create user document:', err);
@@ -147,57 +147,44 @@ export default function ProfilePage() {
     }
   }, [user, authLoading]);
 
-  // Initialize allergens from user data
+  // Initialize selectedAllergens from user.allergens or empty array
   useEffect(() => {
-    if (user?.allergens) {
-      console.log('Initializing allergens from user:', user.allergens);
-      setSelectedAllergens(user.allergens);
-      setDisplayedAllergens(user.allergens);
+    if (user) {
+      setSelectedAllergens(user.allergens || []);
+      setDisplayedAllergens(user.allergens || []);
     }
   }, [user]);
 
   const handleSaveAllergens = async () => {
     console.log('Starting save process...');
-    console.log('Current user:', user);
-    console.log('Previous allergens in database:', user.allergens);
-    console.log('New allergens to save:', selectedAllergens);
-
-    if (!user?.uid) {
-      console.error('No user ID found');
-      toast.error('Unable to save: User not found');
-      return;
-    }
-
     setIsUpdating(true);
+    
     try {
       const userRef = doc(db, 'users', user.uid);
       
-      // Log the current state in database before update
-      const beforeDoc = await getDoc(userRef);
-      console.log('Database state BEFORE update:', beforeDoc.data().allergens);
+      // Check if user document exists
+      const userDoc = await getDoc(userRef);
       
-      // Update Firestore
-      await updateDoc(userRef, {
-        allergens: selectedAllergens
-      });
-      console.log('Firestore update completed');
-      
-      // Verify the update in database
-      const afterDoc = await getDoc(userRef);
-      console.log('Database state AFTER update:', afterDoc.data().allergens);
-      
-      // Update local state
-      setDisplayedAllergens(selectedAllergens);
-      
-      if (JSON.stringify(afterDoc.data().allergens) === JSON.stringify(selectedAllergens)) {
-        console.log('✅ Verification successful: Database allergens match selected allergens');
+      if (!userDoc.exists()) {
+        // Create new user document if it doesn't exist
+        await setDoc(userRef, {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName || '',
+          photoURL: user.photoURL || '',
+          allergens: selectedAllergens || []
+        });
       } else {
-        console.warn('⚠️ Verification failed: Database allergens do not match selected allergens');
+        // Update existing document
+        await updateDoc(userRef, {
+          allergens: selectedAllergens || []
+        });
       }
       
-      toast.success('Your allergens have been updated successfully');
+      setDisplayedAllergens(selectedAllergens);
       setShowAllergenModal(false);
-
+      toast.success('Allergens updated successfully');
+      
       // Force reload the page to refresh user data
       window.location.reload();
     } catch (error) {
