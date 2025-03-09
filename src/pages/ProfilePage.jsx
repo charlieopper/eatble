@@ -399,44 +399,22 @@ export default function ProfilePage() {
                   <div className="flex flex-col items-center">
                     {console.log('Profile photo section rendering')}
                     <div style={{
-                      width: '100%',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      padding: '20px'
+                      width: '150px',
+                      height: '150px',
+                      margin: '0 auto',
+                      marginBottom: '16px'
                     }}>
-                      <div style={{
-                        width: '150px',
-                        height: '150px',
-                        position: 'relative'
-                      }}>
-                        <img 
-                          src={user?.photoURL || defaultAvatar}
-                          alt={user?.displayName || 'User'}
-                          onError={handleImageError}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            borderRadius: '50%',
-                            objectFit: 'cover',
-                            backgroundColor: '#f3f4f6'
-                          }}
-                        />
-                        <button 
-                          style={{
-                            position: 'absolute',
-                            bottom: '5px',
-                            right: '5px',
-                            backgroundColor: 'white',
-                            borderRadius: '50%',
-                            padding: '8px',
-                            border: '1px solid #ddd',
-                            cursor: 'pointer'
-                          }}
-                          onClick={() => setShowAllergenModal(true)}
-                        >
-                          <Edit size={16} />
-                        </button>
-                      </div>
+                      <img
+                        src={user?.photoURL || defaultAvatar}
+                        alt="Profile"
+                        onError={handleImageError}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          borderRadius: '50%',
+                          objectFit: 'cover'
+                        }}
+                      />
                     </div>
                     {console.log('Profile info section rendering')}
                     <div style={{
@@ -447,11 +425,15 @@ export default function ProfilePage() {
                       padding: '0 20px'
                     }}>
                       <h1 style={{
+                        textAlign: 'center',
+                        margin: '0 0 24px 0',
                         fontSize: '24px',
-                        fontWeight: 'bold',
-                        marginBottom: '16px'
+                        fontWeight: '600',
+                        wordBreak: 'break-word',
+                        position: 'relative',
+                        left: '-19px'
                       }}>
-                        {userData?.displayName}
+                        {userData?.displayName || 'User'}
                       </h1>
                       {console.log('Allergens section rendering')}
                       <div style={{
@@ -507,32 +489,50 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* Tabs */}
+                {/* Updated Reviews/Favorites Toggle */}
                 <div style={{
                   display: 'flex',
-                  gap: '16px',
-                  borderBottom: '1px solid #ddd',
-                  width: '100%',
-                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: '#f3f4f6',
+                  borderRadius: '8px',
+                  padding: '2px',
+                  maxWidth: '300px',
+                  margin: '0 auto',
                   marginBottom: '24px'
                 }}>
-                  <button
-                    className={`flex-1 py-2 px-4 ${
-                      activeTab === 'reviews'
-                        ? 'bg-white font-medium'
-                        : 'bg-gray-100 text-gray-500'
-                    }`}
+                  <button 
                     onClick={() => setActiveTab('reviews')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '6px 12px',
+                      backgroundColor: activeTab === 'reviews' ? '#1e40af' : 'transparent',
+                      color: activeTab === 'reviews' ? 'white' : '#4b5563',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '0.875rem',
+                      cursor: 'pointer',
+                      flex: 1
+                    }}
                   >
                     Reviews
                   </button>
-                  <button
-                    className={`flex-1 py-2 px-4 ${
-                      activeTab === 'favorites'
-                        ? 'bg-white font-medium'
-                        : 'bg-gray-100 text-gray-500'
-                    }`}
+                  <button 
                     onClick={() => setActiveTab('favorites')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '6px 12px',
+                      backgroundColor: activeTab === 'favorites' ? '#1e40af' : 'transparent',
+                      color: activeTab === 'favorites' ? 'white' : '#4b5563',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '0.875rem',
+                      cursor: 'pointer',
+                      flex: 1
+                    }}
                   >
                     Favorites
                   </button>
@@ -744,8 +744,8 @@ export default function ProfilePage() {
   };
 
   return (
-    <>
+    <div style={{ paddingTop: '32px' }}>
       {mainContent()}
-    </>
+    </div>
   );
 } 
