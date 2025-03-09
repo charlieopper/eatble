@@ -376,8 +376,8 @@ export default function ProfilePage() {
 
     return (
       <>
-        <div className="min-h-screen" style={{ paddingBottom: '80px' }}>
-          {/* Header - Responsive */}
+        <div>
+          {/* Header */}
           <div style={{ 
             padding: '12px 16px',
             borderBottom: '1px solid #eaeaea',
@@ -766,7 +766,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div style={{ paddingTop: '32px' }}>
+    <div>
       {mainContent()}
     </div>
   );
