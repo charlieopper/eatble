@@ -33,7 +33,20 @@ const googleLogoUrl = "https://www.gstatic.com/images/branding/product/1x/google
 const ReviewItem = ({ review }) => {
   const [isHelpful, setIsHelpful] = useState(false);
   const [helpfulCount, setHelpfulCount] = useState(review.helpfulCount || 0);
+  const [isReported, setIsReported] = useState(false);
+  const [showToast, setShowToast] = useState(false);
   
+  const handleReport = () => {
+    if (!isReported) {
+      setIsReported(true);
+      setShowToast(true);
+      // Hide toast after 3 seconds
+      setTimeout(() => {
+        setShowToast(false);
+      }, 3000);
+    }
+  };
+
   return (
     <div 
       key={review.id}
@@ -41,9 +54,33 @@ const ReviewItem = ({ review }) => {
         padding: '16px',
         borderBottom: '1px solid #e5e7eb',
         marginBottom: '16px',
-        backgroundColor: review.isUserReview ? '#f9fafb' : 'transparent'
+        backgroundColor: review.isUserReview ? '#f9fafb' : 'transparent',
+        position: 'relative' // Added for toast positioning
       }}
     >
+      {/* Toast Message */}
+      {showToast && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '100%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: '#10b981',
+            color: 'white',
+            padding: '8px 16px',
+            borderRadius: '4px',
+            fontSize: '14px',
+            whiteSpace: 'nowrap',
+            zIndex: 50,
+            boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+            animation: 'fadeIn 0.3s ease'
+          }}
+        >
+          Comment has been reported for review by eatABLE team
+        </div>
+      )}
+
       {/* User info and rating */}
       <div style={{
         display: 'flex',
@@ -170,7 +207,6 @@ const ReviewItem = ({ review }) => {
             if (!isHelpful) {
               setHelpfulCount(prev => prev + 1);
               setIsHelpful(true);
-              // In a real app, this would call an API to mark the review as helpful
             }
           }}
         >
@@ -187,17 +223,22 @@ const ReviewItem = ({ review }) => {
           Helpful ({helpfulCount})
         </button>
         <button
+          onClick={handleReport}
+          disabled={isReported}
           style={{
             backgroundColor: 'transparent',
             border: 'none',
             fontSize: '12px',
-            color: '#6b7280',
-            cursor: 'pointer',
+            color: isReported ? '#9ca3af' : '#6b7280',
+            cursor: isReported ? 'default' : 'pointer',
             padding: '4px 8px',
-            borderRadius: '4px'
+            borderRadius: '4px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px'
           }}
         >
-          Report this review
+          {isReported ? 'Reported' : 'Report this review'}
         </button>
       </div>
     </div>
@@ -235,6 +276,16 @@ const EatableReviewsList = ({ reviews }) => {
     </>
   );
 };
+
+// Add keyframe animation for toast
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translate(-50%, 10px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+  }
+`;
+document.head.appendChild(styleSheet);
 
 export default function RestaurantDetailsPage() {
   const { id } = useParams();

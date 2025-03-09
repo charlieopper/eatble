@@ -1,25 +1,27 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import DarkModeToggle from '../ui/DarkModeToggle';
 
 const Header = () => {
   return (
-    <header className="bg-white dark:bg-gray-900 border-b shadow-sm sticky top-0 z-10">
-      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-        <Link to="/" className="text-xl font-bold">
-          eatABLE
+    <header className="sticky top-0 z-10 bg-white border-b shadow-sm">
+      <div className="container mx-auto flex items-center justify-between h-16 px-4">
+        <Link to="/" className="flex items-center">
+          <span className="text-2xl font-bold">
+            <span className="text-[#663399]">eat</span>
+            <span className="text-[#FF6B6B]">ABLE</span>
+          </span>
+          <span className="text-gray-400 ml-2">🍴</span>
         </Link>
-        <div className="flex items-center gap-2">
-          <DarkModeToggle />
-          <Link 
-            to="/login" 
-            className="px-4 py-2 rounded border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+        <div className="flex items-center gap-4">
+          <Link
+            to="/login"
+            className="px-4 py-2 text-gray-700 hover:text-gray-900"
           >
             Login
           </Link>
-          <Link 
-            to="/register" 
-            className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
+          <Link
+            to="/register"
+            className="px-4 py-2 bg-[#663399] text-white rounded-lg hover:bg-[#562b85] transition-colors"
           >
             Register
           </Link>

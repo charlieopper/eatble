@@ -6,15 +6,16 @@ import {
   loginWithEmailPassword,
   loginWithGoogle,
   loginWithFacebook,
-  createUserDocument
+  signOut
 } from '../services/authService';
-import { auth, db } from './firebaseConfig';
-import { facebookProvider } from './firebaseImport';
+import { auth, db } from '../firebase/config';
 import { onAuthStateChanged, signInWithPopup } from 'firebase/auth';
 import toast, { Toaster } from 'react-hot-toast';
 import { doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import Footer from '../components/layout/Footer';
-import { AllergenSelector } from '../components/allergens/AllergenSelector.jsx';
+import { AllergenSelector } from '../components/allergens/AllergenSelector';
+import { useAuth } from '../context/AuthContext';
+import { AuthButtons } from '../components/auth/AuthButtons';
 
 // Add this utility function at the top of your component
 const safeLocalStorage = {
@@ -69,8 +70,33 @@ const logError = (context, error) => {
   return error.message || 'An unknown error occurred';
 };
 
+// Add this function before the HomePage component
+const createUserDocument = async (user, additionalData = {}) => {
+  if (!user) return;
+
+  const userRef = doc(db, 'users', user.uid);
+  
+  try {
+    await setDoc(userRef, {
+      email: user.email,
+      displayName: user.displayName || additionalData.username,
+      allergens: additionalData.allergens || [],
+      createdAt: new Date(),
+      reviewCount: 0,
+      favoriteRestaurants: [],
+      ...additionalData
+    }, { merge: true });
+    
+    return userRef;
+  } catch (error) {
+    console.error('Error creating user document:', error);
+    throw error;
+  }
+};
+
 export default function HomePage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedDistance, setSelectedDistance] = useState('Select Distance');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedAllergens, setSelectedAllergens] = useState([]);
@@ -94,17 +120,8 @@ export default function HomePage() {
   const [formError, setFormError] = useState('');
   const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [user, setUser] = useState(null);
+  const [error, setError] = useState('');
   
-  // Check if user is logged in
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    
-    return () => unsubscribe();
-  }, []);
-
   useEffect(() => {
     // Add a style tag to ensure select options are properly sized on mobile
     const style = document.createElement('style');
@@ -150,8 +167,8 @@ export default function HomePage() {
   // Function to handle registration
   const handleRegister = async (e) => {
     e.preventDefault();
+    setError('');
     setIsLoading(true);
-    setFormError('');
     
     try {
       // Validate form
@@ -163,30 +180,19 @@ export default function HomePage() {
         throw new Error('Username must be between 3 and 20 characters');
       }
       
-      // Register user
+      // Register user with selected allergens
       const user = await registerWithEmailPassword(email, password, username);
-      
-      // Create user document with allergens
-      await createUserDocument(user, { 
-        username, 
-        allergens: selectedAllergens 
-      });
+      await createUserDocument(user, { allergens: selectedAllergens });
       
       // Show success message
-      toast.success('Registration successful!');
+      toast.success('Profile created successfully!');
       
       // Close modal
       setShowRegisterModal(false);
       
-      // Clear form
-      setEmail('');
-      setPassword('');
-      setUsername('');
-      setSelectedAllergens([]);
-      
     } catch (error) {
-      console.error('Registration error:', error);
-      setFormError(error.message);
+      console.error('Profile creation error:', error);
+      setError(error.message);
       toast.error(error.message);
     } finally {
       setIsLoading(false);
@@ -196,31 +202,14 @@ export default function HomePage() {
   // Function to handle login
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError('');
     setIsLoading(true);
-    setLoginError('');
     
     try {
-      // Validate form
-      if (!loginEmail || !loginPassword) {
-        throw new Error('Email and password are required');
-      }
-      
-      // Login user
-      await loginWithEmailPassword(loginEmail, loginPassword);
-      
-      // Show success message
+      await loginWithEmailPassword(email, password);
       toast.success('Login successful!');
-      
-      // Close modal
-      setShowLoginModal(false);
-      
-      // Clear form
-      setLoginEmail('');
-      setLoginPassword('');
-      
     } catch (error) {
-      console.error('Login error:', error);
-      setLoginError(error.message);
+      setError(error.message);
       toast.error(error.message);
     } finally {
       setIsLoading(false);
@@ -229,51 +218,30 @@ export default function HomePage() {
   
   // Update social login function
   const handleSocialLogin = async (provider) => {
+    console.log('🚀 handleSocialLogin started with provider:', provider);
+    setError('');
     setIsLoading(true);
+    
     try {
-      console.log(`Starting ${provider} login`);
-      
       if (provider === 'Google') {
+        console.log('📱 Attempting Google login...');
         try {
           const user = await loginWithGoogle();
-          console.log('Google login successful:', user);
+          console.log('✅ Google login successful:', user);
           toast.success('Google login successful!');
-          
-          // Close modals
-          setShowLoginModal(false);
-          setShowRegisterModal(false);
-          setShowProfileModal(false);
         } catch (googleError) {
-          console.error('Google auth error:', googleError);
-          
-          // Check if it's the "operation not allowed" error
-          if (googleError.message.includes('not enabled') || 
-              googleError.message.includes('operation-not-allowed')) {
-            toast.error('Google authentication is not enabled. Please use email registration or contact the administrator.');
-          } else if (googleError.message.includes('Missing or insufficient permissions')) {
-            // This is a Firestore permissions error, but authentication succeeded
-            toast.success('Google login successful, but profile creation failed. Some features may be limited.');
-            
-            // Close modals anyway since auth succeeded
-            setShowLoginModal(false);
-            setShowRegisterModal(false);
-            setShowProfileModal(false);
-          } else {
-            toast.error(googleError.message);
-          }
+          console.error('❌ Google auth error:', googleError);
+          handleGoogleError(googleError);
+          return;
         }
       } else if (provider === 'Facebook') {
+        console.log('📘 Attempting Facebook login...');
         try {
-          const user = await loginWithFacebook();
-          console.log('Facebook login successful:', user);
-          toast.success('Facebook login successful!');
+          const result = await debugDirectFacebookLogin();
+          console.log('✅ Facebook login result:', result);
         } catch (fbError) {
-          console.error('Facebook auth error:', fbError);
-          
-          // Show the specific error message from the authService
-          toast.error(fbError.message);
-          
-          setIsLoading(false);
+          console.error('❌ Facebook auth error:', fbError);
+          toast.error(`Facebook login failed: ${fbError.message}`);
           return;
         }
       }
@@ -284,26 +252,11 @@ export default function HomePage() {
       setShowProfileModal(false);
       
     } catch (error) {
-      console.error(`${provider} login error:`, error);
-      
-      // Special handling for Firestore permission errors
-      if (error.message.includes('Missing or insufficient permissions')) {
-        toast.error('Login successful, but profile creation failed. Some features may be limited.');
-        
-        // Close modals anyway since auth succeeded
-        setShowLoginModal(false);
-        setShowRegisterModal(false);
-        setShowProfileModal(false);
-      } else {
-        toast.error(error.message);
-        if (showLoginModal) {
-          setLoginError(error.message);
-        } else {
-          setFormError(error.message);
-        }
-      }
+      console.error('❌ Social login general error:', error);
+      toast.error(error.message);
     } finally {
       setIsLoading(false);
+      console.log('🏁 handleSocialLogin completed');
     }
   };
 
@@ -409,57 +362,15 @@ export default function HomePage() {
 
   // Update the handleFacebookLogin function
   const handleFacebookLogin = async () => {
+    setError('');
+    setIsLoading(true);
+    
     try {
-      setIsLoading(true);
-      console.log('Starting Facebook login process');
-      
-      // Use the Facebook provider directly
-      const provider = facebookProvider;
-      console.log('Facebook provider:', provider);
-      
-      // Add scopes for additional permissions if needed
-      try {
-        provider.addScope('email');
-        provider.addScope('public_profile');
-        console.log('Added scopes to Facebook provider');
-      } catch (scopeError) {
-        console.error('Error adding scopes:', scopeError);
-        // Continue even if adding scopes fails
-      }
-      
-      // Sign in with popup
-      console.log('Attempting signInWithPopup');
-      const result = await signInWithPopup(auth, provider);
-      console.log('Facebook auth result:', result);
-      console.log('Facebook user:', result.user);
-      
-      // Show success message
-      toast.success('Facebook login successful!');
-      
-      // Close modals
-      setShowLoginModal(false);
-      setShowRegisterModal(false);
-      setShowProfileModal(false);
-      
+      await loginWithFacebook();
+      toast.success('Login successful!');
     } catch (error) {
-      console.error('Facebook login error:', error);
-      console.error('Error code:', error.code);
-      console.error('Error message:', error.message);
-      
-      // Handle specific errors
-      if (error.code === 'auth/account-exists-with-different-credential') {
-        toast.error('An account already exists with the same email. Try signing in with a different method.');
-      } else if (error.code === 'auth/popup-closed-by-user') {
-        toast.error('Login canceled. Please try again.');
-      } else if (error.code === 'auth/popup-blocked') {
-        toast.error('Pop-up was blocked by your browser. Please allow pop-ups for this site.');
-      } else if (error.code === 'auth/operation-not-allowed') {
-        toast.error('Facebook authentication is not enabled in Firebase. Please contact the administrator.');
-      } else if (error.code === 'auth/unauthorized-domain') {
-        toast.error('This domain is not authorized for OAuth operations. Contact the administrator.');
-      } else {
-        toast.error(`Authentication error: ${error.message}`);
-      }
+      setError(error.message);
+      toast.error(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -478,41 +389,45 @@ export default function HomePage() {
 
   // Add this function for direct debugging
   const debugDirectFacebookLogin = async () => {
-    console.log('Starting direct Facebook login debug');
+    console.log('🔍 Starting direct Facebook login debug');
     try {
-      setIsLoading(true);
-      
-      // Import directly to ensure we have the right provider
+      console.log('📦 Importing FacebookAuthProvider...');
       const { FacebookAuthProvider } = await import('firebase/auth');
-      const directProvider = new FacebookAuthProvider();
-      console.log('Created new Facebook provider:', directProvider);
       
-      // Add scopes
+      console.log('🔨 Creating new Facebook provider...');
+      const directProvider = new FacebookAuthProvider();
+      console.log('✅ Created Facebook provider:', directProvider);
+      
+      console.log('🔑 Adding scopes...');
       directProvider.addScope('email');
       directProvider.addScope('public_profile');
       
-      console.log('Attempting direct Facebook login');
+      console.log('🚀 Initiating Facebook popup...');
       const result = await signInWithPopup(auth, directProvider);
-      console.log('Direct Facebook login successful:', result);
+      console.log('✅ Facebook login successful! Result:', result);
       
       toast.success('Facebook login successful!');
-      
-      // Close modals
-      setShowLoginModal(false);
-      setShowRegisterModal(false);
-      setShowProfileModal(false);
+      return result;
       
     } catch (error) {
-      console.error('Direct Facebook login error:', error);
-      console.error('Error details:', {
+      console.error('❌ Direct Facebook login error:', {
         code: error.code,
         message: error.message,
-        stack: error.stack
+        stack: error.stack,
+        fullError: error
       });
       
-      toast.error(`Facebook login error: ${error.message}`);
-    } finally {
-      setIsLoading(false);
+      // More specific error handling
+      if (error.code === 'auth/popup-closed-by-user') {
+        toast.error('Login cancelled. Please try again.');
+      } else if (error.code === 'auth/popup-blocked') {
+        toast.error('Popup was blocked. Please allow popups and try again.');
+      } else if (error.code === 'auth/unauthorized-domain') {
+        toast.error('This domain is not authorized for Facebook login. Please contact support.');
+      } else {
+        toast.error(`Facebook login error: ${error.message}`);
+      }
+      throw error;
     }
   };
 
@@ -556,6 +471,16 @@ export default function HomePage() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success('Logged out successfully');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Error logging out');
+    }
+  };
+
   return (
     <>
       <Toaster position="top-center" />
@@ -577,38 +502,10 @@ export default function HomePage() {
                 <span style={{ marginLeft: '4px' }}>🍴</span>
               </span>
             </Link>
-            <div>
-              <button 
-                onClick={() => setShowLoginModal(true)}
-                style={{ 
-                  marginRight: '15px', 
-                  background: 'none',
-                  border: 'none',
-                  color: 'black',
-                  fontSize: 'clamp(12px, 3vw, 14px)',
-                  cursor: 'pointer'
-                }}
-              >
-                Login
-              </button>
-              <button 
-                onClick={() => {
-                  console.log('Register button clicked');
-                  setShowRegisterModal(true);
-                }}
-                style={{ 
-                  backgroundColor: '#1e40af',
-                  color: 'white', 
-                  padding: '8px 16px', 
-                  borderRadius: '4px', 
-                  border: 'none',
-                  fontSize: 'clamp(12px, 3vw, 14px)',
-                  cursor: 'pointer'
-                }}
-              >
-                Register
-              </button>
-            </div>
+            <AuthButtons 
+              setShowLoginModal={setShowLoginModal} 
+              setShowRegisterModal={setShowRegisterModal} 
+            />
           </div>
         </div>
 
@@ -782,6 +679,7 @@ export default function HomePage() {
                 borderRadius: '6px',
                 fontWeight: '500',
                 border: 'none',
+                marginTop: '24px',
                 marginBottom: '16px',
                 fontSize: '16px',
                 cursor: 'pointer'
@@ -873,8 +771,8 @@ export default function HomePage() {
                     <input 
                       type="email" 
                       placeholder="Enter your email" 
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       style={{
                         width: '100%',
                         padding: '12px',
@@ -917,8 +815,8 @@ export default function HomePage() {
                     <input 
                       type={showPassword ? "text" : "password"} 
                       placeholder="Enter your password" 
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       style={{
                         width: '100%',
                         padding: '12px',

@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Footer from '../components/layout/Footer';
+import { AuthButtons } from '../components/auth/AuthButtons';
 
 export default function ReviewsPage() {
   // In a real app, this would come from a ReviewsContext or API call
   const [reviews, setReviews] = React.useState([]);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [showLoginModal, setShowLoginModal] = React.useState(false);
+  const [showRegisterModal, setShowRegisterModal] = React.useState(false);
 
   return (
     <div className="min-h-screen" style={{ paddingBottom: '80px' }}>
@@ -26,32 +29,11 @@ export default function ReviewsPage() {
               <span style={{ marginLeft: '4px' }}>🍴</span>
             </span>
           </Link>
-          <div>
-            <button 
-              style={{ 
-                marginRight: '15px', 
-                background: 'none',
-                border: 'none',
-                color: 'black',
-                fontSize: 'clamp(12px, 3vw, 14px)',
-                cursor: 'pointer'
-              }}
-            >
-              Login
-            </button>
-            <button 
-              style={{ 
-                backgroundColor: '#1e40af',
-                color: 'white', 
-                padding: '8px 16px', 
-                borderRadius: '4px', 
-                border: 'none',
-                fontSize: 'clamp(12px, 3vw, 14px)',
-                cursor: 'pointer'
-              }}
-            >
-              Register
-            </button>
+          <div className="flex items-center gap-4">
+            <AuthButtons 
+              setShowLoginModal={setShowLoginModal} 
+              setShowRegisterModal={setShowRegisterModal} 
+            />
           </div>
         </div>
       </div>

@@ -2,12 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { FavoritesProvider } from './context/FavoritesContext';
+import { AuthProvider } from './context/AuthContext';
 import HomePage from './pages/HomePage';
 import SearchPage from './pages/SearchPage';
 import FavoritesPage from './pages/FavoritesPage';
 import ErrorBoundary from './components/ErrorBoundary';
 import RestaurantDetailsPage from './pages/RestaurantDetailsPage';
 import ReviewsPage from './pages/ReviewsPage';
+import AuthTest from './components/auth/AuthTest';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
   const [googleMapsLoaded, setGoogleMapsLoaded] = useState(false);
@@ -38,7 +41,6 @@ function App() {
     document.head.appendChild(script);
     
     return () => {
-      // Clean up script if component unmounts before loading
       if (document.head.contains(script)) {
         document.head.removeChild(script);
       }
@@ -46,19 +48,23 @@ function App() {
   }, []);
   
   return (
-    <FavoritesProvider>
-      <Toaster position="top-center" />
-      <ErrorBoundary>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/restaurants" element={<SearchPage />} />
-          <Route path="/restaurants/search" element={<SearchPage />} />
-          <Route path="/favorites" element={<FavoritesPage />} />
-          <Route path="/restaurant/:id" element={<RestaurantDetailsPage />} />
-          <Route path="/reviews" element={<ReviewsPage />} />
-        </Routes>
-      </ErrorBoundary>
-    </FavoritesProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <FavoritesProvider>
+          <Toaster position="top-center" />
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/restaurants" element={<SearchPage />} />
+            <Route path="/restaurants/search" element={<SearchPage />} />
+            <Route path="/favorites" element={<FavoritesPage />} />
+            <Route path="/restaurant/:id" element={<RestaurantDetailsPage />} />
+            <Route path="/reviews" element={<ReviewsPage />} />
+            <Route path="/auth-test" element={<AuthTest />} />
+            <Route path="/profile" element={<ProfilePage />} />
+          </Routes>
+        </FavoritesProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 
