@@ -38,7 +38,7 @@ const mockReviews = [
     date: "2024-02-20",
     rating: 5,
     text: "Amazing experience! The chef personally came to discuss our allergies.",
-    allergens: ["Peanuts", "Tree nuts"],
+    allergens: ["Peanuts", "Tree Nuts"],
   },
   {
     id: "2",
@@ -276,7 +276,9 @@ export default function ProfilePage() {
         fontSize: '14px'
       }}
     >
-      <span style={{ marginRight: '8px', fontSize: '16px' }}>{getAllergenEmoji(allergen)}</span>
+      <span style={{ marginRight: '8px', fontSize: '16px' }}>
+        {getAllergenEmoji(allergen)}
+      </span>
       {allergen}
     </span>
   );

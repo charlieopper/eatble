@@ -11,9 +11,13 @@ export default function ReviewCard({ review }) {
   console.log('Review object:', review);
 
   const handleRestaurantClick = () => {
-    // Use the numeric ID instead of the name
-    console.log('Navigating to restaurant ID:', review.restaurantId); // Debug log
-    navigate(`/restaurant/${review.restaurantId}`);
+    const restaurantIds = {
+      'Zunchi Cafe': '1',
+      'Sideshow Kitchen': '2',
+      'Namastey Palace': '3'
+    };
+    const id = restaurantIds[review.restaurantName];
+    navigate(`/restaurant/${id}`);
   };
 
   const renderStars = (rating) => {
@@ -36,14 +40,18 @@ export default function ReviewCard({ review }) {
       return allergen;
     }
 
-    // If allergen is a string, convert to standard format
+    // Comprehensive allergen mapping matching homepage
     const allergenMap = {
       'Peanuts': { name: 'Peanuts', emoji: '🥜' },
       'Tree nuts': { name: 'Tree nuts', emoji: '🌰' },
       'Dairy': { name: 'Dairy', emoji: '🥛' },
-      'Gluten': { name: 'Gluten', emoji: '🌾' },
-      'Nuts': { name: 'Nuts', emoji: '🥜' }
-      // Add any other allergens as needed
+      'Eggs': { name: 'Eggs', emoji: '🥚' },
+      'Fish': { name: 'Fish', emoji: '🐟' },
+      'Shellfish': { name: 'Shellfish', emoji: '🦐' },
+      'Soy': { name: 'Soy', emoji: '🫘' },
+      'Wheat': { name: 'Wheat', emoji: '🌾' },
+      'Sesame': { name: 'Sesame', emoji: '🌱' },
+      'Gluten': { name: 'Gluten', emoji: '🍞' }
     };
 
     return allergenMap[allergen] || { name: allergen, emoji: getAllergenEmoji(allergen) };
@@ -103,35 +111,32 @@ export default function ReviewCard({ review }) {
           gap: '8px',
           alignItems: 'center'
         }}>
-          {review.allergens?.map((allergen) => {
-            const allergenData = getAllergenData(allergen);
-            return (
-              <div
-                key={allergenData.name}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  padding: '2px 8px',
-                  backgroundColor: '#ccfbf1',
-                  border: '1px solid #99f6e4',
-                  borderRadius: '9999px',
-                  fontSize: '11px',
-                  color: '#0d9488',
-                  height: '22px',
-                  lineHeight: '18px'
-                }}
-              >
-                <span style={{ 
-                  marginRight: '4px',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}>
-                  {allergenData.emoji}
-                </span>
-                {allergenData.name}
-              </div>
-            );
-          })}
+          {review.allergens?.map((allergen) => (
+            <div
+              key={allergen}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                padding: '2px 8px',
+                backgroundColor: '#ccfbf1',
+                border: '1px solid #99f6e4',
+                borderRadius: '9999px',
+                fontSize: '11px',
+                color: '#0d9488',
+                height: '22px',
+                lineHeight: '18px'
+              }}
+            >
+              <span style={{ 
+                marginRight: '4px',
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                {getAllergenEmoji(allergen)}
+              </span>
+              {allergen}
+            </div>
+          ))}
         </div>
       </div>
     </div>

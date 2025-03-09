@@ -5,7 +5,7 @@ export function getAllergenEmoji(allergen) {
     'Dairy': '🥛',
     'Eggs': '🥚',
     'Wheat': '🌾',
-    'Gluten': '🥖',
+    'Gluten': '🍞',
     'Fish': '🐟',
     'Shellfish': '🦐',
     'Soy': '🫘',
