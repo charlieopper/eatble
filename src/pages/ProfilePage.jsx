@@ -68,45 +68,24 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const { reviews, isLoading, error: reviewsError } = useReviews();
 
-  // Debug log when component mounts and when user/selectedAllergens change
-  useEffect(() => {
-    console.log('ProfilePage - Current user:', user);
-    console.log('ProfilePage - Selected allergens:', selectedAllergens);
-  }, [user, selectedAllergens]);
-
-  // Default avatar - using a more reliable default avatar service
   const defaultAvatar = "https://ui-avatars.com/api/?name=" + 
     encodeURIComponent(user?.displayName || "User") + "&background=random";
 
   useEffect(() => {
-    console.log('Auth state in ProfilePage:', {
-      user: user || 'no user',
-      authLoading,
-      userEmail: user?.email,
-      userUID: user?.uid
-    });
-  }, [user, authLoading]);
-
-  // Fetch latest user data
-  useEffect(() => {
     const fetchUserData = async () => {
       if (!user || !user.uid) {
-        console.log('No valid user object found, skipping data fetch');
         setDataLoading(false);
         return;
       }
 
       try {
-        console.log('Attempting to fetch user data for:', user.uid);
         const docRef = doc(db, 'users', user.uid);
         const docSnap = await getDoc(docRef);
         
         if (docSnap.exists()) {
           const data = docSnap.data();
-          console.log('User document found:', data);
           setUserData(data);
         } else {
-          console.log('No user document found, creating default data structure');
           const defaultUserData = {
             uid: user.uid,
             email: user.email,
@@ -120,18 +99,10 @@ export default function ProfilePage() {
             location: ''
           };
           setUserData(defaultUserData);
-          
-          // Create the user document
-          try {
-            await setDoc(docRef, defaultUserData);
-            console.log('Created new user document');
-          } catch (err) {
-            console.error('Failed to create user document:', err);
-          }
+          await setDoc(docRef, defaultUserData);
         }
       } catch (err) {
-        console.error('Error in fetchUserData:', err);
-        setError('Failed to load profile data: ' + err.message);
+        setError('Failed to load profile data');
       } finally {
         setDataLoading(false);
       }
@@ -142,7 +113,6 @@ export default function ProfilePage() {
     }
   }, [user, authLoading]);
 
-  // Initialize selectedAllergens from user.allergens or empty array
   useEffect(() => {
     if (user) {
       setSelectedAllergens(user.allergens || []);
@@ -150,41 +120,14 @@ export default function ProfilePage() {
     }
   }, [user]);
 
-  // Debug logs for user data fetching
-  useEffect(() => {
-    console.log('ProfilePage - Current userData:', userData);
-    console.log('ProfilePage - Favorite restaurants:', userData?.favoriteRestaurants);
-    console.log('ProfilePage - User document structure:', {
-      uid: userData?.uid,
-      email: userData?.email,
-      favorites: userData?.favoriteRestaurants
-    });
-  }, [userData]);
-
-  // Debug log when tab changes
-  useEffect(() => {
-    console.log('Active tab changed to:', activeTab);
-    if (activeTab === 'favorites') {
-      console.log('Favorites data available:', {
-        userData: !!userData,
-        favoriteRestaurants: userData?.favoriteRestaurants,
-        count: userData?.favoriteRestaurants?.length || 0
-      });
-    }
-  }, [activeTab, userData]);
-
   const handleSaveAllergens = async () => {
-    console.log('Starting save process...');
     setIsUpdating(true);
     
     try {
       const userRef = doc(db, 'users', user.uid);
-      
-      // Check if user document exists
       const userDoc = await getDoc(userRef);
       
       if (!userDoc.exists()) {
-        // Create new user document if it doesn't exist
         await setDoc(userRef, {
           uid: user.uid,
           email: user.email,
@@ -193,7 +136,6 @@ export default function ProfilePage() {
           allergens: selectedAllergens || []
         });
       } else {
-        // Update existing document
         await updateDoc(userRef, {
           allergens: selectedAllergens || []
         });
@@ -202,11 +144,8 @@ export default function ProfilePage() {
       setDisplayedAllergens(selectedAllergens);
       setShowAllergenModal(false);
       toast.success('Allergens updated successfully');
-      
-      // Force reload the page to refresh user data
       window.location.reload();
     } catch (error) {
-      console.error('Error updating allergens:', error);
       toast.error(`Failed to update allergens: ${error.message}`);
     } finally {
       setIsUpdating(false);
@@ -214,12 +153,10 @@ export default function ProfilePage() {
   };
 
   const toggleAllergen = (allergenName) => {
-    console.log('Toggling allergen:', allergenName);
     setSelectedAllergens(prev => {
       const newAllergens = prev.includes(allergenName)
         ? prev.filter(a => a !== allergenName)
         : [...prev, allergenName];
-      console.log('New selected allergens:', newAllergens);
       return newAllergens;
     });
   };
@@ -304,20 +241,15 @@ export default function ProfilePage() {
   const favoriteCount = userData?.favoriteRestaurants?.length || 0;
 
   const handleAllergenClick = () => {
-    console.log('Opening allergen modal');
     setShowAllergenModal(true);
   };
 
   const handleAccountSettingsClick = () => {
-    console.log('Opening account settings modal');
     setShowAccountModal(true);
   };
 
   const mainContent = () => {
-    console.log('Rendering mainContent with userData:', userData);
-    
     if (authLoading) {
-      console.log('Auth is loading, showing loading state');
       return (
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center p-4">
@@ -329,7 +261,6 @@ export default function ProfilePage() {
     }
 
     if (!user || !user.uid) {
-      console.log('No user found, showing login prompt');
       return (
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center p-4">
@@ -343,7 +274,6 @@ export default function ProfilePage() {
     }
 
     if (dataLoading) {
-      console.log('Data is loading, showing loading state');
       return (
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center p-4">
@@ -355,7 +285,6 @@ export default function ProfilePage() {
     }
 
     if (error) {
-      console.log('Error occurred:', error);
       return (
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center p-4">
@@ -369,7 +298,6 @@ export default function ProfilePage() {
     }
 
     if (!userData) {
-      console.log('No userData available');
       return (
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center p-4">
@@ -381,16 +309,6 @@ export default function ProfilePage() {
         </div>
       );
     }
-
-    console.log('Rendering profile with userData:', {
-      displayName: userData.displayName,
-      email: userData.email,
-      allergens: userData.allergens,
-      reviewCount: userData.reviewCount,
-      favorites: userData.favoriteRestaurants?.length
-    });
-
-    console.log("User allergens:", user?.allergens);
 
     return (
       <>
@@ -420,14 +338,11 @@ export default function ProfilePage() {
           </div>
 
           <main className="bg-gray-50">
-            {console.log('Rendering main content container')}
             <div className="container mx-auto px-4 py-6">
-              {console.log('Profile section rendering with container styles')}
               {/* Profile Header */}
               <div className="max-w-[672px] mx-auto">
                 <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
                   <div className="flex flex-col items-center">
-                    {console.log('Profile photo section rendering')}
                     <div style={{
                       width: '150px',
                       height: '150px',
@@ -447,7 +362,6 @@ export default function ProfilePage() {
                         }}
                       />
                     </div>
-                    {console.log('Profile info section rendering')}
                     <div style={{
                       width: '100%',
                       display: 'flex',
@@ -466,7 +380,6 @@ export default function ProfilePage() {
                       }}>
                         {userData?.displayName || 'User'}
                       </h1>
-                      {console.log('Allergens section rendering')}
                       <div style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -501,7 +414,6 @@ export default function ProfilePage() {
                           {isUpdating ? 'Updating...' : 'Edit Allergens'}
                         </button>
                       </div>
-                      {console.log('Stats section rendering')}
                       <div style={{
                         display: 'flex',
                         gap: '24px',
@@ -591,14 +503,7 @@ export default function ProfilePage() {
                   </div>
                 ) : (
                   <div className="favorites-container" style={{ padding: '16px' }}>
-                    {console.log('Rendering favorites section:', {
-                      hasFavorites: !!userData?.favoriteRestaurants,
-                      favoritesCount: userData?.favoriteRestaurants?.length,
-                      favorites: userData?.favoriteRestaurants
-                    })}
-                    
                     {userData?.favoriteRestaurants?.map((restaurant) => {
-                      console.log('Processing restaurant:', restaurant);
                       return (
                         <RestaurantCard 
                           key={restaurant.id}
@@ -670,60 +575,6 @@ export default function ProfilePage() {
                       </div>
                       <ChevronRight size={20} style={{ color: '#9ca3af' }} />
                     </button>
-
-                    {/* Commented out for future implementation
-                    <button 
-                      onClick={() => setShowNotificationModal(true)}
-                      style={{
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '16px',
-                        borderBottom: '1px solid #f8f8f8',
-                        textDecoration: 'none',
-                        color: 'inherit',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        ':hover': {
-                          backgroundColor: '#f9fafb'
-                        }
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <Bell size={20} style={{ marginRight: '12px', color: '#6b7280' }} />
-                        <span>Notification Preferences</span>
-                      </div>
-                      <ChevronRight size={20} style={{ color: '#9ca3af' }} />
-                    </button>
-
-                    <button 
-                      onClick={() => setShowPrivacyModal(true)}
-                      style={{
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '16px',
-                        borderBottom: '1px solid #f8f8f8',
-                        textDecoration: 'none',
-                        color: 'inherit',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        ':hover': {
-                          backgroundColor: '#f9fafb'
-                        }
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <User size={20} style={{ marginRight: '12px', color: '#6b7280' }} />
-                        <span>Privacy Settings</span>
-                      </div>
-                      <ChevronRight size={20} style={{ color: '#9ca3af' }} />
-                    </button>
-                    */}
 
                     <button 
                       onClick={logout}

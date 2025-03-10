@@ -6,8 +6,14 @@ export default function ReviewCard({ review }) {
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
 
-  // Add console log to debug review object
-  console.log('Review object:', review);
+  // Keep only one console log for essential debugging
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Review:', { 
+      id: review.id, 
+      restaurant: review.restaurantName, 
+      rating: review.rating 
+    });
+  }
 
   const handleRestaurantClick = () => {
     const restaurantIds = {
