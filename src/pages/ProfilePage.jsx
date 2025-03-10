@@ -671,6 +671,7 @@ export default function ProfilePage() {
                       <ChevronRight size={20} style={{ color: '#9ca3af' }} />
                     </button>
 
+                    {/* Commented out for future implementation
                     <button 
                       onClick={() => setShowNotificationModal(true)}
                       style={{
@@ -722,6 +723,7 @@ export default function ProfilePage() {
                       </div>
                       <ChevronRight size={20} style={{ color: '#9ca3af' }} />
                     </button>
+                    */}
 
                     <button 
                       onClick={logout}
