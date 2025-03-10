@@ -1,8 +1,11 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
+import { db } from '../firebase/config';
+import { doc, updateDoc, arrayUnion, arrayRemove, getDoc } from 'firebase/firestore';
+import { useAuth } from './AuthContext';
 
 // Create the context
-const FavoritesContext = createContext();
+export const FavoritesContext = createContext();
 
 // Custom hook to use the favorites context
 export const useFavorites = () => {
@@ -32,82 +35,90 @@ const safeSetItem = (key, value) => {
 // Provider component
 export const FavoritesProvider = ({ children }) => {
   const [favorites, setFavorites] = useState([]);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const { user } = useAuth();
 
-  // Load favorites from localStorage on initial render
+  // Load favorites whenever user or favorites change
   useEffect(() => {
-    const loadFavorites = () => {
-      const storedFavorites = safeGetItem('favorites');
-      if (storedFavorites) {
-        try {
-          setFavorites(JSON.parse(storedFavorites));
-        } catch (e) {
-          console.error('Error parsing favorites from localStorage:', e);
-        }
+    const loadFavorites = async () => {
+      if (!user) {
+        setFavorites([]);
+        return;
       }
-      setIsInitialized(true);
+
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        const firestoreFavorites = userDoc.data()?.favoriteRestaurants || [];
+        
+        // Ensure local state matches Firestore
+        setFavorites(firestoreFavorites);
+        
+        console.log('Loaded favorites from Firestore:', firestoreFavorites);
+      } catch (error) {
+        console.error('Error loading favorites:', error);
+        toast.error('Failed to load favorites');
+      }
     };
 
-    // Delay loading to ensure we're in a browser context
-    if (typeof window !== 'undefined') {
-      loadFavorites();
-    }
-  }, []);
+    loadFavorites();
+  }, [user]);
 
-  // Save favorites to localStorage whenever they change
-  useEffect(() => {
-    if (isInitialized && typeof window !== 'undefined') {
-      safeSetItem('favorites', JSON.stringify(favorites));
+  const toggleFavorite = async (restaurant) => {
+    if (!user) {
+      toast.error('Please login to favorite restaurants');
+      return;
     }
-  }, [favorites, isInitialized]);
 
-  // Add a restaurant to favorites
-  const addFavorite = (restaurant) => {
-    setFavorites((prevFavorites) => {
-      // Check if restaurant is already in favorites
-      if (!prevFavorites.some(fav => fav.id === restaurant.id)) {
-        toast.success('Added to favorites');
-        return [...prevFavorites, restaurant];
-      }
-      return prevFavorites;
-    });
+    const isFavorited = favorites.some(fav => fav.id === restaurant.id);
+    
+    try {
+      // Update Firestore first
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        favoriteRestaurants: isFavorited
+          ? arrayRemove(restaurant)
+          : arrayUnion(restaurant)
+      });
+
+      // Then update local state after successful Firestore update
+      setFavorites(prev => 
+        isFavorited 
+          ? prev.filter(fav => fav.id !== restaurant.id)
+          : [...prev, restaurant]
+      );
+
+      console.log('Updated favorites:', isFavorited ? 'removed' : 'added', restaurant.id);
+      toast.success(isFavorited ? 'Removed from favorites' : 'Added to favorites');
+    } catch (error) {
+      console.error('Error updating favorites:', error);
+      toast.error('Failed to update favorites');
+    }
   };
 
-  // Remove a restaurant from favorites
-  const removeFavorite = (restaurantId) => {
-    setFavorites((prevFavorites) => {
-      const newFavorites = prevFavorites.filter(restaurant => restaurant.id !== restaurantId);
-      if (newFavorites.length < prevFavorites.length) {
-        toast.success('Removed from favorites');
-      }
-      return newFavorites;
-    });
-  };
-
-  // Check if a restaurant is in favorites
   const isFavorite = (restaurantId) => {
-    return favorites.some(restaurant => restaurant.id === restaurantId);
+    return favorites.some(fav => fav.id === restaurantId);
   };
 
-  // Toggle favorite status
-  const toggleFavorite = (restaurant) => {
-    if (isFavorite(restaurant.id)) {
-      removeFavorite(restaurant.id);
-    } else {
-      addFavorite(restaurant);
+  // Add a function to force refresh favorites from Firestore
+  const refreshFavorites = async () => {
+    if (!user) return;
+    
+    try {
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      const firestoreFavorites = userDoc.data()?.favoriteRestaurants || [];
+      setFavorites(firestoreFavorites);
+      console.log('Refreshed favorites from Firestore:', firestoreFavorites);
+    } catch (error) {
+      console.error('Error refreshing favorites:', error);
     }
-  };
-
-  const value = {
-    favorites,
-    addFavorite,
-    removeFavorite,
-    isFavorite,
-    toggleFavorite
   };
 
   return (
-    <FavoritesContext.Provider value={value}>
+    <FavoritesContext.Provider value={{ 
+      favorites, 
+      toggleFavorite, 
+      isFavorite,
+      refreshFavorites // Expose refresh function
+    }}>
       {children}
     </FavoritesContext.Provider>
   );

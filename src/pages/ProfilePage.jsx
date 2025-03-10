@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { AllergenSelector } from '../components/allergens/AllergenSelector';
 import Footer from '../components/layout/Footer';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import toast from 'react-hot-toast';
@@ -12,6 +12,10 @@ import { AuthButtons } from '../components/auth/AuthButtons';
 import ReviewCard from '../components/reviews/ReviewCard';
 import { getAllergenEmoji } from '../utils/allergenUtils';
 import RestaurantCard from '../components/restaurants/RestaurantCard';
+import AccountSettingsModal from '../components/settings/AccountSettingsModal';
+import NotificationSettingsModal from '../components/settings/NotificationSettingsModal';
+import PrivacySettingsModal from '../components/settings/PrivacySettingsModal';
+import AllergenModal from '../components/allergens/AllergenModal';
 
 // Mock reviews data
 const mockReviews = [
@@ -37,7 +41,7 @@ const mockReviews = [
     date: "2023-12-05",
     rating: 5,
     text: "They have a separate menu for allergen-free dishes and the staff is very accommodating.",
-    allergens: ["Dairy", "Nuts"],
+    allergens: ["Dairy", "Tree Nuts"],
   },
 ];
 
@@ -45,18 +49,22 @@ const mockReviews = [
 const TEAL_COLOR = "#0d9488";
 
 export default function ProfilePage() {
-  const { user, loading: authLoading, refreshUserData } = useAuth();
+  const { user, loading: authLoading, refreshUserData, logout } = useAuth();
   const [error, setError] = useState('');
   const [userData, setUserData] = useState(null);
   const [dataLoading, setDataLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('reviews');
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
-  const [showAllergenModal, setShowAllergenModal] = useState(false);
+  const [showAccountModal, setShowAccountModal] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [selectedAllergens, setSelectedAllergens] = useState([]);
   const [displayedAllergens, setDisplayedAllergens] = useState([]);
+  const [showAllergenModal, setShowAllergenModal] = useState(false);
+  const navigate = useNavigate();
 
   // Debug log when component mounts and when user/selectedAllergens change
   useEffect(() => {
@@ -293,6 +301,16 @@ export default function ProfilePage() {
   const reviewCount = mockReviews.length;
   const favoriteCount = userData?.favoriteRestaurants?.length || 0;
 
+  const handleAllergenClick = () => {
+    console.log('Opening allergen modal');
+    setShowAllergenModal(true);
+  };
+
+  const handleAccountSettingsClick = () => {
+    console.log('Opening account settings modal');
+    setShowAccountModal(true);
+  };
+
   const mainContent = () => {
     console.log('Rendering mainContent with userData:', userData);
     
@@ -462,7 +480,7 @@ export default function ProfilePage() {
                         ))}
                         
                         <button 
-                          onClick={() => setShowAllergenModal(true)}
+                          onClick={handleAllergenClick}
                           disabled={isUpdating}
                           style={{
                             display: 'flex',
@@ -585,55 +603,129 @@ export default function ProfilePage() {
                   </div>
                 )}
 
-                {/* Settings Section */}
-                <div className="mt-8 bg-white rounded-lg shadow-sm overflow-hidden">
-                  <h2 className="sr-only">Settings</h2>
-                  <div className="divide-y">
-                    <a href="/profile/settings" className="flex items-center justify-between p-4 hover:bg-gray-50">
-                      <div className="flex items-center">
-                        <Settings className="h-5 w-5 mr-3 text-gray-500" />
+                {/* Account Card */}
+                <div style={{ 
+                  backgroundColor: 'white',
+                  border: '1px solid #ddd',
+                  borderRadius: '8px',
+                  marginBottom: '16px',
+                  overflow: 'hidden',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                  marginTop: '20px'
+                }}>
+                  {/* Account Title */}
+                  <div style={{ 
+                    padding: '16px',
+                    borderBottom: '1px solid #f8f8f8'
+                  }}>
+                    <h3 style={{ 
+                      fontSize: '18px',
+                      fontWeight: '600',
+                      margin: '0'
+                    }}>
+                      Account
+                    </h3>
+                  </div>
+
+                  {/* Settings Options */}
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <button 
+                      onClick={handleAccountSettingsClick}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '16px',
+                        borderBottom: '1px solid #f8f8f8',
+                        textDecoration: 'none',
+                        color: 'inherit',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        ':hover': {
+                          backgroundColor: '#f9fafb'
+                        }
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <Settings size={20} style={{ marginRight: '12px', color: '#6b7280' }} />
                         <span>Account Settings</span>
                       </div>
-                      <ChevronRight className="h-5 w-5 text-gray-400" />
-                    </a>
-                    <a href="/profile/allergens" className="flex items-center justify-between p-4 hover:bg-gray-50">
-                      <div className="flex items-center">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="20"
-                          height="20"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="h-5 w-5 mr-3 text-gray-500"
-                        >
-                          <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
-                        </svg>
-                        <span>Manage Allergens</span>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-gray-400" />
-                    </a>
-                    <a href="/profile/notifications" className="flex items-center justify-between p-4 hover:bg-gray-50">
-                      <div className="flex items-center">
-                        <Bell className="h-5 w-5 mr-3 text-gray-500" />
+                      <ChevronRight size={20} style={{ color: '#9ca3af' }} />
+                    </button>
+
+                    <button 
+                      onClick={() => setShowNotificationModal(true)}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '16px',
+                        borderBottom: '1px solid #f8f8f8',
+                        textDecoration: 'none',
+                        color: 'inherit',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        ':hover': {
+                          backgroundColor: '#f9fafb'
+                        }
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <Bell size={20} style={{ marginRight: '12px', color: '#6b7280' }} />
                         <span>Notification Preferences</span>
                       </div>
-                      <ChevronRight className="h-5 w-5 text-gray-400" />
-                    </a>
-                    <a href="/profile/privacy" className="flex items-center justify-between p-4 hover:bg-gray-50">
-                      <div className="flex items-center">
-                        <User className="h-5 w-5 mr-3 text-gray-500" />
+                      <ChevronRight size={20} style={{ color: '#9ca3af' }} />
+                    </button>
+
+                    <button 
+                      onClick={() => setShowPrivacyModal(true)}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '16px',
+                        borderBottom: '1px solid #f8f8f8',
+                        textDecoration: 'none',
+                        color: 'inherit',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        ':hover': {
+                          backgroundColor: '#f9fafb'
+                        }
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <User size={20} style={{ marginRight: '12px', color: '#6b7280' }} />
                         <span>Privacy Settings</span>
                       </div>
-                      <ChevronRight className="h-5 w-5 text-gray-400" />
-                    </a>
-                    <div className="w-full flex items-center p-4 hover:bg-gray-50">
-                      <LogOut className="h-5 w-5 mr-3" />
-                      <LoginLogoutButton setShowLoginModal={setShowLoginModal} />
-                    </div>
+                      <ChevronRight size={20} style={{ color: '#9ca3af' }} />
+                    </button>
+
+                    <button 
+                      onClick={logout}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '16px',
+                        background: 'none',
+                        border: 'none',
+                        color: '#ef4444',
+                        cursor: 'pointer',
+                        ':hover': {
+                          backgroundColor: '#f9fafb'
+                        }
+                      }}
+                    >
+                      <LogOut size={20} style={{ marginRight: '12px' }} />
+                      <span>Sign Out</span>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -642,74 +734,36 @@ export default function ProfilePage() {
         </div>
         <Footer activePage="Profile" />
 
+        {/* Account Modal */}
+        {showAccountModal && (
+          <AccountSettingsModal 
+            isOpen={showAccountModal}
+            onClose={() => setShowAccountModal(false)}
+          />
+        )}
+
+        {/* Notification Modal */}
+        {showNotificationModal && (
+          <NotificationSettingsModal 
+            isOpen={showNotificationModal}
+            onClose={() => setShowNotificationModal(false)}
+          />
+        )}
+
+        {/* Privacy Modal */}
+        {showPrivacyModal && (
+          <PrivacySettingsModal 
+            isOpen={showPrivacyModal}
+            onClose={() => setShowPrivacyModal(false)}
+          />
+        )}
+
         {/* Allergen Modal */}
         {showAllergenModal && (
-          <div style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 50
-          }}>
-            <div style={{
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              padding: '24px',
-              maxWidth: '500px',
-              width: '90%'
-            }}>
-              <h2 style={{ marginBottom: '16px', textAlign: 'center' }}>
-                Edit Your Allergens
-              </h2>
-              
-              <AllergenSelector
-                selectedAllergens={selectedAllergens}
-                toggleAllergen={toggleAllergen}
-              />
-
-              <div style={{
-                display: 'flex',
-                gap: '12px',
-                marginTop: '24px',
-                justifyContent: 'flex-end'
-              }}>
-                <button
-                  onClick={() => {
-                    console.log('Canceling allergen edit');
-                    setShowAllergenModal(false);
-                  }}
-                  disabled={isUpdating}
-                  style={{
-                    padding: '8px 16px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    backgroundColor: 'white'
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    console.log('Save button clicked');
-                    handleSaveAllergens();
-                  }}
-                  disabled={isUpdating}
-                  style={{
-                    padding: '8px 16px',
-                    backgroundColor: '#2563eb',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: isUpdating ? 'not-allowed' : 'pointer'
-                  }}
-                >
-                  {isUpdating ? 'Saving...' : 'Save Changes'}
-                </button>
-              </div>
-            </div>
-          </div>
+          <AllergenModal
+            isOpen={showAllergenModal}
+            onClose={() => setShowAllergenModal(false)}
+          />
         )}
       </>
     );
