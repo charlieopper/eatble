@@ -11,6 +11,7 @@ import RestaurantDetailsPage from './pages/RestaurantDetailsPage';
 import ReviewsPage from './pages/ReviewsPage';
 import AuthTest from './components/auth/AuthTest';
 import ProfilePage from './pages/ProfilePage';
+import { ReviewsProvider } from './context/ReviewsContext';
 
 function App() {
   const [googleMapsLoaded, setGoogleMapsLoaded] = useState(false);
@@ -51,17 +52,19 @@ function App() {
     <ErrorBoundary>
       <AuthProvider>
         <FavoritesProvider>
-          <Toaster position="top-center" />
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/restaurants" element={<SearchPage />} />
-            <Route path="/restaurants/search" element={<SearchPage />} />
-            <Route path="/favorites" element={<FavoritesPage />} />
-            <Route path="/restaurant/:id" element={<RestaurantDetailsPage />} />
-            <Route path="/reviews" element={<ReviewsPage />} />
-            <Route path="/auth-test" element={<AuthTest />} />
-            <Route path="/profile" element={<ProfilePage />} />
-          </Routes>
+          <ReviewsProvider>
+            <Toaster position="top-center" />
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/restaurants" element={<SearchPage />} />
+              <Route path="/restaurants/search" element={<SearchPage />} />
+              <Route path="/favorites" element={<FavoritesPage />} />
+              <Route path="/restaurant/:id" element={<RestaurantDetailsPage />} />
+              <Route path="/reviews" element={<ReviewsPage />} />
+              <Route path="/auth-test" element={<AuthTest />} />
+              <Route path="/profile" element={<ProfilePage />} />
+            </Routes>
+          </ReviewsProvider>
         </FavoritesProvider>
       </AuthProvider>
     </ErrorBoundary>

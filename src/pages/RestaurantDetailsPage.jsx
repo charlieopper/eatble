@@ -10,6 +10,10 @@ import restaurantService from '../services/restaurantService';
 import reviewService from '../services/reviewService';
 import Footer from '../components/layout/Footer';
 import ReviewModal from '../components/reviews/ReviewModal';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase/config';
+import { toast } from 'react-hot-toast';
+import ReviewCard from '../components/reviews/ReviewCard';
 
 // Placeholder restaurant image URL
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fDB8fHww&w=1000&q=80";
@@ -295,7 +299,12 @@ export default function RestaurantDetailsPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [images, setImages] = useState([]);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-  const [userReviews, setUserReviews] = useState([]);
+  const [restaurantReviews, setRestaurantReviews] = useState([]);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(true);
+  const [isLoadingRestaurant, setIsLoadingRestaurant] = useState(true);
+
+  // Log the restaurantId to make sure we have it
+  console.log('Current restaurantId:', id);
 
   useEffect(() => {
     const loadRestaurant = async () => {
@@ -317,23 +326,55 @@ export default function RestaurantDetailsPage() {
     loadRestaurant();
   }, [id]);
 
-  // Fetch user reviews
   useEffect(() => {
-    const fetchUserReviews = () => {
-      const allReviews = reviewService.getUserReviews();
-      // Filter reviews for this restaurant
-      const restaurantReviews = allReviews.filter(review => review.restaurantId === id);
-      setUserReviews(restaurantReviews);
+    const loadRestaurantReviews = async () => {
+      if (!id) {
+        console.log('No restaurantId available');
+        return;
+      }
+      
+      setIsLoadingReviews(true);
+      
+      try {
+        console.log('Fetching reviews for restaurant:', id);
+        const restaurantRef = doc(db, 'restaurants', id);
+        const restaurantDoc = await getDoc(restaurantRef);
+        
+        console.log('Restaurant document exists:', restaurantDoc.exists());
+        
+        if (restaurantDoc.exists()) {
+          const restaurantData = restaurantDoc.data();
+          console.log('Restaurant data:', restaurantData);
+          
+          const reviews = restaurantData?.reviews || [];
+          console.log('Found reviews:', reviews);
+          
+          // Sort reviews by date (newest first)
+          const sortedReviews = reviews.sort((a, b) => 
+            new Date(b.date) - new Date(a.date)
+          );
+          
+          setRestaurantReviews(sortedReviews);
+        } else {
+          console.log('Restaurant document not found');
+          setRestaurantReviews([]);
+        }
+      } catch (error) {
+        console.error('Error loading restaurant reviews:', error);
+        toast.error('Failed to load reviews');
+      } finally {
+        setIsLoadingReviews(false);
+      }
     };
-    
-    fetchUserReviews();
+
+    loadRestaurantReviews();
   }, [id]);
 
   // Function to refresh reviews after submission
-  const handleReviewSubmitted = () => {
-    const allReviews = reviewService.getUserReviews();
-    const restaurantReviews = allReviews.filter(review => review.restaurantId === id);
-    setUserReviews(restaurantReviews);
+  const handleReviewSubmitted = (newReview) => {
+    console.log('New review submitted:', newReview);
+    // Update the local reviews state immediately
+    setRestaurantReviews(prevReviews => [newReview, ...prevReviews]);
   };
 
   const nextImage = () => {
@@ -1161,36 +1202,18 @@ export default function RestaurantDetailsPage() {
           </div>
           
           {/* Individual Reviews */}
-          <EatableReviewsList reviews={[
-            {
-              id: 1,
-              user: { name: 'Karen Armstrong', image: 'https://randomuser.me/api/portraits/women/44.jpg' },
-              rating: 5,
-              date: '2 months ago',
-              allergens: ['Peanuts', 'Tree nuts'],
-              text: 'Love this place! Great ambiance, plenty of outdoor seating, and the chef was fantastic. We mentioned my son\'s life-threatening peanut and tree nut allergy. When we arrived, Marcus, the chef, came to our table and walked us through the menu. He was able to prepare a safe and special pepperoni pizza for my son (which he loved) and was able to make him a nut-free dessert with Breyer\'s ice cream. Highly recommend if you\'re in SF!',
-              helpfulCount: 12
-            },
-            {
-              id: 2,
-              user: { name: 'Dan Sargent', image: 'https://randomuser.me/api/portraits/men/32.jpg' },
-              rating: 4,
-              date: '3 months ago',
-              allergens: ['Shellfish'],
-              text: 'This is an all-time great SF restaurant! Stopped by after a Warriors game and had the best pizza I\'ve ever had. Special shout-out to Marcus who was very attentive to my shellfish allergy.',
-              helpfulCount: 5
-            },
-            ...userReviews.map(review => ({
-              id: review.id,
-              user: { name: 'You', image: 'https://randomuser.me/api/portraits/lego/1.jpg' },
-              rating: review.rating,
-              date: 'Just now',
-              allergens: review.allergens,
-              text: review.reviewText,
-              helpfulCount: 0,
-              isUserReview: true // Flag to identify user's own reviews
-            }))
-          ]} />
+          {isLoadingReviews ? (
+            <div>Loading reviews...</div>
+          ) : restaurantReviews.length > 0 ? (
+            <div className="reviews-list">
+              {restaurantReviews.map((review) => {
+                console.log('Rendering review:', review);
+                return <ReviewCard key={review.id} review={review} />;
+              })}
+            </div>
+          ) : (
+            <p>No reviews yet</p>
+          )}
         </div>
       </div>
 

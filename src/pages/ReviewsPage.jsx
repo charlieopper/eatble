@@ -3,13 +3,13 @@ import { MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Footer from '../components/layout/Footer';
 import { AuthButtons } from '../components/auth/AuthButtons';
+import { useReviews } from '../context/ReviewsContext';
+import ReviewCard from '../components/reviews/ReviewCard';
 
 export default function ReviewsPage() {
-  // In a real app, this would come from a ReviewsContext or API call
-  const [reviews, setReviews] = React.useState([]);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [showLoginModal, setShowLoginModal] = React.useState(false);
-  const [showRegisterModal, setShowRegisterModal] = React.useState(false);
+  const { reviews, isLoading, error } = useReviews(); // Use the reviews context
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
 
   return (
     <div className="min-h-screen" style={{ paddingBottom: '80px' }}>
@@ -63,11 +63,20 @@ export default function ReviewsPage() {
           </div>
         </div>
 
-        {/* Reviews List or Empty State */}
-        {reviews.length > 0 ? (
-          <div>
-            {/* This would be a list of reviews in a real implementation */}
-            <p>Your reviews would be listed here</p>
+        {/* Reviews List with loading state */}
+        {isLoading ? (
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            Loading reviews...
+          </div>
+        ) : error ? (
+          <div style={{ textAlign: 'center', padding: '20px', color: 'red' }}>
+            Error loading reviews: {error}
+          </div>
+        ) : reviews.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {reviews.map((review) => (
+              <ReviewCard key={review.id} review={review} />
+            ))}
           </div>
         ) : (
           <div style={{

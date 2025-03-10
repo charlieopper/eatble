@@ -16,6 +16,7 @@ import AccountSettingsModal from '../components/settings/AccountSettingsModal';
 import NotificationSettingsModal from '../components/settings/NotificationSettingsModal';
 import PrivacySettingsModal from '../components/settings/PrivacySettingsModal';
 import AllergenModal from '../components/allergens/AllergenModal';
+import { useReviews } from '../context/ReviewsContext';
 
 // Mock reviews data
 const mockReviews = [
@@ -65,6 +66,7 @@ export default function ProfilePage() {
   const [displayedAllergens, setDisplayedAllergens] = useState([]);
   const [showAllergenModal, setShowAllergenModal] = useState(false);
   const navigate = useNavigate();
+  const { reviews, isLoading, error: reviewsError } = useReviews();
 
   // Debug log when component mounts and when user/selectedAllergens change
   useEffect(() => {
@@ -506,7 +508,7 @@ export default function ProfilePage() {
                         marginBottom: '24px'
                       }}>
                         <div>
-                          <span style={{ fontWeight: 'bold' }}>{reviewCount}</span>
+                          <span style={{ fontWeight: 'bold' }}>{reviews.length}</span>
                           <span style={{ color: '#666', marginLeft: '4px' }}>Reviews</span>
                         </div>
                         <div>
@@ -569,9 +571,23 @@ export default function ProfilePage() {
                 {/* Tab Content */}
                 {activeTab === 'reviews' ? (
                   <div className="flex flex-col gap-4">
-                    {mockReviews.map((review) => (
-                      <ReviewCard key={review.id} review={review} />
-                    ))}
+                    {isLoading ? (
+                      <div>Loading reviews...</div>
+                    ) : reviewsError ? (
+                      <div>Error loading reviews: {reviewsError}</div>
+                    ) : reviews.length > 0 ? (
+                      reviews.map((review) => (
+                        <ReviewCard key={review.id} review={review} />
+                      ))
+                    ) : (
+                      <p style={{ 
+                        textAlign: 'center', 
+                        color: '#666',
+                        marginTop: '20px' 
+                      }}>
+                        No reviews yet
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <div className="favorites-container" style={{ padding: '16px' }}>

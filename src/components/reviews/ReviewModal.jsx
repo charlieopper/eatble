@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Star, Info } from 'lucide-react';
 import { AllergenSelector } from '../allergens/AllergenSelector.jsx';
-import { reviewService } from '../../services/reviewService';
+import { useReviews } from '../../context/ReviewsContext';
+import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
 export default function ReviewModal({ isOpen, onClose, restaurantName, restaurantId, onReviewSubmitted }) {
@@ -13,6 +14,9 @@ export default function ReviewModal({ isOpen, onClose, restaurantName, restauran
   const [reviewText, setReviewText] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { addReview } = useReviews();
+  const { user } = useAuth();
 
   // Helper component for tooltip
   const InfoTooltip = ({ text, isVisible, onClose }) => (
@@ -108,17 +112,27 @@ export default function ReviewModal({ isOpen, onClose, restaurantName, restauran
     setError('');
     
     try {
-      await reviewService.submitReview(restaurantId, {
-        allergens: selectedAllergens,
-        chefAvailable: chefAvailable === true,
-        allergenMenuAvailable: allergenMenuAvailable === true,
+      const reviewData = {
+        id: crypto.randomUUID(),
+        restaurantId,
+        restaurantName,
         rating,
-        reviewText
-      });
+        text: reviewText,
+        allergens: selectedAllergens,
+        accommodations: {
+          chefAvailable: chefAvailable === true,
+          allergenMenu: allergenMenuAvailable === true
+        },
+        date: new Date().toISOString(),
+        userId: user.uid,
+        userName: user.displayName || 'Anonymous'
+      };
+
+      console.log('Submitting review:', reviewData);
+      await addReview(reviewData);
       
-      toast.success('Review submitted successfully!');
       if (onReviewSubmitted) {
-        onReviewSubmitted();
+        onReviewSubmitted(reviewData);
       }
       onClose();
     } catch (error) {
