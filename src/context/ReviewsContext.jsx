@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { db } from '../firebase/config';
-import { doc, getDoc, updateDoc, arrayUnion, query, limit, orderBy, setDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, arrayUnion, query, limit, orderBy, setDoc, collection, getDocs, where } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
 
 // Create context
@@ -126,6 +126,38 @@ export const ReviewsProvider = ({ children }) => {
     if (hasMore && !isLoading) {
       setCurrentPage(prev => prev + 1);
     }
+  };
+
+  // Add sorting options
+  const sortReviews = (reviews, sortBy = 'newest') => {
+    switch (sortBy) {
+      case 'mostHelpful':
+        return [...reviews].sort((a, b) => 
+          (b.helpfulCount || 0) - (a.helpfulCount || 0)
+        );
+      case 'newest':
+        return [...reviews].sort((a, b) => 
+          new Date(b.date) - new Date(a.date)
+        );
+      default:
+        return reviews;
+    }
+  };
+
+  // Update the fetch reviews function
+  const fetchReviews = async (restaurantId, sortBy = 'newest') => {
+    const reviewsRef = collection(db, 'reviews');
+    const q = query(
+      reviewsRef,
+      where('restaurantId', '==', restaurantId),
+      orderBy(sortBy === 'mostHelpful' ? 'helpfulCount' : 'date', 'desc')
+    );
+    
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
   };
 
   return (

@@ -3,17 +3,18 @@ import { useParams, Link } from 'react-router-dom';
 import { 
   MapPin, Phone, Globe, Clock, ChefHat, 
   FileText, Heart, ArrowLeft, Star,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, ThumbsUp, Flag
 } from 'lucide-react';
 import { useFavorites } from '../context/FavoritesContext';
 import restaurantService from '../services/restaurantService';
 import reviewService from '../services/reviewService';
 import Footer from '../components/layout/Footer';
 import ReviewModal from '../components/reviews/ReviewModal';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, increment, arrayUnion, setDoc, collection, arrayRemove } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { toast } from 'react-hot-toast';
 import ReviewCard from '../components/reviews/ReviewCard';
+import { useAuth } from '../context/AuthContext';
 
 // Placeholder restaurant image URL
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fDB8fHww&w=1000&q=80";
@@ -187,62 +188,70 @@ const ReviewItem = ({ review }) => {
         {review.text}
       </p>
       
-      {/* Review actions */}
+      {/* Review actions - modernized buttons */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'center'
+        alignItems: 'center',
+        marginTop: '16px'
       }}>
         <button
+          onClick={() => handleHelpfulClick(review.id)}
           style={{
-            backgroundColor: isHelpful ? '#f3f4f6' : 'transparent',
-            border: 'none',
-            fontSize: '12px',
-            color: isHelpful ? '#0d9488' : '#6b7280',
-            cursor: 'pointer',
-            padding: '4px 8px',
-            borderRadius: '4px',
             display: 'flex',
             alignItems: 'center',
-            gap: '4px',
-            transition: 'all 0.2s ease'
+            gap: '6px',
+            background: review.helpfulUsers?.includes(user?.uid) ? '#f0fdf4' : '#f9fafb',
+            border: '1px solid',
+            borderColor: review.helpfulUsers?.includes(user?.uid) ? '#86efac' : '#e5e7eb',
+            color: review.helpfulUsers?.includes(user?.uid) ? '#15803d' : '#6b7280',
+            fontSize: '14px',
+            cursor: 'pointer',
+            padding: '6px 12px',
+            borderRadius: '6px',
+            transition: 'all 0.2s ease',
+            fontWeight: '500'
           }}
-          onClick={() => {
-            if (!isHelpful) {
-              setHelpfulCount(prev => prev + 1);
-              setIsHelpful(true);
+        >
+          <ThumbsUp 
+            size={16} 
+            style={{ 
+              marginRight: '4px',
+              fill: review.helpfulUsers?.includes(user?.uid) ? '#15803d' : 'none'
+            }} 
+          />
+          Helpful ({review.helpfulCount || 0})
+        </button>
+        <button
+          onClick={() => handleReportClick(review.id)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: reportedReviews.has(review.id) ? '#fef2f2' : '#f9fafb',
+            border: '1px solid',
+            borderColor: reportedReviews.has(review.id) ? '#fecaca' : '#e5e7eb',
+            color: reportedReviews.has(review.id) ? '#dc2626' : '#6b7280',
+            fontSize: '14px',
+            cursor: 'pointer',
+            padding: '6px 12px',
+            borderRadius: '6px',
+            transition: 'all 0.2s ease',
+            fontWeight: '500',
+            ':hover': {
+              backgroundColor: reportedReviews.has(review.id) ? '#fee2e2' : '#f3f4f6',
+              transform: 'translateY(-1px)'
             }
           }}
         >
-          <span 
-            role="img" 
-            aria-label="thumbs up" 
+          <Flag 
+            size={16} 
             style={{ 
-              transform: isHelpful ? 'scale(1.2)' : 'scale(1)',
-              transition: 'transform 0.2s ease'
-            }}
-          >
-            👍
-          </span>
-          Helpful ({helpfulCount})
-        </button>
-        <button
-          onClick={handleReport}
-          disabled={isReported}
-          style={{
-            backgroundColor: 'transparent',
-            border: 'none',
-            fontSize: '12px',
-            color: isReported ? '#9ca3af' : '#6b7280',
-            cursor: isReported ? 'default' : 'pointer',
-            padding: '4px 8px',
-            borderRadius: '4px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px'
-          }}
-        >
-          {isReported ? 'Reported' : 'Report this review'}
+              marginRight: '4px',
+              fill: reportedReviews.has(review.id) ? '#dc2626' : 'none'
+            }} 
+          />
+          Report
         </button>
       </div>
     </div>
@@ -302,6 +311,9 @@ export default function RestaurantDetailsPage() {
   const [restaurantReviews, setRestaurantReviews] = useState([]);
   const [isLoadingReviews, setIsLoadingReviews] = useState(true);
   const [isLoadingRestaurant, setIsLoadingRestaurant] = useState(true);
+  const [helpfulReviews, setHelpfulReviews] = useState(new Set());
+  const [reportedReviews, setReportedReviews] = useState(new Set());
+  const { user } = useAuth();
 
   // Log the restaurantId to make sure we have it
   console.log('Current restaurantId:', id);
@@ -389,6 +401,68 @@ export default function RestaurantDetailsPage() {
     );
   };
 
+  const handleHelpfulClick = async (reviewId) => {
+    if (!user) {
+      toast.error('Please log in to mark reviews as helpful');
+      return;
+    }
+
+    try {
+      const review = restaurantReviews.find(r => r.id === reviewId);
+      console.log('Current review:', review);
+
+      // Get the restaurant document
+      const restaurantRef = doc(db, 'restaurants', review.restaurantId);
+      const restaurantDoc = await getDoc(restaurantRef);
+
+      if (!restaurantDoc.exists()) {
+        throw new Error('Restaurant document not found');
+      }
+
+      // Get current reviews array
+      const reviews = restaurantDoc.data().reviews || [];
+      
+      // Update the specific review in the array
+      const updatedReviews = reviews.map(r => 
+        r.id === reviewId 
+          ? { 
+              ...r, 
+              helpfulCount: (r.helpfulCount || 0) + 1,
+              helpfulUsers: [...(r.helpfulUsers || []), user.uid]
+            }
+          : r
+      );
+
+      // Update the restaurant document with the modified reviews array
+      await updateDoc(restaurantRef, {
+        reviews: updatedReviews
+      });
+
+      console.log('Successfully updated review in restaurant document');
+
+      // Update local state
+      setRestaurantReviews(prev => 
+        prev.map(r => 
+          r.id === reviewId 
+            ? { ...r, helpfulCount: (r.helpfulCount || 0) + 1 }
+            : r
+        )
+      );
+      
+      toast.success('Thanks for your feedback!');
+    } catch (error) {
+      console.error('Update failed:', error);
+      toast.error('Failed to update helpful count');
+    }
+  };
+
+  const handleReportClick = (reviewId) => {
+    if (!reportedReviews.has(reviewId)) {
+      setReportedReviews(prev => new Set([...prev, reviewId]));
+      toast.success('Review has been reported to our team');
+    }
+  };
+
   if (isLoading) {
     return (
       <div style={{ 
@@ -447,6 +521,24 @@ export default function RestaurantDetailsPage() {
 
   // Create map URL for the address
   const mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(restaurant.address || '')}`;
+
+  const getAllergenData = (allergen) => {
+    // Comprehensive allergen mapping
+    const allergenMap = {
+      'Peanuts': { name: 'Peanuts', emoji: '🥜' },
+      'Tree nuts': { name: 'Tree nuts', emoji: '🌰' },
+      'Dairy': { name: 'Dairy', emoji: '🥛' },
+      'Eggs': { name: 'Eggs', emoji: '🥚' },
+      'Fish': { name: 'Fish', emoji: '🐟' },
+      'Shellfish': { name: 'Shellfish', emoji: '🦐' },
+      'Soy': { name: 'Soy', emoji: '🫘' },
+      'Wheat': { name: 'Wheat', emoji: '🌾' },
+      'Sesame': { name: 'Sesame', emoji: '🌱' },
+      'Gluten': { name: 'Gluten', emoji: '🍞' }
+    };
+
+    return allergenMap[allergen] || { name: allergen, emoji: '⚠️' };
+  };
 
   return (
     <div style={{ 
@@ -1206,10 +1298,175 @@ export default function RestaurantDetailsPage() {
             <div>Loading reviews...</div>
           ) : restaurantReviews.length > 0 ? (
             <div className="reviews-list">
-              {restaurantReviews.map((review) => {
-                console.log('Rendering review:', review);
-                return <ReviewCard key={review.id} review={review} />;
-              })}
+              {restaurantReviews.map((review) => (
+                <div 
+                  key={review.id}
+                  style={{
+                    padding: '20px',
+                    borderBottom: '1px solid #e5e7eb',
+                    position: 'relative'
+                  }}
+                >
+                  {/* Header with user info and date */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    marginBottom: '12px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <div 
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '50%',
+                          backgroundColor: '#f3f4f6',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginRight: '12px',
+                          fontSize: '16px',
+                          color: '#4b5563'
+                        }}
+                      >
+                        {review.userName?.charAt(0)?.toUpperCase() || 'U'}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: '500' }}>{review.userName}</div>
+                        {/* Star Rating */}
+                        <div style={{ display: 'flex', marginTop: '4px', marginBottom: '8px' }}>
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              size={16}
+                              fill={i < review.rating ? "#facc15" : "none"}
+                              color={i < review.rating ? "#facc15" : "#d1d5db"}
+                            />
+                          ))}
+                        </div>
+                        {/* Allergens - now under star rating */}
+                        {review.allergens && review.allergens.length > 0 && (
+                          <div style={{ 
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '8px',
+                            marginBottom: '8px'
+                          }}>
+                            {review.allergens.map((allergen, index) => {
+                              const allergenInfo = getAllergenData(allergen);
+                              return (
+                                <span
+                                  key={index}
+                                  style={{
+                                    padding: '2px 8px',
+                                    backgroundColor: '#ecfdf5',
+                                    color: '#065f46',
+                                    borderRadius: '9999px',
+                                    fontSize: '14px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
+                                  }}
+                                >
+                                  <span>{allergenInfo.emoji}</span>
+                                  <span>{allergenInfo.name}</span>
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div style={{ 
+                      fontSize: '14px', 
+                      color: '#6b7280',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {new Date(review.date).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Review text */}
+                  <p style={{ 
+                    fontSize: '15px',
+                    lineHeight: '1.5',
+                    color: '#374151',
+                    marginBottom: '16px'
+                  }}>
+                    {review.text}
+                  </p>
+
+                  {/* Review actions - modernized buttons */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginTop: '16px'
+                  }}>
+                    <button
+                      onClick={() => handleHelpfulClick(review.id)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        background: review.helpfulUsers?.includes(user?.uid) ? '#f0fdf4' : '#f9fafb',
+                        border: '1px solid',
+                        borderColor: review.helpfulUsers?.includes(user?.uid) ? '#86efac' : '#e5e7eb',
+                        color: review.helpfulUsers?.includes(user?.uid) ? '#15803d' : '#6b7280',
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '500'
+                      }}
+                    >
+                      <ThumbsUp 
+                        size={16} 
+                        style={{ 
+                          marginRight: '4px',
+                          fill: review.helpfulUsers?.includes(user?.uid) ? '#15803d' : 'none'
+                        }} 
+                      />
+                      Helpful ({review.helpfulCount || 0})
+                    </button>
+                    <button
+                      onClick={() => handleReportClick(review.id)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        background: reportedReviews.has(review.id) ? '#fef2f2' : '#f9fafb',
+                        border: '1px solid',
+                        borderColor: reportedReviews.has(review.id) ? '#fecaca' : '#e5e7eb',
+                        color: reportedReviews.has(review.id) ? '#dc2626' : '#6b7280',
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '500',
+                        ':hover': {
+                          backgroundColor: reportedReviews.has(review.id) ? '#fee2e2' : '#f3f4f6',
+                          transform: 'translateY(-1px)'
+                        }
+                      }}
+                    >
+                      <Flag 
+                        size={16} 
+                        style={{ 
+                          marginRight: '4px',
+                          fill: reportedReviews.has(review.id) ? '#dc2626' : 'none'
+                        }} 
+                      />
+                      Report
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
             <p>No reviews yet</p>
