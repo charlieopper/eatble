@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { 
   MapPin, Phone, Globe, Clock, ChefHat, 
   FileText, Heart, ArrowLeft, Star,
-  ChevronLeft, ChevronRight, ThumbsUp, Flag
+  ChevronLeft, ChevronRight, ThumbsUp, Flag, Trash2
 } from 'lucide-react';
 import { useFavorites } from '../context/FavoritesContext';
 import restaurantService from '../services/restaurantService';
@@ -15,6 +15,7 @@ import { db } from '../firebase/config';
 import { toast } from 'react-hot-toast';
 import ReviewCard from '../components/reviews/ReviewCard';
 import { useAuth } from '../context/AuthContext';
+import DeleteConfirmationModal from '../components/reviews/DeleteConfirmationModal';
 
 // Placeholder restaurant image URL
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fDB8fHww&w=1000&q=80";
@@ -34,272 +35,6 @@ const TEAL_COLOR = "#0d9488";
 // Add this at the top of the file with other imports
 const googleLogoUrl = "https://www.gstatic.com/images/branding/product/1x/googleg_48dp.png";
 
-// Review component to handle individual reviews
-const ReviewItem = ({ review }) => {
-  const [isHelpful, setIsHelpful] = useState(false);
-  const [helpfulCount, setHelpfulCount] = useState(review.helpfulCount || 0);
-  const [isReported, setIsReported] = useState(false);
-  const [showToast, setShowToast] = useState(false);
-  
-  const handleReport = () => {
-    if (!isReported) {
-      setIsReported(true);
-      setShowToast(true);
-      // Hide toast after 3 seconds
-      setTimeout(() => {
-        setShowToast(false);
-      }, 3000);
-    }
-  };
-
-  return (
-    <div 
-      key={review.id}
-      style={{
-        padding: '16px',
-        borderBottom: '1px solid #e5e7eb',
-        marginBottom: '16px',
-        backgroundColor: review.isUserReview ? '#f9fafb' : 'transparent',
-        position: 'relative' // Added for toast positioning
-      }}
-    >
-      {/* Toast Message */}
-      {showToast && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: '100%',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            backgroundColor: '#10b981',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: '4px',
-            fontSize: '14px',
-            whiteSpace: 'nowrap',
-            zIndex: 50,
-            boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-            animation: 'fadeIn 0.3s ease'
-          }}
-        >
-          Comment has been reported for review by eatABLE team
-        </div>
-      )}
-
-      {/* User info and rating */}
-      <div style={{
-        display: 'flex',
-        marginBottom: '12px'
-      }}>
-        <img 
-          src={review.user.image} 
-          alt={review.user.name}
-          style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '50%',
-            marginRight: '12px'
-          }}
-        />
-        <div>
-          <div style={{ 
-            fontWeight: '500', 
-            marginBottom: '4px',
-            display: 'flex',
-            alignItems: 'center'
-          }}>
-            {review.user.name}
-            {review.isUserReview && (
-              <span style={{
-                marginLeft: '8px',
-                fontSize: '12px',
-                backgroundColor: '#ef4444',
-                color: 'white',
-                padding: '2px 6px',
-                borderRadius: '9999px'
-              }}>
-                Your Review
-              </span>
-            )}
-          </div>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center',
-            marginBottom: '4px'
-          }}>
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                size={14}
-                color={i < review.rating ? "#facc15" : "#d1d5db"}
-                fill={i < review.rating ? "#facc15" : "none"}
-              />
-            ))}
-            <span style={{ 
-              fontSize: '12px', 
-              color: '#6b7280',
-              marginLeft: '8px'
-            }}>
-              {review.date}
-            </span>
-          </div>
-          
-          {/* Allergens */}
-          <div style={{ 
-            display: 'flex', 
-            flexWrap: 'wrap',
-            marginBottom: '8px'
-          }}>
-            <span style={{ 
-              fontSize: '12px', 
-              color: '#6b7280',
-              marginRight: '8px'
-            }}>
-              Allergies:
-            </span>
-            {review.allergens.map((allergen, index) => (
-              <span 
-                key={index}
-                style={{ 
-                  display: 'inline-block',
-                  padding: '2px 6px',
-                  backgroundColor: '#ccfbf1',
-                  border: '1px solid #99f6e4',
-                  borderRadius: '9999px',
-                  fontSize: '11px',
-                  color: "#0d9488",
-                  marginRight: '4px'
-                }}
-              >
-                {allergen}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-      
-      {/* Review text */}
-      <p style={{ 
-        fontSize: '14px', 
-        lineHeight: '1.5',
-        color: '#4b5563',
-        marginBottom: '12px'
-      }}>
-        {review.text}
-      </p>
-      
-      {/* Review actions - modernized buttons */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: '16px'
-      }}>
-        <button
-          onClick={() => handleHelpfulClick(review.id)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: review.helpfulUsers?.includes(user?.uid) ? '#f0fdf4' : '#f9fafb',
-            border: '1px solid',
-            borderColor: review.helpfulUsers?.includes(user?.uid) ? '#86efac' : '#e5e7eb',
-            color: review.helpfulUsers?.includes(user?.uid) ? '#15803d' : '#6b7280',
-            fontSize: '14px',
-            cursor: 'pointer',
-            padding: '6px 12px',
-            borderRadius: '6px',
-            transition: 'all 0.2s ease',
-            fontWeight: '500'
-          }}
-        >
-          <ThumbsUp 
-            size={16} 
-            style={{ 
-              marginRight: '4px',
-              fill: review.helpfulUsers?.includes(user?.uid) ? '#15803d' : 'none'
-            }} 
-          />
-          Helpful ({review.helpfulCount || 0})
-        </button>
-        <button
-          onClick={() => handleReportClick(review.id)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: reportedReviews.has(review.id) ? '#fef2f2' : '#f9fafb',
-            border: '1px solid',
-            borderColor: reportedReviews.has(review.id) ? '#fecaca' : '#e5e7eb',
-            color: reportedReviews.has(review.id) ? '#dc2626' : '#6b7280',
-            fontSize: '14px',
-            cursor: 'pointer',
-            padding: '6px 12px',
-            borderRadius: '6px',
-            transition: 'all 0.2s ease',
-            fontWeight: '500',
-            ':hover': {
-              backgroundColor: reportedReviews.has(review.id) ? '#fee2e2' : '#f3f4f6',
-              transform: 'translateY(-1px)'
-            }
-          }}
-        >
-          <Flag 
-            size={16} 
-            style={{ 
-              marginRight: '4px',
-              fill: reportedReviews.has(review.id) ? '#dc2626' : 'none'
-            }} 
-          />
-          Report
-        </button>
-      </div>
-    </div>
-  );
-};
-
-// Reviews list component
-const EatableReviewsList = ({ reviews }) => {
-  return (
-    <>
-      {reviews.map(review => (
-        <ReviewItem key={review.id} review={review} />
-      ))}
-      
-      {/* Load More Button */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center',
-        marginTop: '16px'
-      }}>
-        <button
-          style={{
-            backgroundColor: 'white',
-            border: '1px solid #d1d5db',
-            borderRadius: '4px',
-            padding: '8px 16px',
-            fontSize: '14px',
-            color: '#4b5563',
-            cursor: 'pointer'
-          }}
-        >
-          Load more reviews
-        </button>
-      </div>
-    </>
-  );
-};
-
-// Add keyframe animation for toast
-const styleSheet = document.createElement('style');
-styleSheet.textContent = `
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translate(-50%, 10px); }
-    to { opacity: 1; transform: translate(-50%, 0); }
-  }
-`;
-document.head.appendChild(styleSheet);
-
 export default function RestaurantDetailsPage() {
   const { id } = useParams();
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -314,9 +49,66 @@ export default function RestaurantDetailsPage() {
   const [helpfulReviews, setHelpfulReviews] = useState(new Set());
   const [reportedReviews, setReportedReviews] = useState(new Set());
   const { user } = useAuth();
+  const [sortOption, setSortOption] = useState('newest');
+  const [sortedReviews, setSortedReviews] = useState([]);
+  const [activeDeleteModal, setActiveDeleteModal] = useState(null);
 
   // Log the restaurantId to make sure we have it
   console.log('Current restaurantId:', id);
+
+  // Define handleDeleteReview at the component level, before any JSX
+  const handleDeleteReview = async (reviewId) => {
+    try {
+      // 1. Get current restaurant data
+      const restaurantRef = doc(db, 'restaurants', id);
+      const restaurantDoc = await getDoc(restaurantRef);
+      
+      if (!restaurantDoc.exists()) {
+        throw new Error('Restaurant not found');
+      }
+
+      // 2. Find the review to be deleted
+      const currentReviews = restaurantDoc.data().reviews || [];
+      const reviewToDelete = currentReviews.find(r => r.id === reviewId);
+
+      if (!reviewToDelete) {
+        throw new Error('Review not found');
+      }
+
+      // Security check
+      if (reviewToDelete.userId !== user.uid) {
+        throw new Error('Unauthorized: You can only delete your own reviews');
+      }
+
+      // 3. Remove review and recalculate average rating
+      const updatedReviews = currentReviews.filter(r => r.id !== reviewId);
+      const totalRating = updatedReviews.reduce((sum, r) => sum + r.rating, 0);
+      const newAverageRating = updatedReviews.length > 0 
+        ? totalRating / updatedReviews.length 
+        : 0;
+
+      // 4. Update restaurant document
+      await updateDoc(restaurantRef, {
+        reviews: updatedReviews,
+        averageRating: newAverageRating,
+        reviewCount: updatedReviews.length
+      });
+
+      // 5. Update user document
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        reviewCount: increment(-1)
+      });
+
+      // 6. Update local state
+      setRestaurantReviews(prev => prev.filter(r => r.id !== reviewId));
+      
+      toast.success('Review deleted successfully');
+    } catch (error) {
+      console.error('Error deleting review:', error);
+      toast.error(error.message || 'Failed to delete review');
+    }
+  };
 
   useEffect(() => {
     const loadRestaurant = async () => {
@@ -403,26 +195,73 @@ export default function RestaurantDetailsPage() {
 
   const handleHelpfulClick = async (reviewId) => {
     if (!user) {
+      console.log('❌ No user logged in');
       toast.error('Please log in to mark reviews as helpful');
       return;
     }
 
     try {
-      const review = restaurantReviews.find(r => r.id === reviewId);
-      console.log('Current review:', review);
+      console.group('🎯 Helpful Click Process');
+      console.log('Starting helpful click:', {
+        reviewId,
+        userId: user.uid,
+        timestamp: new Date().toISOString()
+      });
 
-      // Get the restaurant document
+      const review = restaurantReviews.find(r => r.id === reviewId);
+      console.log('📝 Found review:', review);
+
+      // 1. Get the restaurant document
       const restaurantRef = doc(db, 'restaurants', review.restaurantId);
       const restaurantDoc = await getDoc(restaurantRef);
 
+      console.log('🏪 Restaurant document:', {
+        exists: restaurantDoc.exists(),
+        id: review.restaurantId,
+        data: restaurantDoc.data()
+      });
+
       if (!restaurantDoc.exists()) {
+        console.error('❌ Restaurant document not found');
         throw new Error('Restaurant document not found');
       }
 
-      // Get current reviews array
+      // 2. Get the user document
+      const userRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userRef);
+
+      console.log('👤 User document:', {
+        exists: userDoc.exists(),
+        data: userDoc.exists() ? userDoc.data() : null
+      });
+
+      // Check if user has already marked this helpful
       const reviews = restaurantDoc.data().reviews || [];
-      
-      // Update the specific review in the array
+      const targetReview = reviews.find(r => r.id === reviewId);
+      const hasMarkedHelpful = targetReview?.helpfulUsers?.includes(user.uid);
+
+      console.log('🔍 Helpful check:', {
+        hasMarkedHelpful,
+        currentHelpfulCount: targetReview?.helpfulCount || 0,
+        currentHelpfulUsers: targetReview?.helpfulUsers || []
+      });
+
+      if (hasMarkedHelpful) {
+        console.log('⚠️ User attempting duplicate helpful click');
+        console.groupEnd();
+        toast('You\'ve already marked this review as helpful', {
+          icon: '👍',
+          duration: 3000,
+          style: {
+            background: '#f0fdf4',
+            color: '#166534',
+            border: '1px solid #86efac'
+          }
+        });
+        return;
+      }
+
+      // 3. Update the review in the restaurant document
       const updatedReviews = reviews.map(r => 
         r.id === reviewId 
           ? { 
@@ -433,25 +272,61 @@ export default function RestaurantDetailsPage() {
           : r
       );
 
-      // Update the restaurant document with the modified reviews array
+      console.log('📝 Updating restaurant document with:', {
+        reviewId,
+        newHelpfulCount: (targetReview?.helpfulCount || 0) + 1,
+        updatedHelpfulUsers: [...(targetReview?.helpfulUsers || []), user.uid]
+      });
+
       await updateDoc(restaurantRef, {
         reviews: updatedReviews
       });
 
-      console.log('Successfully updated review in restaurant document');
+      // 4. Update or create user document with helpfulReviews
+      if (!userDoc.exists()) {
+        console.log('👤 Creating new user document');
+        await setDoc(userRef, {
+          uid: user.uid,
+          helpfulReviews: [reviewId]
+        });
+      } else {
+        console.log('👤 Updating existing user document');
+        await updateDoc(userRef, {
+          helpfulReviews: arrayUnion(reviewId)
+        });
+      }
 
-      // Update local state
+      console.log('✅ Successfully updated both documents');
+
+      // 5. Update local state
       setRestaurantReviews(prev => 
         prev.map(r => 
           r.id === reviewId 
-            ? { ...r, helpfulCount: (r.helpfulCount || 0) + 1 }
+            ? { 
+                ...r, 
+                helpfulCount: (r.helpfulCount || 0) + 1,
+                helpfulUsers: [...(r.helpfulUsers || []), user.uid]
+              }
             : r
         )
       );
       
+      // Update helpfulReviews Set for UI state
+      setHelpfulReviews(prev => new Set([...prev, reviewId]));
+      
+      console.log('🔄 Updated local state');
+      console.groupEnd();
+      
       toast.success('Thanks for your feedback!');
     } catch (error) {
-      console.error('Update failed:', error);
+      console.error('❌ Update failed:', {
+        error,
+        errorCode: error.code,
+        errorMessage: error.message,
+        reviewId,
+        userId: user.uid
+      });
+      console.groupEnd();
       toast.error('Failed to update helpful count');
     }
   };
@@ -461,6 +336,39 @@ export default function RestaurantDetailsPage() {
       setReportedReviews(prev => new Set([...prev, reviewId]));
       toast.success('Review has been reported to our team');
     }
+  };
+
+  // Add this effect to handle sorting when reviews or sort option changes
+  useEffect(() => {
+    if (!restaurantReviews) return;
+    
+    const sortReviews = () => {
+      const reviews = [...restaurantReviews];
+      
+      switch (sortOption) {
+        case 'newest':
+          return reviews.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        case 'highest':
+          return reviews.sort((a, b) => b.rating - a.rating);
+        
+        case 'lowest':
+          return reviews.sort((a, b) => a.rating - b.rating);
+        
+        case 'helpful':
+          return reviews.sort((a, b) => (b.helpfulCount || 0) - (a.helpfulCount || 0));
+        
+        default:
+          return reviews;
+      }
+    };
+
+    setSortedReviews(sortReviews());
+  }, [restaurantReviews, sortOption]);
+
+  // Update your sort handler
+  const handleSortChange = (event) => {
+    setSortOption(event.target.value);
   };
 
   if (isLoading) {
@@ -523,10 +431,12 @@ export default function RestaurantDetailsPage() {
   const mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(restaurant.address || '')}`;
 
   const getAllergenData = (allergen) => {
-    // Comprehensive allergen mapping
+    // Comprehensive allergen mapping with variations
     const allergenMap = {
       'Peanuts': { name: 'Peanuts', emoji: '🥜' },
       'Tree nuts': { name: 'Tree nuts', emoji: '🌰' },
+      'TreeNuts': { name: 'Tree nuts', emoji: '🌰' },
+      'Tree Nuts': { name: 'Tree nuts', emoji: '🌰' }, // Added this variation
       'Dairy': { name: 'Dairy', emoji: '🥛' },
       'Eggs': { name: 'Eggs', emoji: '🥚' },
       'Fish': { name: 'Fish', emoji: '🐟' },
@@ -537,7 +447,9 @@ export default function RestaurantDetailsPage() {
       'Gluten': { name: 'Gluten', emoji: '🍞' }
     };
 
-    return allergenMap[allergen] || { name: allergen, emoji: '⚠️' };
+    // Normalize the allergen string to handle case and spacing variations
+    const normalizedAllergen = allergen.trim();
+    return allergenMap[normalizedAllergen] || { name: allergen, emoji: '⚠️' };
   };
 
   return (
@@ -1250,6 +1162,8 @@ export default function RestaurantDetailsPage() {
             marginBottom: '16px'
           }}>
             <select 
+              value={sortOption}
+              onChange={handleSortChange}
               style={{
                 padding: '8px 12px',
                 borderRadius: '4px',
@@ -1259,10 +1173,10 @@ export default function RestaurantDetailsPage() {
                 color: '#4b5563'
               }}
             >
-              <option>Newest</option>
-              <option>Highest Rating</option>
-              <option>Lowest Rating</option>
-              <option>Most Helpful</option>
+              <option value="newest">Newest</option>
+              <option value="highest">Highest Rating</option>
+              <option value="lowest">Lowest Rating</option>
+              <option value="helpful">Most Helpful</option>
             </select>
             
             <div style={{
@@ -1296,177 +1210,217 @@ export default function RestaurantDetailsPage() {
           {/* Individual Reviews */}
           {isLoadingReviews ? (
             <div>Loading reviews...</div>
-          ) : restaurantReviews.length > 0 ? (
+          ) : sortedReviews.length > 0 ? (
             <div className="reviews-list">
-              {restaurantReviews.map((review) => (
-                <div 
-                  key={review.id}
-                  style={{
-                    padding: '20px',
-                    borderBottom: '1px solid #e5e7eb',
-                    position: 'relative'
-                  }}
-                >
-                  {/* Header with user info and date */}
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    marginBottom: '12px'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <div 
+              {sortedReviews.map((review) => {
+                // Add debugging logs
+                console.log('Review:', {
+                  reviewId: review.id,
+                  reviewUserId: review.userId,
+                  currentUserId: user?.uid,
+                  isMatch: user?.uid === review.userId
+                });
+
+                return (
+                  <div 
+                    key={review.id}
+                    style={{
+                      padding: '20px',
+                      borderBottom: '1px solid #e5e7eb',
+                      position: 'relative'
+                    }}
+                  >
+                    {/* Header with user info and date */}
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      marginBottom: '12px'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <div 
+                          style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '50%',
+                            backgroundColor: '#f3f4f6',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginRight: '12px',
+                            fontSize: '16px',
+                            color: '#4b5563'
+                          }}
+                        >
+                          {review.userName?.charAt(0)?.toUpperCase() || 'U'}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: '500' }}>{review.userName}</div>
+                          {/* Star Rating */}
+                          <div style={{ display: 'flex', marginTop: '4px', marginBottom: '8px' }}>
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                size={16}
+                                fill={i < review.rating ? "#facc15" : "none"}
+                                color={i < review.rating ? "#facc15" : "#d1d5db"}
+                              />
+                            ))}
+                          </div>
+                          {/* Allergens - now under star rating */}
+                          {review.allergens && review.allergens.length > 0 && (
+                            <div style={{ 
+                              display: 'flex',
+                              flexWrap: 'wrap',
+                              gap: '8px',
+                              marginBottom: '8px'
+                            }}>
+                              {review.allergens.map((allergen, index) => {
+                                const allergenInfo = getAllergenData(allergen);
+                                return (
+                                  <span
+                                    key={index}
+                                    style={{
+                                      padding: '2px 8px',
+                                      backgroundColor: '#ecfdf5',
+                                      color: '#065f46',
+                                      borderRadius: '9999px',
+                                      fontSize: '14px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '4px'
+                                    }}
+                                  >
+                                    <span>{allergenInfo.emoji}</span>
+                                    <span>{allergenInfo.name}</span>
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div style={{ 
+                        fontSize: '14px', 
+                        color: '#6b7280',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {new Date(review.date).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Review text */}
+                    <p style={{ 
+                      fontSize: '15px',
+                      lineHeight: '1.5',
+                      color: '#374151',
+                      marginBottom: '16px'
+                    }}>
+                      {review.text}
+                    </p>
+
+                    {/* Review actions - modernized buttons */}
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginTop: '16px'
+                    }}>
+                      <button
+                        onClick={() => handleHelpfulClick(review.id)}
                         style={{
-                          width: '40px',
-                          height: '40px',
-                          borderRadius: '50%',
-                          backgroundColor: '#f3f4f6',
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          marginRight: '12px',
-                          fontSize: '16px',
-                          color: '#4b5563'
+                          gap: '6px',
+                          background: review.helpfulUsers?.includes(user?.uid) ? '#f0fdf4' : '#f9fafb',
+                          border: '1px solid',
+                          borderColor: review.helpfulUsers?.includes(user?.uid) ? '#86efac' : '#e5e7eb',
+                          color: review.helpfulUsers?.includes(user?.uid) ? '#15803d' : '#6b7280',
+                          fontSize: '14px',
+                          cursor: 'pointer',
+                          padding: '6px 12px',
+                          borderRadius: '6px',
+                          transition: 'all 0.2s ease',
+                          fontWeight: '500'
                         }}
                       >
-                        {review.userName?.charAt(0)?.toUpperCase() || 'U'}
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: '500' }}>{review.userName}</div>
-                        {/* Star Rating */}
-                        <div style={{ display: 'flex', marginTop: '4px', marginBottom: '8px' }}>
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              size={16}
-                              fill={i < review.rating ? "#facc15" : "none"}
-                              color={i < review.rating ? "#facc15" : "#d1d5db"}
-                            />
-                          ))}
-                        </div>
-                        {/* Allergens - now under star rating */}
-                        {review.allergens && review.allergens.length > 0 && (
-                          <div style={{ 
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: '8px',
-                            marginBottom: '8px'
-                          }}>
-                            {review.allergens.map((allergen, index) => {
-                              const allergenInfo = getAllergenData(allergen);
-                              return (
-                                <span
-                                  key={index}
-                                  style={{
-                                    padding: '2px 8px',
-                                    backgroundColor: '#ecfdf5',
-                                    color: '#065f46',
-                                    borderRadius: '9999px',
-                                    fontSize: '14px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px'
-                                  }}
-                                >
-                                  <span>{allergenInfo.emoji}</span>
-                                  <span>{allergenInfo.name}</span>
-                                </span>
-                              );
-                            })}
-                          </div>
+                        <ThumbsUp 
+                          size={16} 
+                          style={{ 
+                            marginRight: '4px',
+                            fill: review.helpfulUsers?.includes(user?.uid) ? '#15803d' : 'none'
+                          }} 
+                        />
+                        Helpful ({review.helpfulCount || 0})
+                      </button>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        {user?.uid === review.userId && (
+                          <button
+                            onClick={() => setActiveDeleteModal(review.id)}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              background: '#fee2e2',
+                              border: '1px solid #fecaca',
+                              color: '#dc2626',
+                              fontSize: '14px',
+                              cursor: 'pointer',
+                              padding: '6px 12px',
+                              borderRadius: '6px',
+                              transition: 'all 0.2s ease',
+                              fontWeight: '500'
+                            }}
+                          >
+                            <Trash2 size={16} />
+                            Delete
+                          </button>
                         )}
+                        <button
+                          onClick={() => handleReportClick(review.id)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            background: reportedReviews.has(review.id) ? '#fef2f2' : '#f9fafb',
+                            border: '1px solid',
+                            borderColor: reportedReviews.has(review.id) ? '#fecaca' : '#e5e7eb',
+                            color: reportedReviews.has(review.id) ? '#dc2626' : '#6b7280',
+                            fontSize: '14px',
+                            cursor: 'pointer',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            transition: 'all 0.2s ease',
+                            fontWeight: '500'
+                          }}
+                        >
+                          <Flag 
+                            size={16} 
+                            style={{ 
+                              marginRight: '4px',
+                              fill: reportedReviews.has(review.id) ? '#dc2626' : 'none'
+                            }} 
+                          />
+                          Report
+                        </button>
                       </div>
                     </div>
-                    <div style={{ 
-                      fontSize: '14px', 
-                      color: '#6b7280',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      {new Date(review.date).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      })}
-                    </div>
-                  </div>
 
-                  {/* Review text */}
-                  <p style={{ 
-                    fontSize: '15px',
-                    lineHeight: '1.5',
-                    color: '#374151',
-                    marginBottom: '16px'
-                  }}>
-                    {review.text}
-                  </p>
-
-                  {/* Review actions - modernized buttons */}
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginTop: '16px'
-                  }}>
-                    <button
-                      onClick={() => handleHelpfulClick(review.id)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        background: review.helpfulUsers?.includes(user?.uid) ? '#f0fdf4' : '#f9fafb',
-                        border: '1px solid',
-                        borderColor: review.helpfulUsers?.includes(user?.uid) ? '#86efac' : '#e5e7eb',
-                        color: review.helpfulUsers?.includes(user?.uid) ? '#15803d' : '#6b7280',
-                        fontSize: '14px',
-                        cursor: 'pointer',
-                        padding: '6px 12px',
-                        borderRadius: '6px',
-                        transition: 'all 0.2s ease',
-                        fontWeight: '500'
+                    {/* Delete confirmation modal for this specific review */}
+                    <DeleteConfirmationModal
+                      isOpen={activeDeleteModal === review.id}
+                      onClose={() => setActiveDeleteModal(null)}
+                      onConfirm={() => {
+                        handleDeleteReview(review.id);
+                        setActiveDeleteModal(null);
                       }}
-                    >
-                      <ThumbsUp 
-                        size={16} 
-                        style={{ 
-                          marginRight: '4px',
-                          fill: review.helpfulUsers?.includes(user?.uid) ? '#15803d' : 'none'
-                        }} 
-                      />
-                      Helpful ({review.helpfulCount || 0})
-                    </button>
-                    <button
-                      onClick={() => handleReportClick(review.id)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        background: reportedReviews.has(review.id) ? '#fef2f2' : '#f9fafb',
-                        border: '1px solid',
-                        borderColor: reportedReviews.has(review.id) ? '#fecaca' : '#e5e7eb',
-                        color: reportedReviews.has(review.id) ? '#dc2626' : '#6b7280',
-                        fontSize: '14px',
-                        cursor: 'pointer',
-                        padding: '6px 12px',
-                        borderRadius: '6px',
-                        transition: 'all 0.2s ease',
-                        fontWeight: '500',
-                        ':hover': {
-                          backgroundColor: reportedReviews.has(review.id) ? '#fee2e2' : '#f3f4f6',
-                          transform: 'translateY(-1px)'
-                        }
-                      }}
-                    >
-                      <Flag 
-                        size={16} 
-                        style={{ 
-                          marginRight: '4px',
-                          fill: reportedReviews.has(review.id) ? '#dc2626' : 'none'
-                        }} 
-                      />
-                      Report
-                    </button>
+                    />
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p>No reviews yet</p>
