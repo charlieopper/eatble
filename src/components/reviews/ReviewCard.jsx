@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllergenEmoji } from '../../utils/allergenUtils';
+import { useReviews } from '../../context/ReviewsContext';
+import { ThumbsUp, Flag, Trash2 } from 'lucide-react';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
 
-export default function ReviewCard({ review }) {
+export default function ReviewCard({ review, showRestaurantName = true }) {
+  const { deleteReview } = useReviews();
   const [isHovered, setIsHovered] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const navigate = useNavigate();
 
   // Keep only one console log for essential debugging
@@ -23,6 +28,15 @@ export default function ReviewCard({ review }) {
     };
     const id = restaurantIds[review.restaurantName];
     navigate(`/restaurant/${id}`);
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteReview(review.id, review.restaurantId);
+      setShowDeleteModal(false);
+    } catch (error) {
+      console.error('Error in handleDelete:', error);
+    }
   };
 
   const renderStars = (rating) => {
@@ -83,7 +97,7 @@ export default function ReviewCard({ review }) {
   };
 
   return (
-    <div style={cardStyle}>
+    <div className="review-card" style={cardStyle}>
       <div style={contentStyle}>
         {/* Header with restaurant name and date */}
         <div style={{ 
@@ -104,7 +118,7 @@ export default function ReviewCard({ review }) {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >
-            {review.restaurantName}
+            {showRestaurantName ? review.restaurantName : ''}
           </h3>
           <span style={{ 
             fontSize: '14px',
@@ -165,7 +179,41 @@ export default function ReviewCard({ review }) {
             </div>
           ))}
         </div>
+
+        {/* Delete button */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'flex-end',
+          marginTop: '8px',
+          gap: '8px'
+        }}>
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              border: 'none',
+              backgroundColor: '#fee2e2',
+              color: '#dc2626',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >
+            <Trash2 size={16} style={{ marginRight: '4px' }} />
+            Delete
+          </button>
+        </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 } 

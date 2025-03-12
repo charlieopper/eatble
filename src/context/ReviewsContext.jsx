@@ -160,6 +160,60 @@ export const ReviewsProvider = ({ children }) => {
     }));
   };
 
+  const deleteReview = async (reviewId, restaurantId) => {
+    if (!user) {
+      toast.error('Please login to delete reviews');
+      return;
+    }
+
+    try {
+      // 1. Get current restaurant data
+      const restaurantRef = doc(db, 'restaurants', restaurantId);
+      const restaurantDoc = await getDoc(restaurantRef);
+      
+      if (!restaurantDoc.exists()) {
+        throw new Error('Restaurant not found');
+      }
+
+      // 2. Find and remove the review
+      const currentReviews = restaurantDoc.data().reviews || [];
+      const reviewToDelete = currentReviews.find(r => r.id === reviewId);
+
+      if (!reviewToDelete) {
+        throw new Error('Review not found');
+      }
+
+      // Security check
+      if (reviewToDelete.userId !== user.uid) {
+        throw new Error('Unauthorized: You can only delete your own reviews');
+      }
+
+      // 3. Remove review from restaurant document
+      const updatedReviews = currentReviews.filter(r => r.id !== reviewId);
+      await updateDoc(restaurantRef, {
+        reviews: updatedReviews
+      });
+
+      // 4. Remove review from user document
+      const userRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userRef);
+      const userReviews = userDoc.data()?.reviews || [];
+      const updatedUserReviews = userReviews.filter(r => r.id !== reviewId);
+      
+      await updateDoc(userRef, {
+        reviews: updatedUserReviews
+      });
+
+      // 5. Update local state
+      setReviews(prev => prev.filter(r => r.id !== reviewId));
+      
+      toast.success('Review deleted successfully');
+    } catch (error) {
+      toast.error(error.message || 'Failed to delete review');
+      throw error;
+    }
+  };
+
   return (
     <ReviewsContext.Provider value={{
       reviews,
@@ -167,7 +221,8 @@ export const ReviewsProvider = ({ children }) => {
       error,
       hasMore,
       addReview,
-      loadMoreReviews
+      loadMoreReviews,
+      deleteReview
     }}>
       {children}
     </ReviewsContext.Provider>

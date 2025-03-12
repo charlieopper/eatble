@@ -59,7 +59,18 @@ export default function ReviewsPage() {
               fontWeight: '600',
               margin: 0,
               padding: 0
-            }}>Your Reviews</h2>
+            }}>
+              Your Reviews
+              {!isLoading && !error && (
+                <span style={{ 
+                  marginLeft: '8px',
+                  color: '#6b7280',
+                  fontSize: '1rem'
+                }}>
+                  ({reviews.length})
+                </span>
+              )}
+            </h2>
           </div>
         </div>
 

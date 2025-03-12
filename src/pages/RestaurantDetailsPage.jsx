@@ -16,6 +16,7 @@ import { toast } from 'react-hot-toast';
 import ReviewCard from '../components/reviews/ReviewCard';
 import { useAuth } from '../context/AuthContext';
 import DeleteConfirmationModal from '../components/reviews/DeleteConfirmationModal';
+import { useReviews } from '../context/ReviewsContext';
 
 // Placeholder restaurant image URL
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fDB8fHww&w=1000&q=80";
@@ -52,6 +53,7 @@ export default function RestaurantDetailsPage() {
   const [sortOption, setSortOption] = useState('newest');
   const [sortedReviews, setSortedReviews] = useState([]);
   const [activeDeleteModal, setActiveDeleteModal] = useState(null);
+  const { deleteReview } = useReviews();
 
   // Log the restaurantId to make sure we have it
   console.log('Current restaurantId:', id);
@@ -59,54 +61,10 @@ export default function RestaurantDetailsPage() {
   // Define handleDeleteReview at the component level, before any JSX
   const handleDeleteReview = async (reviewId) => {
     try {
-      // 1. Get current restaurant data
-      const restaurantRef = doc(db, 'restaurants', id);
-      const restaurantDoc = await getDoc(restaurantRef);
-      
-      if (!restaurantDoc.exists()) {
-        throw new Error('Restaurant not found');
-      }
-
-      // 2. Find the review to be deleted
-      const currentReviews = restaurantDoc.data().reviews || [];
-      const reviewToDelete = currentReviews.find(r => r.id === reviewId);
-
-      if (!reviewToDelete) {
-        throw new Error('Review not found');
-      }
-
-      // Security check
-      if (reviewToDelete.userId !== user.uid) {
-        throw new Error('Unauthorized: You can only delete your own reviews');
-      }
-
-      // 3. Remove review and recalculate average rating
-      const updatedReviews = currentReviews.filter(r => r.id !== reviewId);
-      const totalRating = updatedReviews.reduce((sum, r) => sum + r.rating, 0);
-      const newAverageRating = updatedReviews.length > 0 
-        ? totalRating / updatedReviews.length 
-        : 0;
-
-      // 4. Update restaurant document
-      await updateDoc(restaurantRef, {
-        reviews: updatedReviews,
-        averageRating: newAverageRating,
-        reviewCount: updatedReviews.length
-      });
-
-      // 5. Update user document
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
-        reviewCount: increment(-1)
-      });
-
-      // 6. Update local state
-      setRestaurantReviews(prev => prev.filter(r => r.id !== reviewId));
-      
-      toast.success('Review deleted successfully');
+      await deleteReview(reviewId, id);
+      setActiveDeleteModal(null);
     } catch (error) {
-      console.error('Error deleting review:', error);
-      toast.error(error.message || 'Failed to delete review');
+      console.error('Error in handleDeleteReview:', error);
     }
   };
 
