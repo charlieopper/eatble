@@ -345,7 +345,7 @@ export default function SearchPage() {
                 alignItems: 'center',
                 gap: '4px',
                 padding: '6px 12px',
-                backgroundColor: viewMode === 'list' ? '#1e40af' : 'transparent',
+                backgroundColor: viewMode === 'list' ? '#2563eb' : 'transparent',
                 color: viewMode === 'list' ? 'white' : '#4b5563',
                 border: 'none',
                 borderRadius: '6px',
@@ -363,7 +363,7 @@ export default function SearchPage() {
                 alignItems: 'center',
                 gap: '4px',
                 padding: '6px 12px',
-                backgroundColor: viewMode === 'map' ? '#1e40af' : 'transparent',
+                backgroundColor: viewMode === 'map' ? '#2563eb' : 'transparent',
                 color: viewMode === 'map' ? 'white' : '#4b5563',
                 border: 'none',
                 borderRadius: '6px',
@@ -501,7 +501,7 @@ export default function SearchPage() {
                   }}
                   style={{
                     padding: '10px 20px',
-                    backgroundColor: '#1e40af',
+                    backgroundColor: '#2563eb',
                     color: 'white',
                     border: 'none',
                     borderRadius: '4px',

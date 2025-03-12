@@ -49,14 +49,15 @@ export const AuthButtons = ({ setShowLoginModal, setShowRegisterModal }) => {
           </button>
           <button 
             onClick={() => setShowRegisterModal(true)}
-            style={{ 
-              backgroundColor: '#1e40af',
-              color: 'white', 
-              padding: '8px 16px', 
-              borderRadius: '4px', 
+            style={{
+              backgroundColor: '#2563eb',
+              color: 'white',
+              padding: '8px 16px',
+              borderRadius: '6px',
               border: 'none',
-              fontSize: 'clamp(12px, 3vw, 14px)',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              fontWeight: '500',
+              fontSize: '14px'
             }}
           >
             Register

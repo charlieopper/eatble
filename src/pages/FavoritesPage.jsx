@@ -87,7 +87,7 @@ export default function FavoritesPage() {
               style={{
                 display: 'inline-block',
                 padding: '8px 16px',
-                backgroundColor: '#1e40af',
+                backgroundColor: '#2563eb',
                 color: 'white',
                 borderRadius: '4px',
                 textDecoration: 'none',

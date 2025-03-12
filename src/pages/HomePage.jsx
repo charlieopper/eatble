@@ -534,7 +534,7 @@ export default function HomePage() {
             onClick={handleLeaveReview}
             style={{ 
               backgroundColor: 'white', 
-              color: '#1e40af', 
+              color: '#2563eb', 
               padding: '12px 24px', 
               borderRadius: '4px', 
               fontWeight: '500',
@@ -680,13 +680,33 @@ export default function HomePage() {
                 fontWeight: '500',
                 border: 'none',
                 marginTop: '24px',
-                marginBottom: '16px',
+                marginBottom: '12px',
                 fontSize: '16px',
                 cursor: 'pointer'
               }}
             >
               SEARCH RESTAURANTS
             </button>
+
+            {/* Profile Creation Link - with larger font size */}
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              marginBottom: '16px'
+            }}>
+              <span
+                onClick={() => setShowRegisterModal(true)}
+                style={{
+                  color: '#2563eb',
+                  fontSize: '18px',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  fontWeight: '500'
+                }}
+              >
+                Create Profile to Save Allergen Settings
+              </span>
+            </div>
           </div>
         </div>
         

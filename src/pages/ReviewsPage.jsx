@@ -103,7 +103,7 @@ export default function ReviewsPage() {
               style={{
                 display: 'inline-block',
                 padding: '8px 16px',
-                backgroundColor: '#0d9488', // Teal color to match the homepage button
+                backgroundColor: '#2563eb', // Changed from '#0d9488' to our brand blue
                 color: 'white',
                 borderRadius: '4px',
                 textDecoration: 'none',
