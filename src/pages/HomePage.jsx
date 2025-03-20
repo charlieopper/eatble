@@ -583,7 +583,8 @@ export default function HomePage() {
                     paddingLeft: '40px',
                     border: '1px solid #d1d5db',
                     borderRadius: '6px',
-                    fontSize: '16px'
+                    fontSize: '16px',
+                    boxSizing: 'border-box'
                   }}
                 />
               </div>
@@ -598,12 +599,17 @@ export default function HomePage() {
                   border: '1px solid #d1d5db',
                   borderRadius: '6px',
                   marginBottom: '16px',
-                  fontSize: '16px'
+                  fontSize: '16px',
+                  boxSizing: 'border-box'
                 }}
               />
               <div style={{ position: 'relative', marginBottom: '16px' }}>
-                <div 
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                <select
+                  value={selectedDistance}
+                  onChange={(e) => {
+                    setSelectedDistance(e.target.value);
+                    setIsDropdownOpen(false);
+                  }}
                   style={{
                     width: '100%',
                     padding: '12px',
@@ -611,60 +617,19 @@ export default function HomePage() {
                     borderRadius: '6px',
                     fontSize: '16px',
                     backgroundColor: 'white',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    cursor: 'pointer'
+                    boxSizing: 'border-box',
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    MozAppearance: 'none'
                   }}
                 >
-                  <span>{selectedDistance}</span>
-                  <svg 
-                    width="12" 
-                    height="12" 
-                    viewBox="0 0 12 12" 
-                    fill="none" 
-                    xmlns="http://www.w3.org/2000/svg"
-                    style={{
-                      transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                      transition: 'transform 0.2s'
-                    }}
-                  >
-                    <path d="M2 4L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                
-                {isDropdownOpen && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    backgroundColor: 'white',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    marginTop: '4px',
-                    zIndex: 10,
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                  }}>
-                    {distanceOptions.map((option, index) => (
-                      <div 
-                        key={index}
-                        onClick={() => {
-                          setSelectedDistance(option);
-                          setIsDropdownOpen(false);
-                        }}
-                        style={{
-                          padding: '12px',
-                          borderBottom: index < distanceOptions.length - 1 ? '1px solid #f3f4f6' : 'none',
-                          fontSize: '16px',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        {option}
-                      </div>
-                    ))}
-                  </div>
-                )}
+                  <option value="">Select Distance</option>
+                  {distanceOptions.map((option, index) => (
+                    <option key={index} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
             
