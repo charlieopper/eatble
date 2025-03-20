@@ -17,6 +17,8 @@ import NotificationSettingsModal from '../components/settings/NotificationSettin
 import PrivacySettingsModal from '../components/settings/PrivacySettingsModal';
 import AllergenModal from '../components/allergens/AllergenModal';
 import { useReviews } from '../context/ReviewsContext';
+import LoginModal from '../components/auth/LoginModal';
+import RegisterModal from '../components/auth/RegisterModal';
 
 // Mock reviews data
 const mockReviews = [
@@ -262,13 +264,93 @@ export default function ProfilePage() {
 
     if (!user || !user.uid) {
       return (
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center p-4">
-            <p className="text-xl font-semibold mb-2">Please log in to view your profile</p>
-            <p className="text-sm text-gray-500">
-              Visit the <a href="/auth-test" className="text-blue-600 underline">login page</a> to sign in
-            </p>
+        <div className="min-h-screen" style={{ paddingBottom: '80px' }}>
+          {/* Header */}
+          <div style={{ 
+            padding: '12px 16px',
+            borderBottom: '1px solid #eaeaea'
+          }}>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center'
+            }}>
+              <Link to="/" style={{ textDecoration: 'none' }}>
+                <span style={{ fontWeight: 'bold', fontSize: 'clamp(16px, 4vw, 20px)' }}>
+                  eat<span style={{ color: '#e53e3e' }}>ABLE</span>
+                  <span style={{ marginLeft: '4px' }}>🍴</span>
+                </span>
+              </Link>
+              <AuthButtons 
+                setShowLoginModal={setShowLoginModal} 
+                setShowRegisterModal={setShowRegisterModal} 
+              />
+            </div>
           </div>
+
+          {/* Main content - Logged out state */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '40px 20px',
+            textAlign: 'center',
+            minHeight: '60vh'
+          }}>
+            <h2 style={{ 
+              fontSize: '24px',
+              fontWeight: 'bold',
+              marginBottom: '16px'
+            }}>
+              Welcome to eatABLE
+            </h2>
+            <p style={{
+              color: '#6b7280',
+              marginBottom: '24px',
+              maxWidth: '400px'
+            }}>
+              Sign in to view your profile, manage your allergen preferences, and access your reviews.
+            </p>
+            <button
+              onClick={() => setShowLoginModal(true)}
+              style={{
+                padding: '12px 24px',
+                backgroundColor: '#2563eb',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '16px',
+                fontWeight: '500',
+                cursor: 'pointer'
+              }}
+            >
+              Sign In
+            </button>
+          </div>
+
+          <Footer activePage="Profile" />
+
+          {/* Modals */}
+          {showLoginModal && (
+            <LoginModal 
+              onClose={() => setShowLoginModal(false)}
+              onSwitchToRegister={() => {
+                setShowLoginModal(false);
+                setShowRegisterModal(true);
+              }}
+            />
+          )}
+          
+          {showRegisterModal && (
+            <RegisterModal 
+              onClose={() => setShowRegisterModal(false)}
+              onSwitchToLogin={() => {
+                setShowRegisterModal(false);
+                setShowLoginModal(true);
+              }}
+            />
+          )}
         </div>
       );
     }
