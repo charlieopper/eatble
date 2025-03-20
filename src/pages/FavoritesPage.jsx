@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useFavorites } from '../context/FavoritesContext';
@@ -6,13 +6,15 @@ import RestaurantList from '../components/restaurants/RestaurantList';
 import RestaurantDetailModal from '../components/restaurants/RestaurantDetailModal';
 import Footer from '../components/layout/Footer';
 import { AuthButtons } from '../components/auth/AuthButtons';
+import LoginModal from '../components/auth/LoginModal';
+import RegisterModal from '../components/auth/RegisterModal';
 
 export default function FavoritesPage() {
   const { favorites } = useFavorites();
   const [selectedRestaurantDetail, setSelectedRestaurantDetail] = React.useState(null);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [showLoginModal, setShowLoginModal] = React.useState(false);
-  const [showRegisterModal, setShowRegisterModal] = React.useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
 
   return (
     <div className="min-h-screen" style={{ paddingBottom: '80px' }}>
@@ -108,6 +110,26 @@ export default function FavoritesPage() {
         <RestaurantDetailModal
           restaurant={selectedRestaurantDetail}
           onClose={() => setSelectedRestaurantDetail(null)}
+        />
+      )}
+
+      {showLoginModal && (
+        <LoginModal 
+          onClose={() => setShowLoginModal(false)}
+          onSwitchToRegister={() => {
+            setShowLoginModal(false);
+            setShowRegisterModal(true);
+          }}
+        />
+      )}
+      
+      {showRegisterModal && (
+        <RegisterModal 
+          onClose={() => setShowRegisterModal(false)}
+          onSwitchToLogin={() => {
+            setShowRegisterModal(false);
+            setShowLoginModal(true);
+          }}
         />
       )}
     </div>

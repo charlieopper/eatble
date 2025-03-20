@@ -14,8 +14,8 @@ import { auth, db } from "../firebase/config";
 // Password validation regex
 const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
 
-// Create or update user document
-const createUserDocument = async (user, additionalData = {}) => {
+// Export createUserDocument
+export const createUserDocument = async (user, additionalData = {}) => {
   if (!user) return;
 
   const userRef = doc(db, 'users', user.uid);

@@ -5,6 +5,8 @@ import Footer from '../components/layout/Footer';
 import { AuthButtons } from '../components/auth/AuthButtons';
 import { useReviews } from '../context/ReviewsContext';
 import ReviewCard from '../components/reviews/ReviewCard';
+import LoginModal from '../components/auth/LoginModal';
+import RegisterModal from '../components/auth/RegisterModal';
 
 export default function ReviewsPage() {
   const { reviews, isLoading, error } = useReviews(); // Use the reviews context
@@ -118,6 +120,26 @@ export default function ReviewsPage() {
 
       {/* Footer */}
       <Footer activePage="Reviews" />
+
+      {showLoginModal && (
+        <LoginModal 
+          onClose={() => setShowLoginModal(false)}
+          onSwitchToRegister={() => {
+            setShowLoginModal(false);
+            setShowRegisterModal(true);
+          }}
+        />
+      )}
+      
+      {showRegisterModal && (
+        <RegisterModal 
+          onClose={() => setShowRegisterModal(false)}
+          onSwitchToLogin={() => {
+            setShowRegisterModal(false);
+            setShowLoginModal(true);
+          }}
+        />
+      )}
     </div>
   );
 } 

@@ -11,6 +11,8 @@ import googleLogo from '../assets/google-g-logo.png';
 import Map from '../components/map/Map';
 import RestaurantCard from '../components/restaurants/RestaurantCard';
 import { AuthButtons } from '../components/auth/AuthButtons';
+import LoginModal from '../components/auth/LoginModal';
+import RegisterModal from '../components/auth/RegisterModal';
 
 export default function SearchPage() {
   const location = useLocation();
@@ -534,6 +536,26 @@ export default function SearchPage() {
         <RestaurantDetailModal
           restaurant={selectedRestaurantDetail}
           onClose={() => setSelectedRestaurantDetail(null)}
+        />
+      )}
+
+      {showLoginModal && (
+        <LoginModal 
+          onClose={() => setShowLoginModal(false)}
+          onSwitchToRegister={() => {
+            setShowLoginModal(false);
+            setShowRegisterModal(true);
+          }}
+        />
+      )}
+      
+      {showRegisterModal && (
+        <RegisterModal 
+          onClose={() => setShowRegisterModal(false)}
+          onSwitchToLogin={() => {
+            setShowRegisterModal(false);
+            setShowLoginModal(true);
+          }}
         />
       )}
     </div>
