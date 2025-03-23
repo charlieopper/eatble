@@ -866,52 +866,45 @@ export default function RestaurantDetailsPage() {
         </div>
 
         {/* Google Review */}
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center',
-            marginBottom: '4px'
-          }}>
+        <div style={{ marginTop: '12px', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
             <img 
-              src={googleLogoUrl}
+              src={googleLogoUrl} 
               alt="Google" 
-              className="google-g-logo" 
-              width="18" 
-              height="18" 
-              style={{ marginRight: '8px' }}
+              style={{ width: '16px', height: '16px', marginRight: '8px' }}
             />
-            <span style={{ 
-              fontWeight: '600', 
-              fontSize: '14px', 
-              marginRight: '8px' 
-            }}>
-              Google Review
-            </span>
+            <span style={{ fontWeight: '600', fontSize: '14px', marginRight: '8px' }}>Google Review</span>
             <div style={{ display: 'flex' }}>
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  size={12}
-                  color={i < Math.floor(restaurant.googleReview?.rating || 0) ? "#facc15" : "#d1d5db"}
-                  fill={i < Math.floor(restaurant.googleReview?.rating || 0) ? "#facc15" : "none"}
-                />
-              ))}
+              {[...Array(5)].map((_, i) => {
+                const rating = restaurant?.googleReview?.rating || 0;
+                const isFullStar = i < Math.floor(rating);
+                const isHalfStar = !isFullStar && i === Math.floor(rating) && rating % 1 >= 0.5;
+                
+                return (
+                  <Star
+                    key={i}
+                    size={12}
+                    color="#facc15"
+                    fill={isFullStar ? "#facc15" : isHalfStar ? "url(#halfStar)" : "none"}
+                  />
+                );
+              })}
+              {/* SVG definition for half star */}
+              <svg width="0" height="0">
+                <defs>
+                  <linearGradient id="halfStar">
+                    <stop offset="50%" stopColor="#facc15" />
+                    <stop offset="50%" stopColor="#d1d5db" />
+                  </linearGradient>
+                </defs>
+              </svg>
             </div>
-            <span style={{ 
-              fontSize: '12px', 
-              color: '#6b7280', 
-              marginLeft: '8px' 
-            }}>
-              ({restaurant.googleReview?.reviewCount || 0})
+            <span style={{ fontSize: '12px', color: '#6b7280', marginLeft: '8px' }}>
+              ({restaurant?.googleReview?.reviewCount || 0})
             </span>
           </div>
-          <p style={{ 
-            fontSize: '14px', 
-            fontStyle: 'italic', 
-            color: '#4b5563',
-            margin: '0'
-          }}>
-            "{restaurant.googleReview?.quote || 'No review available'}"
+          <p style={{ fontSize: '14px', fontStyle: 'italic', color: '#4b5563', margin: '0' }}>
+            "{restaurant?.googleReview?.quote || 'No review available'}"
           </p>
         </div>
 

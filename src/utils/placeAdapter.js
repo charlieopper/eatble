@@ -153,7 +153,7 @@ export function adaptGooglePlaceToMockFormat(place, eatableData = null) {
       quote: eatableData?.reviews?.[0]?.text || 'No review available'
     },
     googleReview: {
-      rating: place.rating || 0,
+      rating: Number(place.rating) || 0,
       reviewCount: place.userRatingCount || 0,
       quote: getBestReview(place.reviews)
     },
@@ -179,5 +179,6 @@ export function adaptGooglePlaceToMockFormat(place, eatableData = null) {
   };
 
   console.log('✨ Adapted place:', adaptedPlace);
+  console.log('✨ Adapted Google rating:', adaptedPlace.googleReview.rating);
   return adaptedPlace;
 } 

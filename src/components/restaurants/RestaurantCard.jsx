@@ -227,15 +227,40 @@ const RestaurantCard = ({ restaurant, onClick }) => {
             {phone}
           </a>
           <div style={{ marginTop: '4px' }}>
-            <a 
-              href={mapUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              style={{ color: '#2563eb', textDecoration: 'none' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {address}
-            </a>
+            {/* Contact Info */}
+            <div style={contactStyle}>
+              <a 
+                href={mapUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ 
+                  color: '#2563eb',
+                  textDecoration: 'none',
+                  marginBottom: '4px',
+                  display: 'block'
+                }}
+              >
+                {address}
+              </a>
+              
+              {/* Website link with simplified display */}
+              {website && (
+                <a
+                  href={website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ 
+                    color: '#2563eb',
+                    textDecoration: 'none',
+                    display: 'block',
+                    marginBottom: '4px'
+                  }}
+                >
+                  {website.replace(/https?:\/\/(www\.)?/, '').split('?')[0]} {/* Simplify URL display */}
+                </a>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -402,14 +427,29 @@ const RestaurantCard = ({ restaurant, onClick }) => {
             />
             <span style={{ fontWeight: '600', fontSize: '14px', marginRight: '8px' }}>Google Review</span>
             <div style={{ display: 'flex' }}>
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  size={12}
-                  color={i < Math.floor(googleReview?.rating || 0) ? "#facc15" : "#d1d5db"}
-                  fill={i < Math.floor(googleReview?.rating || 0) ? "#facc15" : "none"}
-                />
-              ))}
+              {[...Array(5)].map((_, i) => {
+                const rating = googleReview?.rating || 0;
+                const isFullStar = i < Math.floor(rating);
+                const isHalfStar = !isFullStar && i === Math.floor(rating) && rating % 1 >= 0.5;
+                
+                return (
+                  <Star
+                    key={i}
+                    size={12}
+                    color="#facc15"
+                    fill={isFullStar ? "#facc15" : isHalfStar ? "url(#halfStar)" : "none"}
+                  />
+                );
+              })}
+              {/* SVG definition for half star */}
+              <svg width="0" height="0">
+                <defs>
+                  <linearGradient id="halfStar">
+                    <stop offset="50%" stopColor="#facc15" />
+                    <stop offset="50%" stopColor="#d1d5db" />
+                  </linearGradient>
+                </defs>
+              </svg>
             </div>
             <span style={{ fontSize: '12px', color: '#6b7280', marginLeft: '8px' }}>
               ({googleReview?.reviewCount || 0})
