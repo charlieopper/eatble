@@ -69,6 +69,37 @@ export default function RestaurantDetailsPage() {
     }
   };
 
+  // Add this function at the top level of the component
+  const calculateEatableReview = (reviews) => {
+    if (!reviews || reviews.length === 0) {
+      return {
+        rating: 0,
+        reviewCount: 0,
+        quote: 'No review available'
+      };
+    }
+
+    // Calculate average rating
+    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+    const averageRating = totalRating / reviews.length;
+
+    // Get the highest rated review for the quote
+    const bestReview = [...reviews].sort((a, b) => b.rating - a.rating)[0];
+    let reviewText = bestReview.text;
+    
+    // Truncate review text if needed
+    if (reviewText.length > 150) {
+      const truncateIndex = reviewText.lastIndexOf(' ', 150);
+      reviewText = truncateIndex > 0 ? reviewText.substring(0, truncateIndex) + '...' : reviewText;
+    }
+
+    return {
+      rating: averageRating,
+      reviewCount: reviews.length,
+      quote: reviewText
+    };
+  };
+
   useEffect(() => {
     const loadRestaurant = async () => {
       setIsLoading(true);
@@ -98,10 +129,13 @@ export default function RestaurantDetailsPage() {
           
           if (docSnap.exists()) {
             const eatableData = docSnap.data();
+            const eatableReview = calculateEatableReview(eatableData.reviews);
+            
             // Update with Eatable data while preserving adapted place data
             setRestaurant(prev => ({
               ...prev,
-              ...eatableData
+              ...eatableData,
+              eatableReview // Add the calculated review data
             }));
           }
         } catch (eatableError) {
@@ -231,7 +265,7 @@ export default function RestaurantDetailsPage() {
       const targetReview = reviews.find(r => r.id === reviewId);
       const hasMarkedHelpful = targetReview?.helpfulUsers?.includes(user.uid);
 
-      console.log('🔍 Helpful check:', {
+      console.log('�� Helpful check:', {
         hasMarkedHelpful,
         currentHelpfulCount: targetReview?.helpfulCount || 0,
         currentHelpfulUsers: targetReview?.helpfulUsers || []
@@ -826,12 +860,7 @@ export default function RestaurantDetailsPage() {
               ({restaurant?.eatableReview?.reviewCount || 0})
             </span>
           </div>
-          <p style={{ 
-            fontSize: '14px', 
-            fontStyle: 'italic', 
-            color: '#4b5563',
-            margin: '0'
-          }}>
+          <p style={{ fontSize: '14px', fontStyle: 'italic', color: '#4b5563', margin: '0' }}>
             "{restaurant?.eatableReview?.quote || 'No review available'}"
           </p>
         </div>
