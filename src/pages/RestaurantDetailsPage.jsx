@@ -72,20 +72,72 @@ export default function RestaurantDetailsPage() {
     const loadRestaurant = async () => {
       setIsLoading(true);
       try {
-        const data = await restaurantService.getRestaurantById(id);
-        setRestaurant(data);
+        // Get the place details from Places API
+        const placeData = await restaurantService.fetchPlaceDetails(id);
+        console.log('📍 Loaded place details:', placeData);
+
+        // Create combined data without waiting for Eatable data
+        const combinedData = {
+          id: placeData.id || id,
+          place_id: placeData.id || id,
+          name: placeData.displayName?.text || 'Unknown Restaurant',
+          image: placeData.photos?.[0]?.getUrl?.() || null,
+          cuisines: placeData.types || [],
+          rating: placeData.rating || 0,
+          user_ratings_total: placeData.userRatingCount || 0,
+          price_level: placeData.priceLevel || 0,
+          address: placeData.formattedAddress || 'Address not available',
+          phone: placeData.internationalPhoneNumber || '',
+          website: placeData.websiteUri || '',
+          hours: placeData.regularOpeningHours?.weekdayDescriptions || [],
+          // Default values for Eatable-specific data
+          allergens: [],
+          chefAvailable: false,
+          eatableRating: 0,
+          reviews: []
+        };
+
+        console.log('✨ Combined restaurant data:', combinedData);
+        setRestaurant(combinedData);
         
-        // In a real app, we would get images from the API
-        // For now, we'll use our mock images
-        setImages(MOCK_IMAGES);
+        // Set images if available from Places API
+        if (placeData.photos && placeData.photos.length > 0) {
+          const photoUrls = placeData.photos.map(photo => photo.getUrl());
+          setImages(photoUrls);
+        } else {
+          // Fallback to mock images if no photos available
+          setImages(MOCK_IMAGES);
+        }
+
+        // Try to get Eatable data, but don't block rendering if it fails
+        try {
+          // Get the restaurant document from Firestore
+          const docRef = doc(db, 'restaurants', id);
+          const docSnap = await getDoc(docRef);
+          
+          if (docSnap.exists()) {
+            const eatableData = docSnap.data();
+            // Update the restaurant data with Eatable-specific info
+            setRestaurant(prev => ({
+              ...prev,
+              ...eatableData
+            }));
+          }
+        } catch (eatableError) {
+          console.log('Note: No Eatable-specific data found for this restaurant');
+        }
+
       } catch (error) {
         console.error('Error loading restaurant:', error);
+        toast.error('Failed to load restaurant details');
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadRestaurant();
+    if (id) {
+      loadRestaurant();
+    }
   }, [id]);
 
   useEffect(() => {

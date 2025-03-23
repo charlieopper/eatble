@@ -4,6 +4,8 @@ import { AllergenSelector } from '../allergens/AllergenSelector.jsx';
 import { useReviews } from '../../context/ReviewsContext';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
+import { getDoc, doc } from 'firebase/firestore';
+import { db } from '@/pages/firebaseConfig';
 
 export default function ReviewModal({ isOpen, onClose, restaurantName, restaurantId, onReviewSubmitted }) {
   const [selectedAllergens, setSelectedAllergens] = useState([]);
@@ -116,6 +118,9 @@ export default function ReviewModal({ isOpen, onClose, restaurantName, restauran
         id: crypto.randomUUID(),
         restaurantId,
         restaurantName,
+        userId: user.uid,
+        userName: user.displayName || 'Anonymous',
+        date: new Date().toISOString(),
         rating,
         text: reviewText,
         allergens: selectedAllergens,
@@ -123,12 +128,9 @@ export default function ReviewModal({ isOpen, onClose, restaurantName, restauran
           chefAvailable: chefAvailable === true,
           allergenMenu: allergenMenuAvailable === true
         },
-        date: new Date().toISOString(),
-        userId: user.uid,
-        userName: user.displayName || 'Anonymous'
+        helpfulCount: 0
       };
 
-      console.log('Submitting review:', reviewData);
       await addReview(reviewData);
       
       if (onReviewSubmitted) {

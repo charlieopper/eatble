@@ -13,39 +13,31 @@ import AuthTest from './components/auth/AuthTest';
 import ProfilePage from './pages/ProfilePage';
 import { ReviewsProvider } from './context/ReviewsContext';
 
+const loadGoogleMapsScript = () => {
+  if (window.google) return Promise.resolve();
+  
+  return new Promise((resolve) => {
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&libraries=places&loading=async`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve();
+    document.head.appendChild(script);
+  });
+};
+
 function App() {
   const [googleMapsLoaded, setGoogleMapsLoaded] = useState(false);
   
   useEffect(() => {
-    // Check if Google Maps is already loaded
-    if (window.google && window.google.maps) {
-      setGoogleMapsLoaded(true);
-      return;
-    }
-    
-    // Load Google Maps API
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-    script.async = true;
-    script.defer = true;
-    
-    script.onload = () => {
-      console.log('Google Maps API loaded successfully');
-      setGoogleMapsLoaded(true);
-    };
-    
-    script.onerror = () => {
-      console.error('Failed to load Google Maps API');
-    };
-    
-    document.head.appendChild(script);
-    
-    return () => {
-      if (document.head.contains(script)) {
-        document.head.removeChild(script);
-      }
-    };
+    loadGoogleMapsScript()
+      .then(() => {
+        console.log('Google Maps API loaded successfully');
+        setGoogleMapsLoaded(true);
+      })
+      .catch(err => {
+        console.error('Error loading Google Maps API:', err);
+      });
   }, []);
   
   return (
