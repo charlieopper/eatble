@@ -1,6 +1,9 @@
 import { getAllergenEmoji } from '../utils/allergens';
 
 export function adaptGooglePlaceToMockFormat(place, eatableData = null) {
+  console.log('🔍 Adapting place:', place);
+  console.log('📝 Reviews:', place.reviews);
+
   // Debug logs
   console.log('🔍 Raw place data:', {
     id: place.id,
@@ -70,7 +73,7 @@ export function adaptGooglePlaceToMockFormat(place, eatableData = null) {
     const filteredTypes = types.filter(type => 
       type !== 'restaurant' && 
       type !== 'point_of_interest' && 
-      type !== 'establishment' &&
+      type !== 'establishment' && 
       type !== 'food' &&  // Remove generic food type
       type !== 'store' &&  // Remove generic store type
       type !== 'business'  // Remove generic business type
@@ -91,40 +94,25 @@ export function adaptGooglePlaceToMockFormat(place, eatableData = null) {
 
   // Get the best review (highest rating with text)
   const getBestReview = (reviews) => {
-    console.log('🔍 Processing reviews for:', place.displayName?.text);
-    console.log('📝 Raw reviews:', reviews);
-    
     if (!reviews || !reviews.length) {
-      console.log('❌ No reviews array found');
       return 'No Google review available';
     }
-    
+
     // Sort reviews by rating (highest first)
     const sortedReviews = [...reviews].sort((a, b) => b.rating - a.rating);
-    
-    // Find first review with text
-    const bestReview = sortedReviews.find(review => {
-      if (!review) return false;
-      
-      // Handle text object structure from Places API
-      const reviewText = review.text?.text || review.text;
-      console.log('Review text structure:', {
-        raw: review.text,
-        extracted: reviewText
-      });
-      
-      return reviewText && typeof reviewText === 'string' && reviewText.trim().length > 0;
-    });
-    
-    console.log('⭐ Best review found:', bestReview);
-    
+    const bestReview = sortedReviews[0];
+
     if (bestReview?.text?.text || bestReview?.text) {
       const reviewText = bestReview.text?.text || bestReview.text;
-      console.log('✅ Returning review text:', reviewText);
-      return reviewText;
+      
+      // If text is shorter than limit, return as is
+      if (reviewText.length <= 150) return reviewText;
+      
+      // Find the last space within the first 150 characters
+      const truncateIndex = reviewText.lastIndexOf(' ', 150);
+      return truncateIndex > 0 ? reviewText.substring(0, truncateIndex) + '...' : reviewText;
     }
-    
-    console.log('❌ No valid review text found');
+
     return 'No Google review available';
   };
 
@@ -135,6 +123,16 @@ export function adaptGooglePlaceToMockFormat(place, eatableData = null) {
     reviewCount: place.reviews?.length,
     reviews: place.reviews
   });
+
+  // Calculate average eatABLE rating from reviews
+  const calculateEatableRating = (reviews) => {
+    if (!reviews || !reviews.length) return 0;
+    const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
+    return sum / reviews.length;
+  };
+
+  const eatableRating = calculateEatableRating(eatableData?.reviews);
+  console.log('⭐ Calculated eatABLE rating:', eatableRating);
 
   const adaptedPlace = {
     id: place.id || 'unknown',
@@ -150,14 +148,14 @@ export function adaptGooglePlaceToMockFormat(place, eatableData = null) {
       : place.priceLevel === 'PRICE_LEVEL_VERY_EXPENSIVE' ? 4
       : 0,
     eatableReview: {
-      rating: eatableData?.averageRating || 0,
+      rating: eatableRating || 0,
       reviewCount: eatableData?.reviews?.length || 0,
       quote: eatableData?.reviews?.[0]?.text || 'No review available'
     },
     googleReview: {
       rating: place.rating || 0,
       reviewCount: place.userRatingCount || 0,
-      quote: getBestReview(place.reviews || [])
+      quote: getBestReview(place.reviews)
     },
     accommodations: {
       chefAvailable: eatableData?.chefAvailable || false,

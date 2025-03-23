@@ -17,6 +17,7 @@ import ReviewCard from '../components/reviews/ReviewCard';
 import { useAuth } from '../context/AuthContext';
 import DeleteConfirmationModal from '../components/reviews/DeleteConfirmationModal';
 import { useReviews } from '../context/ReviewsContext';
+import { adaptGooglePlaceToMockFormat } from '../utils/placeAdapter';
 
 // Placeholder restaurant image URL
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fDB8fHww&w=1000&q=80";
@@ -76,48 +77,28 @@ export default function RestaurantDetailsPage() {
         const placeData = await restaurantService.fetchPlaceDetails(id);
         console.log('📍 Loaded place details:', placeData);
 
-        // Create combined data without waiting for Eatable data
-        const combinedData = {
-          id: placeData.id || id,
-          place_id: placeData.id || id,
-          name: placeData.displayName?.text || 'Unknown Restaurant',
-          image: placeData.photos?.[0]?.getUrl?.() || null,
-          cuisines: placeData.types || [],
-          rating: placeData.rating || 0,
-          user_ratings_total: placeData.userRatingCount || 0,
-          price_level: placeData.priceLevel || 0,
-          address: placeData.formattedAddress || 'Address not available',
-          phone: placeData.internationalPhoneNumber || '',
-          website: placeData.websiteUri || '',
-          hours: placeData.regularOpeningHours?.weekdayDescriptions || [],
-          // Default values for Eatable-specific data
-          allergens: [],
-          chefAvailable: false,
-          eatableRating: 0,
-          reviews: []
-        };
+        // Adapt the place data using our existing adapter
+        const adaptedData = adaptGooglePlaceToMockFormat(placeData);
+        console.log('✨ Adapted restaurant data:', adaptedData);
 
-        console.log('✨ Combined restaurant data:', combinedData);
-        setRestaurant(combinedData);
+        setRestaurant(adaptedData);
         
         // Set images if available from Places API
         if (placeData.photos && placeData.photos.length > 0) {
           const photoUrls = placeData.photos.map(photo => photo.getUrl());
           setImages(photoUrls);
         } else {
-          // Fallback to mock images if no photos available
           setImages(MOCK_IMAGES);
         }
 
-        // Try to get Eatable data, but don't block rendering if it fails
+        // Try to get Eatable data
         try {
-          // Get the restaurant document from Firestore
           const docRef = doc(db, 'restaurants', id);
           const docSnap = await getDoc(docRef);
           
           if (docSnap.exists()) {
             const eatableData = docSnap.data();
-            // Update the restaurant data with Eatable-specific info
+            // Update with Eatable data while preserving adapted place data
             setRestaurant(prev => ({
               ...prev,
               ...eatableData
@@ -827,36 +808,22 @@ export default function RestaurantDetailsPage() {
         </div>
 
         {/* eatABLE Review */}
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center',
-            marginBottom: '4px'
-          }}>
+        <div style={{ marginTop: '12px', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
             <span style={{ marginRight: '8px' }}>🍴</span>
-            <span style={{ 
-              fontWeight: '600', 
-              fontSize: '14px', 
-              marginRight: '8px' 
-            }}>
-              eatABLE Rating
-            </span>
+            <span style={{ fontWeight: '600', fontSize: '14px', marginRight: '8px' }}>eatABLE Review</span>
             <div style={{ display: 'flex' }}>
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
                   size={12}
-                  color={i < Math.floor(restaurant.eatableReview?.rating || 0) ? TEAL_COLOR : "#d1d5db"}
-                  fill={i < Math.floor(restaurant.eatableReview?.rating || 0) ? TEAL_COLOR : "none"}
+                  color={i < Math.floor(restaurant?.eatableReview?.rating || 0) ? TEAL_COLOR : "#d1d5db"}
+                  fill={i < Math.floor(restaurant?.eatableReview?.rating || 0) ? TEAL_COLOR : "none"}
                 />
               ))}
             </div>
-            <span style={{ 
-              fontSize: '12px', 
-              color: '#6b7280', 
-              marginLeft: '8px' 
-            }}>
-              ({restaurant.eatableReview?.reviewCount || 0})
+            <span style={{ fontSize: '12px', color: '#6b7280', marginLeft: '8px' }}>
+              ({restaurant?.eatableReview?.reviewCount || 0})
             </span>
           </div>
           <p style={{ 
@@ -865,7 +832,7 @@ export default function RestaurantDetailsPage() {
             color: '#4b5563',
             margin: '0'
           }}>
-            "{restaurant.eatableReview?.quote || 'No review available'}"
+            "{restaurant?.eatableReview?.quote || 'No review available'}"
           </p>
         </div>
 
