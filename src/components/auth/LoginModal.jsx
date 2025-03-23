@@ -2,28 +2,34 @@ import React, { useState } from 'react';
 import { X, Eye, EyeOff } from 'lucide-react';
 import { loginWithEmailPassword, loginWithGoogle, loginWithFacebook } from '../../services/authService';
 import toast from 'react-hot-toast';
+import AuthError from './AuthError';
 
 export default function LoginModal({ onClose, onSwitchToRegister }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-    
+
     try {
+      if (!email) {
+        throw new Error('auth/missing-email');
+      }
+      if (!password) {
+        throw new Error('auth/missing-password');
+      }
+
+      // Attempt login
       await loginWithEmailPassword(email, password);
-      toast.success('Login successful!');
-      onClose();
-    } catch (error) {
-      setError(error.message);
-      toast.error(error.message);
-    } finally {
-      setIsLoading(false);
+      onClose(); // Only close if login succeeds
+    } catch (err) {
+      setError(err.message);
+      setIsLoading(false); // Reset loading state on error
     }
   };
 
@@ -91,18 +97,7 @@ export default function LoginModal({ onClose, onSwitchToRegister }) {
           Login
         </h2>
         
-        {error && (
-          <div style={{
-            backgroundColor: '#fee2e2',
-            color: '#b91c1c',
-            padding: '12px',
-            borderRadius: '4px',
-            marginBottom: '16px',
-            fontSize: '14px'
-          }}>
-            {error}
-          </div>
-        )}
+        <AuthError error={error} />
         
         <form onSubmit={handleLogin}>
           <div style={{ marginBottom: '16px' }}>

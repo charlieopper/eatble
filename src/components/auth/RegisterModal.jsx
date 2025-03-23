@@ -8,31 +8,41 @@ import {
 } from '../../services/authService';
 import { AllergenSelector } from '../allergens/AllergenSelector';
 import toast from 'react-hot-toast';
+import AuthError from './AuthError';
 
 export default function RegisterModal({ onClose, onSwitchToLogin }) {
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedAllergens, setSelectedAllergens] = useState([]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-    
+
     try {
+      // Validate form
+      if (!email || !password || !username) {
+        throw new Error('All fields are required');
+      }
+      if (username.length < 3 || username.length > 20) {
+        throw new Error('Username must be between 3 and 20 characters');
+      }
+      if (password.length < 8 || !/(?=.*[a-z])(?=.*[0-9])(?=.*[^A-Za-z0-9])/.test(password)) {
+        throw new Error('Password must be at least 8 characters and include letters, numbers, and special characters');
+      }
+
+      // Attempt registration
       const user = await registerWithEmailPassword(email, password, username);
       await createUserDocument(user, { allergens: selectedAllergens });
-      toast.success('Profile created successfully!');
-      onClose();
-    } catch (error) {
-      setError(error.message);
-      toast.error(error.message);
-    } finally {
-      setIsLoading(false);
+      onClose(); // Only close if registration succeeds
+    } catch (err) {
+      setError(err.message);
+      setIsLoading(false); // Reset loading state on error
     }
   };
 
@@ -114,18 +124,7 @@ export default function RegisterModal({ onClose, onSwitchToLogin }) {
           Create Account
         </h2>
         
-        {error && (
-          <div style={{
-            backgroundColor: '#fee2e2',
-            color: '#b91c1c',
-            padding: '12px',
-            borderRadius: '4px',
-            marginBottom: '16px',
-            fontSize: '14px'
-          }}>
-            {error}
-          </div>
-        )}
+        <AuthError error={error} />
         
         <form onSubmit={handleRegister}>
           <div style={{ marginBottom: '12px' }}>
