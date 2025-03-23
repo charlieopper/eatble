@@ -18,6 +18,7 @@ import { useAuth } from '../context/AuthContext';
 import DeleteConfirmationModal from '../components/reviews/DeleteConfirmationModal';
 import { useReviews } from '../context/ReviewsContext';
 import { adaptGooglePlaceToMockFormat } from '../utils/placeAdapter';
+import { cleanUrl } from '../utils/urlUtils';
 
 // Placeholder restaurant image URL
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fDB8fHww&w=1000&q=80";
@@ -1022,18 +1023,16 @@ export default function RestaurantDetailsPage() {
           </a>
           
           {restaurant.website && (
-            <a 
+            <a
               href={restaurant.website}
               target="_blank"
               rel="noopener noreferrer"
               style={{ 
-                color: '#2563eb', 
-                textDecoration: 'none',
-                fontSize: '14px',
-                display: 'block'
+                color: '#2563eb',
+                textDecoration: 'none'
               }}
             >
-              {restaurant.website}
+              {cleanUrl(restaurant.website)}
             </a>
           )}
         </div>

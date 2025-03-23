@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Heart, Star, ChefHat, FileText } from 'lucide-react';
 import { useFavorites } from '../../context/FavoritesContext';
 import { useNavigate } from 'react-router-dom';
+import { cleanUrl } from '../../utils/urlUtils';
 
 // Placeholder restaurant image URL
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fDB8fHww&w=1000&q=80";
@@ -257,7 +258,7 @@ const RestaurantCard = ({ restaurant, onClick }) => {
                     marginBottom: '4px'
                   }}
                 >
-                  {website.replace(/https?:\/\/(www\.)?/, '').split('?')[0]} {/* Simplify URL display */}
+                  {cleanUrl(website)}
                 </a>
               )}
             </div>
