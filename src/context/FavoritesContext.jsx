@@ -37,7 +37,7 @@ export const FavoritesProvider = ({ children }) => {
   const [favorites, setFavorites] = useState([]);
   const { user } = useAuth();
 
-  // Load favorites whenever user or favorites change
+  // Load favorites whenever user changes
   useEffect(() => {
     const loadFavorites = async () => {
       if (!user) {
@@ -49,10 +49,14 @@ export const FavoritesProvider = ({ children }) => {
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         const firestoreFavorites = userDoc.data()?.favoriteRestaurants || [];
         
-        // Ensure local state matches Firestore
-        setFavorites(firestoreFavorites);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[Favorites]:', {
+            action: 'load',
+            count: firestoreFavorites.length
+          });
+        }
         
-        console.log('Loaded favorites from Firestore:', firestoreFavorites);
+        setFavorites(firestoreFavorites);
       } catch (error) {
         console.error('Error loading favorites:', error);
         toast.error('Failed to load favorites');
@@ -86,16 +90,18 @@ export const FavoritesProvider = ({ children }) => {
           : [...prev, restaurant]
       );
 
-      console.log('Updated favorites:', isFavorited ? 'removed' : 'added', restaurant.id);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Favorites]:', {
+          action: isFavorited ? 'remove' : 'add',
+          restaurantId: restaurant.id
+        });
+      }
+      
       toast.success(isFavorited ? 'Removed from favorites' : 'Added to favorites');
     } catch (error) {
       console.error('Error updating favorites:', error);
       toast.error('Failed to update favorites');
     }
-  };
-
-  const isFavorite = (restaurantId) => {
-    return favorites.some(fav => fav.id === restaurantId);
   };
 
   // Add a function to force refresh favorites from Firestore
@@ -106,7 +112,13 @@ export const FavoritesProvider = ({ children }) => {
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       const firestoreFavorites = userDoc.data()?.favoriteRestaurants || [];
       setFavorites(firestoreFavorites);
-      console.log('Refreshed favorites from Firestore:', firestoreFavorites);
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Favorites]:', {
+          action: 'refresh',
+          count: firestoreFavorites.length
+        });
+      }
     } catch (error) {
       console.error('Error refreshing favorites:', error);
     }
@@ -116,8 +128,8 @@ export const FavoritesProvider = ({ children }) => {
     <FavoritesContext.Provider value={{ 
       favorites, 
       toggleFavorite, 
-      isFavorite,
-      refreshFavorites // Expose refresh function
+      isFavorite: (restaurantId) => favorites.some(fav => fav.id === restaurantId),
+      refreshFavorites
     }}>
       {children}
     </FavoritesContext.Provider>

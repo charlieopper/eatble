@@ -19,6 +19,8 @@ import AllergenModal from '../components/allergens/AllergenModal';
 import { useReviews } from '../context/ReviewsContext';
 import LoginModal from '../components/auth/LoginModal';
 import RegisterModal from '../components/auth/RegisterModal';
+import EatableReview from '../components/reviews/EatableReview';
+import { useFavorites } from '../context/FavoritesContext';
 
 // Mock reviews data
 const mockReviews = [
@@ -69,6 +71,7 @@ export default function ProfilePage() {
   const [showAllergenModal, setShowAllergenModal] = useState(false);
   const navigate = useNavigate();
   const { reviews, isLoading, error: reviewsError } = useReviews();
+  const { favorites, refreshFavorites } = useFavorites();
 
   const defaultAvatar = "https://ui-avatars.com/api/?name=" + 
     encodeURIComponent(user?.displayName || "User") + "&background=random";
@@ -86,7 +89,49 @@ export default function ProfilePage() {
         
         if (docSnap.exists()) {
           const data = docSnap.data();
-          setUserData(data);
+          
+          // Use the current favorites state instead of data.favoriteRestaurants
+          if (favorites && favorites.length > 0) {
+            const updatedFavorites = await Promise.all(
+              favorites.map(async (favorite) => {
+                const restaurantRef = doc(db, 'restaurants', favorite.id);
+                const restaurantSnap = await getDoc(restaurantRef);
+                
+                if (restaurantSnap.exists()) {
+                  const restaurantData = restaurantSnap.data();
+                  const reviews = restaurantData.reviews || [];
+                  const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+                  const averageRating = reviews.length > 0 ? totalRating / reviews.length : 0;
+                  const bestReview = reviews.length > 0 
+                    ? [...reviews].sort((a, b) => b.rating - a.rating)[0]
+                    : null;
+
+                  return {
+                    ...favorite,
+                    ...restaurantData,
+                    eatableReview: {
+                      rating: averageRating,
+                      reviewCount: reviews.length,
+                      quote: bestReview ? bestReview.text : 'No review available'
+                    }
+                  };
+                }
+                return favorite;
+              })
+            );
+            
+            setUserData(prev => ({
+              ...prev,
+              ...data,
+              favoriteRestaurants: updatedFavorites
+            }));
+          } else {
+            setUserData(prev => ({
+              ...prev,
+              ...data,
+              favoriteRestaurants: []
+            }));
+          }
         } else {
           const defaultUserData = {
             uid: user.uid,
@@ -104,6 +149,7 @@ export default function ProfilePage() {
           await setDoc(docRef, defaultUserData);
         }
       } catch (err) {
+        console.error('Error loading favorites:', err);
         setError('Failed to load profile data');
       } finally {
         setDataLoading(false);
@@ -113,7 +159,7 @@ export default function ProfilePage() {
     if (!authLoading) {
       fetchUserData();
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, favorites]);
 
   useEffect(() => {
     if (user) {
@@ -249,6 +295,29 @@ export default function ProfilePage() {
   const handleAccountSettingsClick = () => {
     setShowAccountModal(true);
   };
+
+  const renderFavorites = () => (
+    <div className="favorites-container" style={{ padding: '16px' }}>
+      {favorites?.map((restaurant) => (
+        <RestaurantCard 
+          key={restaurant.id}
+          restaurant={restaurant}
+        >
+          <EatableReview review={restaurant.eatableReview} />
+        </RestaurantCard>
+      ))}
+      
+      {(!favorites || favorites.length === 0) && (
+        <p style={{ 
+          textAlign: 'center', 
+          color: '#666',
+          marginTop: '20px' 
+        }}>
+          No favorite restaurants yet
+        </p>
+      )}
+    </div>
+  );
 
   const mainContent = () => {
     if (authLoading) {
@@ -583,28 +652,7 @@ export default function ProfilePage() {
                       </p>
                     )}
                   </div>
-                ) : (
-                  <div className="favorites-container" style={{ padding: '16px' }}>
-                    {userData?.favoriteRestaurants?.map((restaurant) => {
-                      return (
-                        <RestaurantCard 
-                          key={restaurant.id}
-                          restaurant={restaurant}
-                        />
-                      );
-                    })}
-                    
-                    {(!userData?.favoriteRestaurants || userData.favoriteRestaurants.length === 0) && (
-                      <p style={{ 
-                        textAlign: 'center', 
-                        color: '#666',
-                        marginTop: '20px' 
-                      }}>
-                        No favorite restaurants yet
-                      </p>
-                    )}
-                  </div>
-                )}
+                ) : renderFavorites()}
 
                 {/* Account Card */}
                 <div style={{ 

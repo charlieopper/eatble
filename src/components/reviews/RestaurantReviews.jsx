@@ -6,14 +6,6 @@ const TEAL_COLOR = "#0d9488";
 const googleLogoUrl = "https://www.gstatic.com/images/branding/product/1x/googleg_48dp.png";
 
 const RestaurantReviews = ({ restaurant }) => {
-  // Debug logs
-  console.log('RestaurantReviews received:', {
-    restaurant,
-    eatableReview: restaurant?.eatableReview,
-    reviews: restaurant?.reviews,
-    rating: restaurant?.eatableReview?.rating
-  });
-
   // Use the existing eatableReview if available, otherwise calculate from reviews
   const eatableReviewData = restaurant?.eatableReview || getReviewSummary(restaurant?.reviews);
 

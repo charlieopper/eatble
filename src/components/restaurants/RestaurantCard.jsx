@@ -3,6 +3,7 @@ import { Heart, Star, ChefHat, FileText } from 'lucide-react';
 import { useFavorites } from '../../context/FavoritesContext';
 import { useNavigate } from 'react-router-dom';
 import { cleanUrl } from '../../utils/urlUtils';
+import EatableReview from '../reviews/EatableReview';
 
 // Placeholder restaurant image URL
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fDB8fHww&w=1000&q=80";
@@ -397,26 +398,7 @@ const RestaurantCard = ({ restaurant, onClick }) => {
         </div>
 
         {/* eatABLE Review */}
-        <div style={{ marginTop: '12px', marginBottom: '12px' }}>
-          <div style={reviewHeaderStyle}>
-            <span style={{ marginRight: '8px' }}>🍴</span>
-            <span style={{ fontWeight: '600', fontSize: '14px', marginRight: '8px' }}>eatABLE Review</span>
-            <div style={{ display: 'flex' }}>
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  size={12}
-                  color={i < Math.floor(eatableReview?.rating || 0) ? TEAL_COLOR : "#d1d5db"}
-                  fill={i < Math.floor(eatableReview?.rating || 0) ? TEAL_COLOR : "none"}
-                />
-              ))}
-            </div>
-            <span style={{ fontSize: '12px', color: '#6b7280', marginLeft: '8px' }}>
-              ({eatableReview?.reviewCount || 0})
-            </span>
-          </div>
-          <p style={quoteStyle}>"{eatableReview?.quote || 'No review available'}"</p>
-        </div>
+        <EatableReview review={eatableReview} />
 
         {/* Google Review */}
         <div style={{ marginTop: '12px', marginBottom: '12px' }}>
