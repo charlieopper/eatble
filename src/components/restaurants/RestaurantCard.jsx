@@ -4,6 +4,7 @@ import { useFavorites } from '../../context/FavoritesContext';
 import { useNavigate } from 'react-router-dom';
 import { cleanUrl } from '../../utils/urlUtils';
 import EatableReview from '../reviews/EatableReview';
+import { selectMostHelpfulReview } from '../../utils/reviewUtils';
 
 // Placeholder restaurant image URL
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fDB8fHww&w=1000&q=80";
@@ -15,7 +16,7 @@ const TEAL_COLOR = "#0d9488";
 const googleLogoUrl = "https://www.gstatic.com/images/branding/product/1x/googleg_48dp.png";
 
 const RestaurantCard = ({ restaurant, onClick }) => {
-  const { name, image, cuisines, eatableReview, accommodations } = restaurant;
+  const { name, image, cuisines, eatableReview, accommodations, reviews } = restaurant;
   const { isFavorite, toggleFavorite } = useFavorites();
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
@@ -180,6 +181,48 @@ const RestaurantCard = ({ restaurant, onClick }) => {
 
   // Add this near the top of your component
   console.log("Restaurant allergens:", allergens);
+
+  // Add this to get the most helpful review
+  console.log('[RestaurantCard Debug]', {
+    restaurantName: name,
+    hasReviews: Boolean(reviews),
+    reviewCount: reviews?.length,
+    rawReviews: reviews,
+    eatableReview: eatableReview
+  });
+
+  // First try to get reviews from Firestore data
+  let formattedReview;
+  if (reviews?.length > 0) {
+    console.log('[RestaurantCard] Found Firestore reviews:', reviews);
+    formattedReview = selectMostHelpfulReview(reviews);
+  } 
+  // Fallback to existing eatableReview if no Firestore reviews
+  else if (eatableReview) {
+    console.log('[RestaurantCard] Using existing eatableReview:', eatableReview);
+    formattedReview = {
+      text: eatableReview.text || eatableReview.quote || 'No review available',
+      rating: eatableReview.rating || 0,
+      reviewCount: eatableReview.reviewCount || 0,
+      helpfulVotes: eatableReview.helpfulVotes || [],
+      userName: eatableReview.userName || '',
+      date: eatableReview.date || ''
+    };
+  } 
+  // Final fallback
+  else {
+    console.log('[RestaurantCard] No reviews available');
+    formattedReview = {
+      text: 'No review available',
+      rating: 0,
+      reviewCount: 0,
+      helpfulVotes: [],
+      userName: '',
+      date: ''
+    };
+  }
+
+  console.log('[RestaurantCard] Final review to display:', formattedReview);
 
   return (
     <div 
@@ -398,7 +441,7 @@ const RestaurantCard = ({ restaurant, onClick }) => {
         </div>
 
         {/* eatABLE Review */}
-        <EatableReview review={eatableReview} />
+        <EatableReview review={formattedReview} />
 
         {/* Google Review */}
         <div style={{ marginTop: '12px', marginBottom: '12px' }}>

@@ -20,6 +20,7 @@ import { useReviews } from '../context/ReviewsContext';
 import { adaptGooglePlaceToMockFormat } from '../utils/placeAdapter';
 import { cleanUrl } from '../utils/urlUtils';
 import EatableReview from '../components/reviews/EatableReview';
+import { selectMostHelpfulReview } from '../utils/reviewUtils';
 
 // Placeholder restaurant image URL
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fDB8fHww&w=1000&q=80";
@@ -164,12 +165,38 @@ export default function RestaurantDetailsPage() {
       try {
         // Get the place details from Places API
         const placeData = await restaurantService.fetchPlaceDetails(id);
-        console.log('📍 Loaded place details:', placeData);
-
+        
         // Adapt the place data using our existing adapter
         const adaptedData = adaptGooglePlaceToMockFormat(placeData);
-        console.log('✨ Adapted restaurant data:', adaptedData);
+        
+        // Get Eatable reviews
+        const docRef = doc(db, 'restaurants', id);
+        const docSnap = await getDoc(docRef);
+        
+        console.log('[LoadRestaurant] Firestore document:', {
+          exists: docSnap.exists(),
+          data: docSnap.exists() ? docSnap.data() : null
+        });
+        
+        if (docSnap.exists()) {
+          const restaurantData = docSnap.data();
+          
+          if (restaurantData.reviews && restaurantData.reviews.length > 0) {
+            console.log('[LoadRestaurant] Found Eatable reviews:', restaurantData.reviews);
+            
+            // Use the utility function
+            const mostHelpfulReview = selectMostHelpfulReview(restaurantData.reviews);
+            
+            if (mostHelpfulReview) {
+              console.log('[LoadRestaurant] Selected review:', mostHelpfulReview);
+              
+              // Update restaurant data with the formatted review
+              adaptedData.eatableReview = mostHelpfulReview;
+            }
+          }
+        }
 
+        console.log('[LoadRestaurant] Final adapted data:', adaptedData);
         setRestaurant(adaptedData);
         
         // Set images if available from Places API
@@ -178,26 +205,6 @@ export default function RestaurantDetailsPage() {
           setImages(photoUrls);
         } else {
           setImages(MOCK_IMAGES);
-        }
-
-        // Try to get Eatable data
-        try {
-          const docRef = doc(db, 'restaurants', id);
-          const docSnap = await getDoc(docRef);
-          
-          if (docSnap.exists()) {
-            const eatableData = docSnap.data();
-            const eatableReview = calculateEatableReview(eatableData.reviews);
-            
-            // Update with Eatable data while preserving adapted place data
-            setRestaurant(prev => ({
-              ...prev,
-              ...eatableData,
-              eatableReview // Add the calculated review data
-            }));
-          }
-        } catch (eatableError) {
-          console.log('Note: No Eatable-specific data found for this restaurant');
         }
 
       } catch (error) {

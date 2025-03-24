@@ -13,6 +13,9 @@ import RestaurantCard from '../components/restaurants/RestaurantCard';
 import { AuthButtons } from '../components/auth/AuthButtons';
 import LoginModal from '../components/auth/LoginModal';
 import RegisterModal from '../components/auth/RegisterModal';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase/config';
+import { toast } from 'react-hot-toast';
 
 export default function SearchPage() {
   const location = useLocation();
@@ -35,36 +38,54 @@ export default function SearchPage() {
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
   const [userLocation, setUserLocation] = useState(null);
 
-  // Function to load initial restaurants
+  const fetchFirestoreData = async (restaurants) => {
+    const enrichedRestaurants = await Promise.all(
+      restaurants.map(async (restaurant) => {
+        try {
+          // Fetch Firestore document for each restaurant
+          const restaurantRef = doc(db, 'restaurants', restaurant.id);
+          const restaurantDoc = await getDoc(restaurantRef);
+          
+          console.log('[SearchPage] Firestore data for:', restaurant.name, {
+            exists: restaurantDoc.exists(),
+            data: restaurantDoc.data()
+          });
+
+          if (restaurantDoc.exists()) {
+            const firestoreData = restaurantDoc.data();
+            return {
+              ...restaurant,
+              reviews: firestoreData.reviews || [],
+              accommodations: firestoreData.accommodations || {}
+            };
+          }
+          
+          return restaurant;
+        } catch (error) {
+          console.error('Error fetching Firestore data:', error);
+          return restaurant;
+        }
+      })
+    );
+
+    return enrichedRestaurants;
+  };
+
   const loadRestaurants = useCallback(async () => {
     setIsLoading(true);
     try {
       const result = await restaurantService.getRestaurants(1, 3); // Load fewer initially for testing
       console.log('Initial load result:', result);
       
-      // Ensure each restaurant has coordinates
-      const restaurantsWithCoords = result.restaurants.map(restaurant => {
-        // If restaurant already has coordinates, use them
-        if (restaurant.lat && restaurant.lng) {
-          return restaurant;
-        }
-        
-        // Otherwise, generate random coordinates around San Francisco
-        const lat = 37.7749 + (Math.random() - 0.5) * 0.05;
-        const lng = -122.4194 + (Math.random() - 0.5) * 0.05;
-        
-        return {
-          ...restaurant,
-          lat,
-          lng
-        };
-      });
+      // Enrich with Firestore data
+      const enrichedRestaurants = await fetchFirestoreData(result.restaurants);
+      console.log('Enriched restaurants:', enrichedRestaurants);
       
-      setRestaurants(restaurantsWithCoords);
+      setRestaurants(enrichedRestaurants);
       setHasMore(result.hasMore);
       setPage(1);
       
-      console.log('Restaurants with coordinates:', restaurantsWithCoords);
+      console.log('Restaurants with coordinates:', enrichedRestaurants);
     } catch (error) {
       console.error('Error loading restaurants:', error);
       setHasMore(false);
@@ -95,21 +116,8 @@ export default function SearchPage() {
       console.log('Got more restaurants:', result);
       
       if (result.restaurants && result.restaurants.length > 0) {
-        // Add coordinates to new restaurants
-        const newRestaurantsWithCoords = result.restaurants.map(restaurant => {
-          if (restaurant.lat && restaurant.lng) {
-            return restaurant;
-          }
-          
-          const lat = 37.7749 + (Math.random() - 0.5) * 0.05;
-          const lng = -122.4194 + (Math.random() - 0.5) * 0.05;
-          
-          return {
-            ...restaurant,
-            lat,
-            lng
-          };
-        });
+        // Enrich with Firestore data
+        const newRestaurantsWithCoords = await fetchFirestoreData(result.restaurants);
         
         setRestaurants(prevRestaurants => [...prevRestaurants, ...newRestaurantsWithCoords]);
         setPage(nextPage);
@@ -133,29 +141,14 @@ export default function SearchPage() {
     try {
       const result = await restaurantService.searchRestaurants(query, 1, 5);
       
-      // Ensure each restaurant has coordinates
-      const restaurantsWithCoords = result.restaurants.map(restaurant => {
-        // If restaurant already has coordinates, use them
-        if (restaurant.lat && restaurant.lng) {
-          return restaurant;
-        }
-        
-        // Otherwise, generate random coordinates around San Francisco
-        const lat = 37.7749 + (Math.random() - 0.5) * 0.05;
-        const lng = -122.4194 + (Math.random() - 0.5) * 0.05;
-        
-        return {
-          ...restaurant,
-          lat,
-          lng
-        };
-      });
+      // Enrich with Firestore data
+      const enrichedRestaurants = await fetchFirestoreData(result.restaurants);
       
-      setRestaurants(restaurantsWithCoords);
+      setRestaurants(enrichedRestaurants);
       setHasMore(result.hasMore);
       setPage(1);
       
-      console.log('Search results with coordinates:', restaurantsWithCoords);
+      console.log('Search results with coordinates:', enrichedRestaurants);
     } catch (error) {
       console.error('Error searching restaurants:', error);
     } finally {

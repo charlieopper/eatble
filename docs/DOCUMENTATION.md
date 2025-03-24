@@ -1,6 +1,6 @@
 # eatABLE - Allergy-Friendly Restaurant Reviews
 
-Last Updated: 2025-03-23
+Last Updated: 2025-03-24
 
 ## Table of Contents
 
@@ -14,6 +14,7 @@ Last Updated: 2025-03-23
 8. [State Management](#state-management)
 9. [Current Limitations](#current-limitations)
 10. [Planned Features](#planned-features)
+11. [Recent Updates](#recent-updates)
 
 ## Project Overview
 
@@ -82,6 +83,8 @@ eatABLE is a web application designed to help users with food allergies find saf
    - User information
    - Preferences management
    - Authentication state handling
+   - Favorites management
+   - Firestore data integration
 
 ### Auth Components
 
@@ -143,18 +146,16 @@ eatABLE is a web application designed to help users with food allergies find saf
 
 ## State Management
 
-Currently using React's built-in state management:
-
 - useState for component-level state
-- useContext for auth state (planned)
+- useContext for auth state and favorites
 - Custom hooks for shared logic
+- Firestore for persistent data storage
 
 ## Current Limitations
 
-1. Mock data for reviews
-2. Limited error handling
-3. No persistent state management
-4. Basic form validation
+1. Limited error handling
+2. Basic form validation
+3. Performance optimization needed for large datasets
 
 ## Planned Features
 
@@ -166,6 +167,38 @@ Currently using React's built-in state management:
 6. Advanced search filters
 7. User profile images
 8. Review ratings system
+
+## Recent Updates
+
+### Favorites System (March 2024)
+
+- Implemented FavoritesContext for global favorites state management
+- Added Firestore integration for persistent favorites storage
+- Created optimistic UI updates for better user experience
+- Implemented proper error handling with fallbacks
+
+### Review System Improvements
+
+- Added support for multiple reviews per restaurant
+- Implemented "helpful" voting system for reviews
+- Created utility for selecting most helpful reviews
+- Enhanced review display with user information and dates
+
+### ProfilePage Enhancements
+
+- Added local state management for favorites to prevent UI flashing
+- Enhanced Firestore data fetching with proper error handling
+- Fixed review data formatting for RestaurantCard components
+- Improved user experience by preventing unnecessary error toasts
+
+### Data Flow Architecture
+
+The favorites and reviews system now follows this data flow:
+
+1. **Context Providers**: Manage global state and Firebase interactions
+2. **Page Components**: Enrich data with additional Firestore information
+3. **UI Components**: Display formatted data with proper fallbacks
+4. **Utility Functions**: Handle data transformation and selection logic
 
 ---
 

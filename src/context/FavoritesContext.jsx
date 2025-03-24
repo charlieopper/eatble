@@ -5,12 +5,12 @@ import { doc, updateDoc, arrayUnion, arrayRemove, getDoc, setDoc, serverTimestam
 import { useAuth } from './AuthContext';
 
 // Create the context
-export const FavoritesContext = createContext();
+const FavoritesContext = createContext();
 
 // Custom hook to use the favorites context
-export const useFavorites = () => {
+export function useFavorites() {
   return useContext(FavoritesContext);
-};
+}
 
 // Safe localStorage functions
 const safeGetItem = (key) => {
@@ -33,9 +33,9 @@ const safeSetItem = (key, value) => {
 };
 
 // Provider component
-export const FavoritesProvider = ({ children }) => {
-  const [favorites, setFavorites] = useState([]);
+export function FavoritesProvider({ children }) {
   const { user } = useAuth();
+  const [favorites, setFavorites] = useState([]);
   
   // Add debugging
   useEffect(() => {
@@ -48,53 +48,56 @@ export const FavoritesProvider = ({ children }) => {
     }
   }, [user]);
 
-  // Load favorites whenever user changes
+  const getFavorites = async () => {
+    console.log('[FavoritesContext] getFavorites called:', { 
+      hasUser: Boolean(user),
+      userId: user?.uid 
+    });
+
+    if (!user?.uid) {
+      console.log('[FavoritesContext] No user, returning empty array');
+      return [];
+    }
+
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      const docSnap = await getDoc(userDocRef);
+      
+      console.log('[FavoritesContext] Firestore response:', {
+        exists: docSnap.exists(),
+        data: docSnap.exists() ? 'has data' : 'no data'
+      });
+
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        const favoritesData = userData.favoriteRestaurants || [];
+        console.log('[FavoritesContext] Got favorites:', favoritesData?.length);
+        return favoritesData;
+      }
+
+      console.log('[FavoritesContext] No user doc found');
+      return [];
+    } catch (error) {
+      console.error('[FavoritesContext] Error in getFavorites:', error);
+      throw error; // Let the component handle the error
+    }
+  };
+
+  // Load favorites when user changes
   useEffect(() => {
-    const loadFavorites = async () => {
-      if (!user) {
-        setFavorites([]);
-        return;
-      }
-
-      try {
-        // Check if user document exists
-        const userDocRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-        
-        console.log('[Favorites Debug]:', { 
-          action: 'check_user_doc', 
-          exists: userDoc.exists(),
-          data: userDoc.data()
+    console.log('[FavoritesContext] User changed:', user?.uid);
+    if (user?.uid) {
+      getFavorites()
+        .then(favs => {
+          console.log('[FavoritesContext] Setting favorites:', favs?.length);
+          setFavorites(favs);
+        })
+        .catch(error => {
+          console.error('[FavoritesContext] Error loading favorites:', error);
         });
-        
-        // If user document doesn't exist, create it
-        if (!userDoc.exists()) {
-          console.log('[Favorites Debug]:', { action: 'creating_user_doc' });
-          await setDoc(userDocRef, { 
-            favoriteRestaurants: [],
-            createdAt: serverTimestamp(),
-            email: user.email,
-            displayName: user.displayName || ''
-          });
-          setFavorites([]);
-          return;
-        }
-        
-        const firestoreFavorites = userDoc.data()?.favoriteRestaurants || [];
-        
-        console.log('[Favorites Debug]:', {
-          action: 'load_favorites',
-          count: firestoreFavorites.length
-        });
-        
-        setFavorites(firestoreFavorites);
-      } catch (error) {
-        console.error('Error loading favorites:', error);
-        toast.error('Failed to load favorites');
-      }
-    };
-
-    loadFavorites();
+    } else {
+      setFavorites([]);
+    }
   }, [user]);
 
   const toggleFavorite = async (restaurant) => {
@@ -170,7 +173,7 @@ export const FavoritesProvider = ({ children }) => {
     
     try {
       const userDoc = await getDoc(doc(db, 'users', user.uid));
-      const firestoreFavorites = userDoc.data()?.favoriteRestaurants || [];
+      const firestoreFavorites = await getFavorites();
       setFavorites(firestoreFavorites);
       
       if (process.env.NODE_ENV === 'development') {
@@ -189,9 +192,10 @@ export const FavoritesProvider = ({ children }) => {
       favorites, 
       toggleFavorite, 
       isFavorite: (restaurantId) => favorites.some(fav => fav.id === restaurantId),
-      refreshFavorites
+      refreshFavorites,
+      getFavorites
     }}>
       {children}
     </FavoritesContext.Provider>
   );
-}; 
+} 

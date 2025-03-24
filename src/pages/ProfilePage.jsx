@@ -21,6 +21,7 @@ import LoginModal from '../components/auth/LoginModal';
 import RegisterModal from '../components/auth/RegisterModal';
 import EatableReview from '../components/reviews/EatableReview';
 import { useFavorites } from '../context/FavoritesContext';
+import { selectMostHelpfulReview } from '../utils/reviewUtils';
 
 // Mock reviews data
 const mockReviews = [
@@ -54,6 +55,8 @@ const mockReviews = [
 const TEAL_COLOR = "#0d9488";
 
 export default function ProfilePage() {
+  console.log('[ProfilePage] Component rendering');
+  
   const { user, loading: authLoading, refreshUserData, logout } = useAuth();
   const [error, setError] = useState('');
   const [userData, setUserData] = useState(null);
@@ -71,7 +74,17 @@ export default function ProfilePage() {
   const [showAllergenModal, setShowAllergenModal] = useState(false);
   const navigate = useNavigate();
   const { reviews, isLoading, error: reviewsError } = useReviews();
-  const { favorites, refreshFavorites } = useFavorites();
+  const { favorites, getFavorites, setFavorites } = useFavorites();
+  const [isLoadingFavorites, setIsLoadingFavorites] = useState(false);
+  const [localFavorites, setLocalFavorites] = useState([]);
+
+  // Debug log to see what we're getting from context
+  console.log('[ProfilePage] Context values:', { 
+    hasUser: Boolean(user), 
+    userId: user?.uid,
+    hasFavorites: Boolean(favorites),
+    favoritesCount: favorites?.length
+  });
 
   const defaultAvatar = "https://ui-avatars.com/api/?name=" + 
     encodeURIComponent(user?.displayName || "User") + "&background=random";
@@ -298,16 +311,14 @@ export default function ProfilePage() {
 
   const renderFavorites = () => (
     <div className="favorites-container" style={{ padding: '16px' }}>
-      {favorites?.map((restaurant) => (
+      {localFavorites?.map((restaurant) => (
         <RestaurantCard 
           key={restaurant.id}
           restaurant={restaurant}
-        >
-          <EatableReview review={restaurant.eatableReview} />
-        </RestaurantCard>
+        />
       ))}
       
-      {(!favorites || favorites.length === 0) && (
+      {(!localFavorites || localFavorites.length === 0) && (
         <p style={{ 
           textAlign: 'center', 
           color: '#666',
@@ -318,6 +329,105 @@ export default function ProfilePage() {
       )}
     </div>
   );
+
+  const fetchFirestoreData = async (restaurants) => {
+    try {
+      if (!restaurants?.length) {
+        return [];
+      }
+
+      const enrichedRestaurants = await Promise.all(
+        restaurants.map(async (restaurant) => {
+          try {
+            const restaurantRef = doc(db, 'restaurants', restaurant.id);
+            const restaurantDoc = await getDoc(restaurantRef);
+            
+            if (restaurantDoc.exists()) {
+              const firestoreData = restaurantDoc.data();
+              const reviews = firestoreData.reviews || [];
+              
+              // Keep the existing eatableReview if we have it
+              const enrichedRestaurant = {
+                ...restaurant,
+                reviews,
+                rawReviews: reviews,
+                hasReviews: reviews.length > 0,
+                reviewCount: reviews.length,
+                accommodations: firestoreData.accommodations || [],
+                eatableReview: restaurant.eatableReview // Keep existing eatableReview
+              };
+
+              // If we have new reviews, update the eatableReview
+              if (reviews.length > 0) {
+                const mostHelpfulReview = selectMostHelpfulReview(reviews);
+                if (mostHelpfulReview) {
+                  enrichedRestaurant.eatableReview = mostHelpfulReview;
+                }
+              }
+
+              return enrichedRestaurant;
+            }
+            
+            return {
+              ...restaurant,
+              reviews: [],
+              rawReviews: [],
+              hasReviews: false,
+              reviewCount: 0,
+              accommodations: []
+            };
+          } catch (error) {
+            console.error('[ProfilePage] Error fetching restaurant:', restaurant.id, error);
+            return restaurant;
+          }
+        })
+      );
+
+      return enrichedRestaurants;
+    } catch (error) {
+      console.error('[ProfilePage] Error in fetchFirestoreData:', error);
+      return restaurants || [];
+    }
+  };
+
+  useEffect(() => {
+    const loadFavorites = async () => {
+      if (!user?.uid) {
+        return;
+      }
+
+      try {
+        setIsLoadingFavorites(true);
+        
+        // Get initial favorites
+        const favoritesData = await getFavorites();
+
+        if (!favoritesData?.length) {
+          setLocalFavorites([]);
+          return;
+        }
+
+        // Enrich with Firestore data
+        const enrichedFavorites = await fetchFirestoreData(favoritesData);
+        
+        if (enrichedFavorites?.length) {
+          setLocalFavorites(enrichedFavorites);
+        }
+      } catch (error) {
+        console.error('[ProfilePage] Error loading favorites:', error);
+        if (user?.uid) {
+          toast.error('Failed to load favorite restaurants');
+        }
+      } finally {
+        setIsLoadingFavorites(false);
+      }
+    };
+
+    loadFavorites();
+  }, [user?.uid]);
+
+  // Use localFavorites instead of favorites from context
+  const displayFavorites = localFavorites.length > 0 ? localFavorites : favorites;
 
   const mainContent = () => {
     if (authLoading) {
