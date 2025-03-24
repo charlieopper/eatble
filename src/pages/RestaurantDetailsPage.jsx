@@ -101,6 +101,57 @@ export default function RestaurantDetailsPage() {
     };
   };
 
+  // Add this function near the top of the component
+  const calculateReviewStats = (reviews) => {
+    if (!reviews || reviews.length === 0) {
+      return {
+        averageRating: 0,
+        totalReviews: 0,
+        distribution: {
+          5: { count: 0, percentage: 0 },
+          4: { count: 0, percentage: 0 },
+          3: { count: 0, percentage: 0 },
+          2: { count: 0, percentage: 0 },
+          1: { count: 0, percentage: 0 }
+        }
+      };
+    }
+
+    const distribution = {
+      5: { count: 0, percentage: 0 },
+      4: { count: 0, percentage: 0 },
+      3: { count: 0, percentage: 0 },
+      2: { count: 0, percentage: 0 },
+      1: { count: 0, percentage: 0 }
+    };
+
+    // Count reviews for each rating
+    reviews.forEach(review => {
+      if (distribution[review.rating]) {
+        distribution[review.rating].count++;
+      }
+    });
+
+    // Calculate percentages
+    const totalReviews = reviews.length;
+    Object.keys(distribution).forEach(rating => {
+      distribution[rating].percentage = 
+        Math.round((distribution[rating].count / totalReviews) * 100);
+    });
+
+    // Calculate average rating
+    const averageRating = Number(
+      (reviews.reduce((acc, review) => acc + review.rating, 0) / totalReviews)
+        .toFixed(1)
+    );
+
+    return {
+      averageRating,
+      totalReviews,
+      distribution
+    };
+  };
+
   useEffect(() => {
     const loadRestaurant = async () => {
       setIsLoading(true);
@@ -477,6 +528,8 @@ export default function RestaurantDetailsPage() {
     const normalizedAllergen = allergen.trim();
     return allergenMap[normalizedAllergen] || { name: allergen, emoji: '⚠️' };
   };
+
+  const reviewStats = calculateReviewStats(restaurantReviews);
 
   return (
     <div style={{ 
@@ -1086,50 +1139,30 @@ export default function RestaurantDetailsPage() {
                     backgroundColor: '#e5e7eb',
                     borderRadius: '4px',
                     marginLeft: '8px',
-                    marginRight: '8px',
-                    position: 'relative'
+                    marginRight: '8px'
                   }}>
                     <div style={{
-                      position: 'absolute',
-                      left: 0,
-                      top: 0,
+                      width: `${reviewStats.distribution[stars].percentage}%`,
                       height: '100%',
-                      width: stars === 5 ? '85%' : 
-                             stars === 4 ? '7%' : 
-                             stars === 3 ? '5%' : 
-                             stars === 2 ? '2%' : '1%',
                       backgroundColor: '#facc15',
-                      borderRadius: '4px'
+                      borderRadius: '4px',
+                      transition: 'width 0.3s ease'
                     }}></div>
                   </div>
-                  <span style={{ 
-                    fontSize: '12px', 
-                    color: '#6b7280',
-                    width: '30px',
-                    textAlign: 'right'
-                  }}>
-                    {stars === 5 ? '85%' : 
-                     stars === 4 ? '7%' : 
-                     stars === 3 ? '5%' : 
-                     stars === 2 ? '2%' : '1%'}
-                  </span>
+                  <div style={{ width: '30px', fontSize: '14px', color: '#6b7280' }}>
+                    {reviewStats.distribution[stars].percentage}%
+                  </div>
                 </div>
               ))}
             </div>
             
-            {/* Right side - Overall rating */}
-            <div style={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center',
-              justifyContent: 'center'
+            {/* Right side - Average rating */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center'
             }}>
-              <div style={{ fontSize: '14px', marginBottom: '8px' }}>Rating</div>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center',
-                marginBottom: '4px'
-              }}>
+              <div style={{ display: 'flex' }}>
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
@@ -1144,10 +1177,10 @@ export default function RestaurantDetailsPage() {
                 fontWeight: 'bold',
                 marginBottom: '4px'
               }}>
-                4.9
+                {reviewStats.averageRating}
               </div>
               <div style={{ fontSize: '14px', color: '#6b7280' }}>
-                129 reviews
+                {reviewStats.totalReviews} reviews
               </div>
             </div>
           </div>
