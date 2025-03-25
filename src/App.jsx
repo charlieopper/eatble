@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { FavoritesProvider } from './context/FavoritesContext';
@@ -13,31 +13,56 @@ import AuthTest from './components/auth/AuthTest';
 import ProfilePage from './pages/ProfilePage';
 import { ReviewsProvider } from './context/ReviewsContext';
 
-const loadGoogleMapsScript = () => {
-  if (window.google) return Promise.resolve();
-  
-  return new Promise((resolve) => {
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&libraries=places&loading=async`;
-    script.async = true;
-    script.defer = true;
-    script.onload = () => resolve();
-    document.head.appendChild(script);
-  });
-};
-
 function App() {
   const [googleMapsLoaded, setGoogleMapsLoaded] = useState(false);
   
   useEffect(() => {
-    loadGoogleMapsScript()
-      .then(() => {
-        console.log('Google Maps API loaded successfully');
-        setGoogleMapsLoaded(true);
-      })
-      .catch(err => {
-        console.error('Error loading Google Maps API:', err);
-      });
+    // If Google Maps is already loaded
+    if (window.google && window.google.maps && window.google.maps.places) {
+      console.log('[GoogleMaps] API already loaded');
+      window.googleMapsLoaded = true;
+      setGoogleMapsLoaded(true);
+      return;
+    }
+
+    // Function to load the Google Maps script
+    const loadGoogleMapsScript = () => {
+      const API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY;
+      
+      // Create script element
+      const script = document.createElement('script');
+      script.id = 'google-maps-script';
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      
+      // Set up callbacks
+      script.onload = () => {
+        console.log('[GoogleMaps] Script loaded successfully');
+        // Wait a moment to ensure Places library is initialized
+        setTimeout(() => {
+          if (window.google && window.google.maps && window.google.maps.places) {
+            console.log('[GoogleMaps] API fully initialized');
+            window.googleMapsLoaded = true;
+            setGoogleMapsLoaded(true);
+          } else {
+            console.error('[GoogleMaps] API loaded but Places library not available');
+          }
+        }, 500);
+      };
+      
+      script.onerror = () => {
+        console.error('[GoogleMaps] Script loading failed');
+      };
+      
+      // Add script to document
+      document.head.appendChild(script);
+    };
+
+    // Check if script is already in the document
+    if (!document.getElementById('google-maps-script')) {
+      loadGoogleMapsScript();
+    }
   }, []);
   
   return (
@@ -46,16 +71,25 @@ function App() {
         <FavoritesProvider>
           <ReviewsProvider>
             <Toaster position="top-center" />
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/restaurants" element={<SearchPage />} />
-              <Route path="/restaurants/search" element={<SearchPage />} />
-              <Route path="/favorites" element={<FavoritesPage />} />
-              <Route path="/restaurant/:id" element={<RestaurantDetailsPage />} />
-              <Route path="/reviews" element={<ReviewsPage />} />
-              <Route path="/auth-test" element={<AuthTest />} />
-              <Route path="/profile" element={<ProfilePage />} />
-            </Routes>
+            {googleMapsLoaded ? (
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/restaurants" element={<SearchPage />} />
+                <Route path="/restaurants/search" element={<SearchPage />} />
+                <Route path="/favorites" element={<FavoritesPage />} />
+                <Route path="/restaurant/:id" element={<RestaurantDetailsPage />} />
+                <Route path="/reviews" element={<ReviewsPage />} />
+                <Route path="/auth-test" element={<AuthTest />} />
+                <Route path="/profile" element={<ProfilePage />} />
+              </Routes>
+            ) : (
+              <div className="loading-container">
+                <div className="loading-message">
+                  <h2>Loading Maps...</h2>
+                  <p>Please wait while we initialize the map service.</p>
+                </div>
+              </div>
+            )}
           </ReviewsProvider>
         </FavoritesProvider>
       </AuthProvider>
