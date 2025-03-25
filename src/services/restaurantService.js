@@ -6,35 +6,109 @@ import { collection, doc, getDoc, getDocs, query, where, orderBy, limit } from '
 
 const API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY;
 const rateLimiter = new RateLimiter();
-const restaurantCache = new Map();
+
+// Enhanced cache with expiration
+const restaurantCache = {
+  nearbySearches: new Map(),
+  placeDetails: new Map(),
+  
+  // Cache expiration time (30 days in milliseconds)
+  EXPIRATION: 24 * 60 * 60 * 1000 * 30,
+  
+  // Save to localStorage
+  saveToStorage() {
+    try {
+      // Save nearby searches
+      const nearbyData = {};
+      this.nearbySearches.forEach((value, key) => {
+        nearbyData[key] = value;
+      });
+      localStorage.setItem('restaurantCacheNearby', JSON.stringify(nearbyData));
+      
+      // Save place details
+      const detailsData = {};
+      this.placeDetails.forEach((value, key) => {
+        detailsData[key] = value;
+      });
+      localStorage.setItem('restaurantCacheDetails', JSON.stringify(detailsData));
+      
+      console.log('[Cache] Saved to localStorage');
+    } catch (error) {
+      console.error('[Cache] Error saving to localStorage:', error);
+    }
+  },
+  
+  // Load from localStorage
+  loadFromStorage() {
+    try {
+      // Load nearby searches
+      const nearbyData = localStorage.getItem('restaurantCacheNearby');
+      if (nearbyData) {
+        const parsed = JSON.parse(nearbyData);
+        Object.entries(parsed).forEach(([key, value]) => {
+          // Only load if not expired
+          if (value.timestamp && (Date.now() - value.timestamp) < this.EXPIRATION) {
+            this.nearbySearches.set(key, value);
+          }
+        });
+      }
+      
+      // Load place details
+      const detailsData = localStorage.getItem('restaurantCacheDetails');
+      if (detailsData) {
+        const parsed = JSON.parse(detailsData);
+        Object.entries(parsed).forEach(([key, value]) => {
+          // Only load if not expired
+          if (value.timestamp && (Date.now() - value.timestamp) < this.EXPIRATION) {
+            this.placeDetails.set(key, value);
+          }
+        });
+      }
+      
+      console.log('[Cache] Loaded from localStorage');
+    } catch (error) {
+      console.error('[Cache] Error loading from localStorage:', error);
+    }
+  }
+};
+
+// Initialize cache from localStorage
+restaurantCache.loadFromStorage();
 
 export const restaurantService = {
   async getRestaurants(page = 1, limit = 10, location = { lat: 37.7749, lng: -122.4194 }) {
     try {
       console.log('🔍 getRestaurants called with:', { page, limit, location });
       
-      await rateLimiter.acquireToken();
-      const places = await this.fetchNearbyRestaurants(location, 5000);
+      // Create a cache key for this specific search
+      const locationKey = `${location.lat.toFixed(4)},${location.lng.toFixed(4)},5000`;
       
-      // Fetch full details for each place to get reviews
-      const detailedPlaces = await Promise.all(
-        places.map(async (place) => {
-          try {
-            const details = await this.fetchPlaceDetails(place.id);
-            return { ...place, ...details };
-          } catch (error) {
-            console.error(`Error fetching details for ${place.id}:`, error);
-            return place;
-          }
-        })
-      );
+      // Check if we have cached results for this location
+      let places;
+      if (restaurantCache.nearbySearches.has(locationKey)) {
+        console.log('[Cache] Using cached nearby search results');
+        places = restaurantCache.nearbySearches.get(locationKey).data;
+      } else {
+        // If not in cache, fetch from API
+        await rateLimiter.acquireToken();
+        places = await this.fetchNearbyRestaurants(location, 5000);
+        
+        // Store in cache with timestamp
+        restaurantCache.nearbySearches.set(locationKey, {
+          data: places,
+          timestamp: Date.now()
+        });
+        restaurantCache.saveToStorage();
+      }
       
+      // Fetch Eatable data for all places in one batch
       const eatableData = await this.fetchBatchEatableData(places.map(p => p.id));
       
       // Format results and add pagination
       const start = (page - 1) * limit;
-      const paginatedPlaces = detailedPlaces.slice(start, start + limit);
+      const paginatedPlaces = places.slice(start, start + limit);
       
+      // Only adapt the paginated places (not all places)
       const formattedResults = paginatedPlaces.map(place => 
         adaptGooglePlaceToMockFormat(place, eatableData[place.id])
       );
@@ -87,8 +161,13 @@ export const restaurantService = {
   async getRestaurantDetails(placeId) {
     try {
       // Check cache first
-      if (restaurantCache.has(placeId)) {
-        return restaurantCache.get(placeId);
+      if (restaurantCache.placeDetails.has(placeId)) {
+        const cachedData = restaurantCache.placeDetails.get(placeId);
+        // Check if cache is still valid
+        if ((Date.now() - cachedData.timestamp) < restaurantCache.EXPIRATION) {
+          console.log('[Cache] Using cached place details for:', placeId);
+          return cachedData.data;
+        }
       }
 
       await rateLimiter.acquireToken();
@@ -99,7 +178,11 @@ export const restaurantService = {
       ]);
 
       const formattedPlace = adaptGooglePlaceToMockFormat(placeDetails, eatableData);
-      restaurantCache.set(placeId, formattedPlace);
+      restaurantCache.placeDetails.set(placeId, {
+        data: formattedPlace,
+        timestamp: Date.now()
+      });
+      restaurantCache.saveToStorage();
       
       return formattedPlace;
     } catch (error) {
@@ -176,25 +259,43 @@ export const restaurantService = {
   },
 
   async fetchPlaceDetails(placeId) {
-    const endpoint = `https://places.googleapis.com/v1/places/${placeId}`;
-    console.log(`🔍 Fetching details for place: ${placeId}`);
-    
-    const response = await fetch(endpoint, {
-      headers: {
-        'X-Goog-Api-Key': API_KEY,
-        'X-Goog-FieldMask': 'id,displayName,formattedAddress,internationalPhoneNumber,websiteUri,rating,userRatingCount,reviews,reviews.text,reviews.rating,reviews.authorAttribution,regularOpeningHours,priceLevel'
+    try {
+      // Check cache first
+      if (restaurantCache.placeDetails.has(placeId)) {
+        const cachedData = restaurantCache.placeDetails.get(placeId);
+        // Check if cache is still valid
+        if ((Date.now() - cachedData.timestamp) < restaurantCache.EXPIRATION) {
+          console.log('[Cache] Using cached place details for:', placeId);
+          return cachedData.data;
+        }
       }
-    });
-
-    const data = await response.json();
-    console.log('📦 Place details response:', {
-      placeId,
-      hasReviews: Boolean(data.reviews),
-      reviewCount: data.reviews?.length,
-      firstReview: data.reviews?.[0]
-    });
-    
-    return data;
+      
+      // If not in cache or expired, fetch from API
+      await rateLimiter.acquireToken();
+      
+      return new Promise((resolve, reject) => {
+        const service = new google.maps.places.PlacesService(document.createElement('div'));
+        service.getDetails(
+          { placeId: placeId, fields: ['name', 'rating', 'formatted_address', 'photos', 'website', 'price_level', 'reviews', 'types'] },
+          (place, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK) {
+              // Store in cache with timestamp
+              restaurantCache.placeDetails.set(placeId, {
+                data: place,
+                timestamp: Date.now()
+              });
+              restaurantCache.saveToStorage();
+              resolve(place);
+            } else {
+              reject(new Error(`Place details request failed: ${status}`));
+            }
+          }
+        );
+      });
+    } catch (error) {
+      console.error(`Error fetching place details for ${placeId}:`, error);
+      throw error;
+    }
   },
 
   async fetchEatableData(placeId) {
