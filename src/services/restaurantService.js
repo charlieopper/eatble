@@ -44,7 +44,6 @@ const restaurantCache = {
       });
       localStorage.setItem('restaurantCacheDetails', JSON.stringify(detailsData));
       
-      console.log('[Cache] Saved to localStorage - Details: ' + this.placeDetails.size + ' items, Nearby: ' + this.nearbySearches.size + ' searches');
     } catch (error) {
       console.error('[Cache] Error saving to localStorage:', error);
     }
@@ -77,7 +76,6 @@ const restaurantCache = {
         });
       }
       
-      console.log('[Cache] Loaded from localStorage - Details: ' + this.placeDetails.size + ' items, Nearby: ' + this.nearbySearches.size + ' searches');
     } catch (error) {
       console.error('[Cache] Error loading from localStorage:', error);
     }
@@ -90,7 +88,6 @@ restaurantCache.loadFromStorage();
 export const restaurantService = {
   async getRestaurants(page = 1, limit = 10, location = { lat: 37.7749, lng: -122.4194 }) {
     try {
-      console.log('🔍 getRestaurants called with:', { page, limit, location });
       
       // Create a cache key for this location
       const locationKey = `${location.lat.toFixed(4)},${location.lng.toFixed(4)}`;
@@ -101,7 +98,6 @@ export const restaurantService = {
       if (restaurantCache.nearbySearches.has(locationKey)) {
         const cachedData = restaurantCache.nearbySearches.get(locationKey);
         if ((Date.now() - cachedData.timestamp) < restaurantCache.EXPIRATION) {
-          console.log('[Cache] Using cached nearby search results for location: ' + locationKey);
           places = cachedData.data;
           fromCache = true;
           totalSaved++;
@@ -112,7 +108,6 @@ export const restaurantService = {
       
       // If not in cache or expired, fetch from API
       if (!fromCache) {
-        console.log('[API] Fetching nearby restaurants for location: ' + locationKey);
         await rateLimiter.acquireToken();
         apiCalls++;
         places = await this.fetchNearbyRestaurants(location, 5000);
@@ -130,9 +125,6 @@ export const restaurantService = {
       const end = start + limit;
       const paginatedPlaces = places.slice(start, end);
       
-      console.log(`[Pagination] Showing restaurants ${start+1}-${end} of ${places.length} total`);
-      console.log(`[Optimization] Only fetching details for ${paginatedPlaces.length} restaurants instead of all ${places.length}`);
-      
       // Only fetch details for the paginated places (not all places)
       const detailedPlaces = await Promise.all(
         paginatedPlaces.map(async (place) => {
@@ -143,7 +135,6 @@ export const restaurantService = {
               if ((Date.now() - cachedData.timestamp) < restaurantCache.EXPIRATION) {
                 cacheHits++;
                 totalSaved++;
-                console.log(`[Cache] HIT for ${place.id} (Total hits: ${cacheHits}, misses: ${cacheMisses}, API calls saved: ${totalSaved})`);
                 return { ...place, ...cachedData.data };
               }
             }
@@ -151,7 +142,6 @@ export const restaurantService = {
             // If not in cache, fetch details
             cacheMisses++;
             apiCalls++;
-            console.log(`[Cache] MISS for ${place.id} (Total hits: ${cacheHits}, misses: ${cacheMisses}, API calls: ${apiCalls})`);
             
             // Only fetch if Google Maps is available
             if (isGoogleMapsAvailable()) {
@@ -175,9 +165,7 @@ export const restaurantService = {
       const formattedResults = detailedPlaces.map(place => 
         adaptGooglePlaceToMockFormat(place, eatableData[place.id])
       );
-      
-      console.log(`[Stats] Cache hits: ${cacheHits}, Cache misses: ${cacheMisses}, API calls: ${apiCalls}, API calls saved: ${totalSaved}`);
-      
+            
       return {
         restaurants: formattedResults,
         hasMore: end < places.length,
@@ -190,9 +178,7 @@ export const restaurantService = {
   },
 
   async searchRestaurants(query, page = 1, limit = 10) {
-    try {
-      console.log('🔍 searchRestaurants called with:', { query, page, limit });
-      
+    try {      
       await rateLimiter.acquireToken();
       const location = { lat: 37.7749, lng: -122.4194 }; // Default to SF
       const places = await this.fetchNearbyRestaurants(location, 5000);
@@ -230,7 +216,6 @@ export const restaurantService = {
         const cachedData = restaurantCache.placeDetails.get(placeId);
         // Check if cache is still valid
         if ((Date.now() - cachedData.timestamp) < restaurantCache.EXPIRATION) {
-          console.log('[Cache] Using cached place details for:', placeId);
           return cachedData.data;
         }
       }
@@ -319,7 +304,6 @@ export const restaurantService = {
     });
 
     const data = await response.json();
-    console.log('📦 Places API response:', data);
     return data.places || [];
   },
 
@@ -330,13 +314,11 @@ export const restaurantService = {
         const cachedData = restaurantCache.placeDetails.get(placeId);
         // Check if cache is still valid
         if ((Date.now() - cachedData.timestamp) < restaurantCache.EXPIRATION) {
-          console.log(`[Cache] Using cached place details for: ${placeId}`);
           return cachedData.data;
         }
       }
       
       // If not in cache or expired, fetch from API
-      console.log(`[API] Fetching place details for: ${placeId}`);
       
       await rateLimiter.acquireToken();
       
@@ -357,8 +339,6 @@ export const restaurantService = {
         if (!isGoogleMapsAvailable()) {
           throw new Error('Google Maps API not loaded after waiting');
         }
-        
-        console.log('[GoogleMaps] API now available after waiting');
       }
       
       return new Promise((resolve, reject) => {
@@ -385,7 +365,6 @@ export const restaurantService = {
       
       // If we have a cached version (even if expired), return it as fallback
       if (restaurantCache.placeDetails.has(placeId)) {
-        console.log(`[Cache] Using expired cache as fallback for ${placeId}`);
         return restaurantCache.placeDetails.get(placeId).data;
       }
       

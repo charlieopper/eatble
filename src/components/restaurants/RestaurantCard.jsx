@@ -175,31 +175,13 @@ const RestaurantCard = ({ restaurant, onClick }) => {
       </div>
     );
   };
-
-  // Add this console log at the top of your component to debug
-  console.log("Google logo path:", googleLogoUrl);
-
-  // Add this near the top of your component
-  console.log("Restaurant allergens:", allergens);
-
-  // Add this to get the most helpful review
-  console.log('[RestaurantCard Debug]', {
-    restaurantName: name,
-    hasReviews: Boolean(reviews),
-    reviewCount: reviews?.length,
-    rawReviews: reviews,
-    eatableReview: eatableReview
-  });
-
   // First try to get reviews from Firestore data
   let formattedReview;
   if (reviews?.length > 0) {
-    console.log('[RestaurantCard] Found Firestore reviews:', reviews);
     formattedReview = selectMostHelpfulReview(reviews);
   } 
   // Fallback to existing eatableReview if no Firestore reviews
   else if (eatableReview) {
-    console.log('[RestaurantCard] Using existing eatableReview:', eatableReview);
     formattedReview = {
       text: eatableReview.text || eatableReview.quote || 'No review available',
       rating: eatableReview.rating || 0,
@@ -211,7 +193,6 @@ const RestaurantCard = ({ restaurant, onClick }) => {
   } 
   // Final fallback
   else {
-    console.log('[RestaurantCard] No reviews available');
     formattedReview = {
       text: 'No review available',
       rating: 0,
@@ -221,8 +202,6 @@ const RestaurantCard = ({ restaurant, onClick }) => {
       date: ''
     };
   }
-
-  console.log('[RestaurantCard] Final review to display:', formattedReview);
 
   return (
     <div 
@@ -488,7 +467,6 @@ const RestaurantCard = ({ restaurant, onClick }) => {
         {allergens && allergens.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '12px' }}>
             {allergens.map((allergen, index) => {
-              console.log("Allergen item:", allergen);
               return (
                 <span 
                   key={index} 

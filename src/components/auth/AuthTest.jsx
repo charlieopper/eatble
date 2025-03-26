@@ -25,7 +25,6 @@ export default function AuthTest() {
     try {
       const user = await registerWithEmailPassword(email, password, username);
       setSuccess('Registration successful! Please check your email for verification.');
-      console.log('Registered user:', user);
     } catch (error) {
       setError(error.message);
       console.error('Registration error:', error);
@@ -43,7 +42,6 @@ export default function AuthTest() {
     try {
       const user = await loginWithEmailPassword(email, password);
       setSuccess('Login successful!');
-      console.log('Logged in user:', user);
     } catch (error) {
       setError(error.message);
       console.error('Login error:', error);
@@ -60,7 +58,6 @@ export default function AuthTest() {
     try {
       const user = await loginWithGoogle();
       setSuccess('Google login successful!');
-      console.log('Google user:', user);
     } catch (error) {
       setError(error.message);
       console.error('Google login error:', error);
@@ -77,7 +74,6 @@ export default function AuthTest() {
     try {
       const user = await loginWithFacebook();
       setSuccess('Facebook login successful!');
-      console.log('Facebook user:', user);
     } catch (error) {
       setError(error.message);
       console.error('Facebook login error:', error);

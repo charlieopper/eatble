@@ -1,24 +1,12 @@
 import { getAllergenEmoji } from '../utils/allergens';
 
 export function adaptGooglePlaceToMockFormat(place, eatableData = null) {
-  console.log('🔍 Adapting place:', place);
-  console.log('📝 Reviews:', place.reviews);
-
-  // Debug logs
-  console.log('🔍 Raw place data:', {
-    id: place.id,
-    name: place.displayName?.text,
-    hours: place.regularOpeningHours,
-    phone: place.internationalPhoneNumber,
-    formattedAddress: place.formattedAddress
-  });
 
   // Format opening hours
   const formatOpeningHours = (openingHours) => {
     console.log('📅 Opening hours data:', openingHours);
     
     if (!openingHours?.weekdayDescriptions?.length) {
-      console.log('❌ No weekday descriptions found');
       return 'Hours not available';
     }
     
@@ -31,26 +19,18 @@ export function adaptGooglePlaceToMockFormat(place, eatableData = null) {
       desc.startsWith(todayString)
     );
     
-    console.log('📅 Today\'s hours:', {
-      today: todayString,
-      found: todayHours
-    });
-    
     return todayHours || openingHours.weekdayDescriptions[0] || 'Hours not available';
   };
 
   // Format phone number
   const formatPhoneNumber = (phone) => {
-    console.log('📞 Phone number input:', phone);
     
     if (!phone) {
-      console.log('❌ No phone number provided');
       return 'Phone not available';
     }
     
     // Remove the +1 prefix if it exists and clean the number
     const cleaned = phone.replace(/^\+1/, '').replace(/[^\d]/g, '');
-    console.log('📞 Cleaned phone:', cleaned);
     
     // Format US numbers (10 digits)
     if (cleaned.length === 10) {
@@ -116,14 +96,6 @@ export function adaptGooglePlaceToMockFormat(place, eatableData = null) {
     return 'No Google review available';
   };
 
-  // Debug the place data
-  console.log('📍 Place data for reviews:', {
-    name: place.displayName?.text,
-    hasReviews: Boolean(place.reviews),
-    reviewCount: place.reviews?.length,
-    reviews: place.reviews
-  });
-
   // Calculate average eatABLE rating from reviews
   const calculateEatableRating = (reviews) => {
     if (!reviews || !reviews.length) return 0;
@@ -132,7 +104,6 @@ export function adaptGooglePlaceToMockFormat(place, eatableData = null) {
   };
 
   const eatableRating = calculateEatableRating(eatableData?.reviews);
-  console.log('⭐ Calculated eatABLE rating:', eatableRating);
 
   const adaptedPlace = {
     id: place.id || 'unknown',
@@ -177,8 +148,6 @@ export function adaptGooglePlaceToMockFormat(place, eatableData = null) {
     lng: place.location?.longitude || -122.4194 + (Math.random() - 0.5) * 0.05,
     map: null
   };
-
-  console.log('✨ Adapted place:', adaptedPlace);
-  console.log('✨ Adapted Google rating:', adaptedPlace.googleReview.rating);
+  
   return adaptedPlace;
 } 

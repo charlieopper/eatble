@@ -25,13 +25,8 @@ export const getReviewSummary = (reviews) => {
 };
 
 export const selectMostHelpfulReview = (reviews) => {
-  console.log('[SelectMostHelpful Debug - Raw Reviews]', {
-    reviews,
-    reviewStructure: reviews?.[0]
-  });
 
   if (!reviews || reviews.length === 0) {
-    console.log('[SelectMostHelpful] No reviews found');
     return null;
   }
 
@@ -39,11 +34,6 @@ export const selectMostHelpfulReview = (reviews) => {
   const reviewsWithHelpful = reviews.filter(review => 
     review.helpfulVotes && review.helpfulVotes.length > 0
   );
-
-  console.log('[SelectMostHelpful - Helpful Reviews]', {
-    reviewsWithHelpful,
-    hasHelpfulReviews: reviewsWithHelpful.length > 0
-  });
 
   let selectedReview;
   if (reviewsWithHelpful.length > 0) {
@@ -59,9 +49,6 @@ export const selectMostHelpfulReview = (reviews) => {
       return dateB - dateA;
     })[0];
   }
-
-  console.log('[SelectMostHelpful] Raw selected review:', selectedReview);
-
   // Format the review data
   const formattedReview = {
     text: selectedReview.review || selectedReview.text || selectedReview.content || '',
@@ -74,12 +61,9 @@ export const selectMostHelpfulReview = (reviews) => {
             new Date(selectedReview.createdAt.seconds * 1000).toLocaleDateString() 
             : new Date().toLocaleDateString())
   };
-
-  console.log('[SelectMostHelpful - Formatted Review]', formattedReview);
   
   // Only return if we have review text
   if (!formattedReview.text) {
-    console.log('[SelectMostHelpful] No review text found, trying next review');
     // Try the next review if this one has no text
     const remainingReviews = reviews.filter(r => r.id !== selectedReview.id);
     if (remainingReviews.length > 0) {

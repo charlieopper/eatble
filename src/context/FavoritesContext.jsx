@@ -36,60 +36,33 @@ const safeSetItem = (key, value) => {
 export function FavoritesProvider({ children }) {
   const { user } = useAuth();
   const [favorites, setFavorites] = useState([]);
-  
-  // Add debugging
-  useEffect(() => {
-    if (user) {
-      console.log('[Favorites Debug]:', { 
-        action: 'user_loaded', 
-        uid: user.uid,
-        isNewUser: user.metadata?.creationTime === user.metadata?.lastSignInTime
-      });
-    }
-  }, [user]);
-
   const getFavorites = async () => {
-    console.log('[FavoritesContext] getFavorites called:', { 
-      hasUser: Boolean(user),
-      userId: user?.uid 
-    });
 
     if (!user?.uid) {
-      console.log('[FavoritesContext] No user, returning empty array');
       return [];
     }
 
     try {
       const userDocRef = doc(db, 'users', user.uid);
       const docSnap = await getDoc(userDocRef);
-      
-      console.log('[FavoritesContext] Firestore response:', {
-        exists: docSnap.exists(),
-        data: docSnap.exists() ? 'has data' : 'no data'
-      });
 
       if (docSnap.exists()) {
         const userData = docSnap.data();
         const favoritesData = userData.favoriteRestaurants || [];
-        console.log('[FavoritesContext] Got favorites:', favoritesData?.length);
         return favoritesData;
       }
 
-      console.log('[FavoritesContext] No user doc found');
       return [];
     } catch (error) {
-      console.error('[FavoritesContext] Error in getFavorites:', error);
       throw error; // Let the component handle the error
     }
   };
 
   // Load favorites when user changes
   useEffect(() => {
-    console.log('[FavoritesContext] User changed:', user?.uid);
     if (user?.uid) {
       getFavorites()
         .then(favs => {
-          console.log('[FavoritesContext] Setting favorites:', favs?.length);
           setFavorites(favs);
         })
         .catch(error => {
@@ -111,12 +84,6 @@ export function FavoritesProvider({ children }) {
       
       // Check if this restaurant is already a favorite
       const isFav = favorites.some(fav => fav.id === restaurant.id);
-      
-      console.log('[Favorites Debug]:', { 
-        action: 'toggle_favorite', 
-        restaurantId: restaurant.id,
-        currentlyFavorite: isFav
-      });
       
       if (isFav) {
         // Remove from favorites
@@ -146,11 +113,6 @@ export function FavoritesProvider({ children }) {
         
         // Create new array with the new favorite
         const updatedFavorites = [...favorites, favoriteData];
-        
-        console.log('[Favorites Debug]:', { 
-          action: 'adding_favorite', 
-          favoriteData
-        });
         
         // Update Firestore
         await updateDoc(userDocRef, {

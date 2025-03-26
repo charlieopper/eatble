@@ -55,7 +55,6 @@ const mockReviews = [
 const TEAL_COLOR = "#0d9488";
 
 export default function ProfilePage() {
-  console.log('[ProfilePage] Component rendering');
   
   const { user, loading: authLoading, refreshUserData, logout } = useAuth();
   const [error, setError] = useState('');
@@ -77,14 +76,6 @@ export default function ProfilePage() {
   const { favorites, getFavorites, setFavorites } = useFavorites();
   const [isLoadingFavorites, setIsLoadingFavorites] = useState(false);
   const [localFavorites, setLocalFavorites] = useState([]);
-
-  // Debug log to see what we're getting from context
-  console.log('[ProfilePage] Context values:', { 
-    hasUser: Boolean(user), 
-    userId: user?.uid,
-    hasFavorites: Boolean(favorites),
-    favoritesCount: favorites?.length
-  });
 
   const defaultAvatar = "https://ui-avatars.com/api/?name=" + 
     encodeURIComponent(user?.displayName || "User") + "&background=random";

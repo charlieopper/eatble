@@ -14,20 +14,12 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('Setting up auth state listener');
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log('Auth state changed:', {
-        userExists: !!user,
-        userEmail: user?.email,
-        userUID: user?.uid
-      });
-      
       setUser(user);
       setLoading(false);
     });
 
     return () => {
-      console.log('Cleaning up auth state listener');
       unsubscribe();
     };
   }, []);

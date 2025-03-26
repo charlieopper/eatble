@@ -19,7 +19,6 @@ function App() {
   useEffect(() => {
     // If Google Maps is already loaded
     if (window.google && window.google.maps && window.google.maps.places) {
-      console.log('[GoogleMaps] API already loaded');
       window.googleMapsLoaded = true;
       setGoogleMapsLoaded(true);
       return;
@@ -38,11 +37,9 @@ function App() {
       
       // Set up callbacks
       script.onload = () => {
-        console.log('[GoogleMaps] Script loaded successfully');
         // Wait a moment to ensure Places library is initialized
         setTimeout(() => {
           if (window.google && window.google.maps && window.google.maps.places) {
-            console.log('[GoogleMaps] API fully initialized');
             window.googleMapsLoaded = true;
             setGoogleMapsLoaded(true);
           } else {

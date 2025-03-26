@@ -173,30 +173,20 @@ export default function RestaurantDetailsPage() {
         const docRef = doc(db, 'restaurants', id);
         const docSnap = await getDoc(docRef);
         
-        console.log('[LoadRestaurant] Firestore document:', {
-          exists: docSnap.exists(),
-          data: docSnap.exists() ? docSnap.data() : null
-        });
-        
         if (docSnap.exists()) {
           const restaurantData = docSnap.data();
           
           if (restaurantData.reviews && restaurantData.reviews.length > 0) {
-            console.log('[LoadRestaurant] Found Eatable reviews:', restaurantData.reviews);
-            
             // Use the utility function
             const mostHelpfulReview = selectMostHelpfulReview(restaurantData.reviews);
             
-            if (mostHelpfulReview) {
-              console.log('[LoadRestaurant] Selected review:', mostHelpfulReview);
-              
+            if (mostHelpfulReview) {              
               // Update restaurant data with the formatted review
               adaptedData.eatableReview = mostHelpfulReview;
             }
           }
         }
 
-        console.log('[LoadRestaurant] Final adapted data:', adaptedData);
         setRestaurant(adaptedData);
         
         // Set images if available from Places API
@@ -223,25 +213,19 @@ export default function RestaurantDetailsPage() {
   useEffect(() => {
     const loadRestaurantReviews = async () => {
       if (!id) {
-        console.log('No restaurantId available');
         return;
       }
       
       setIsLoadingReviews(true);
       
       try {
-        console.log('Fetching reviews for restaurant:', id);
         const restaurantRef = doc(db, 'restaurants', id);
         const restaurantDoc = await getDoc(restaurantRef);
         
-        console.log('Restaurant document exists:', restaurantDoc.exists());
-        
         if (restaurantDoc.exists()) {
           const restaurantData = restaurantDoc.data();
-          console.log('Restaurant data:', restaurantData);
           
           const reviews = restaurantData?.reviews || [];
-          console.log('Found reviews:', reviews);
           
           // Sort reviews by date (newest first)
           const sortedReviews = reviews.sort((a, b) => 
@@ -250,7 +234,6 @@ export default function RestaurantDetailsPage() {
           
           setRestaurantReviews(sortedReviews);
         } else {
-          console.log('Restaurant document not found');
           setRestaurantReviews([]);
         }
       } catch (error) {
@@ -266,7 +249,6 @@ export default function RestaurantDetailsPage() {
 
   // Function to refresh reviews after submission
   const handleReviewSubmitted = (newReview) => {
-    console.log('New review submitted:', newReview);
     // Update the local reviews state immediately
     setRestaurantReviews(prevReviews => [newReview, ...prevReviews]);
   };

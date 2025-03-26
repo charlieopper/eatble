@@ -4,15 +4,7 @@ import { Star } from 'lucide-react';
 const TEAL_COLOR = "#0d9488";
 
 const EatableReview = ({ review }) => {
-  // Debug logs
-  console.log('[EatableReview Debug]', {
-    receivedReview: review,
-    hasText: !!review?.text,
-    hasQuote: !!review?.quote,
-    helpfulVotes: review?.helpfulVotes,
-    reviewCount: review?.reviewCount
-  });
-
+  
   // Get the review text from either review.text or review.quote
   const reviewText = review?.text || review?.quote;
   
@@ -21,13 +13,6 @@ const EatableReview = ({ review }) => {
   
   // Get the rating value
   const rating = review?.rating || 0;
-
-  // Debug final values
-  console.log('[EatableReview Final Values]', {
-    reviewText,
-    reviewCount,
-    rating
-  });
 
   return (
     <div style={{ marginTop: '12px', marginBottom: '12px' }}>
