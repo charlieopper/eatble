@@ -72,8 +72,31 @@ export default function RestaurantDetailsPage() {
     const loadRestaurant = async () => {
       setIsLoading(true);
       try {
+        // First, get the basic restaurant data
         const data = await restaurantService.getRestaurantById(id);
-        setRestaurant(data);
+        
+        // Then, fetch the latest reviews from Firestore
+        console.log(`Fetching Firestore data for restaurant ID: ${id}`);
+        const restaurantRef = doc(db, 'restaurants', id.toString());
+        const restaurantDoc = await getDoc(restaurantRef);
+        
+        if (restaurantDoc.exists()) {
+          const firestoreData = restaurantDoc.data();
+          console.log('Firestore data for restaurant:', firestoreData);
+          
+          // Merge the Firestore data with the basic restaurant data
+          const mergedData = {
+            ...data,
+            reviews: firestoreData.reviews || [],
+            eatableReviews: firestoreData.reviews || []
+          };
+          
+          console.log('Merged restaurant data with reviews:', mergedData);
+          setRestaurant(mergedData);
+        } else {
+          console.log('No Firestore document found for this restaurant');
+          setRestaurant(data);
+        }
         
         // In a real app, we would get images from the API
         // For now, we'll use our mock images
@@ -328,6 +351,101 @@ export default function RestaurantDetailsPage() {
   const handleSortChange = (event) => {
     setSortOption(event.target.value);
   };
+
+  // Add debugging in the component
+  useEffect(() => {
+    if (restaurant) {
+      console.log('RestaurantDetailsPage - Restaurant:', restaurant.name);
+      console.log('RestaurantDetailsPage - Has eatableReviews?', !!restaurant.eatableReviews);
+      if (restaurant.eatableReviews) {
+        console.log('RestaurantDetailsPage - Review structure:', 
+          restaurant.eatableReviews.map(r => ({
+            id: r.id,
+            chefAvailable: r.accommodations?.chefAvailable,
+            allergenMenu: r.accommodations?.allergenMenu
+          }))
+        );
+      }
+    }
+  }, [restaurant]);
+
+  // Add this debugging at the top of your component or in useEffect
+  useEffect(() => {
+    if (restaurant) {
+      console.log('RestaurantDetailsPage - Full restaurant object:', restaurant);
+      console.log('RestaurantDetailsPage - Reviews array:', restaurant.eatableReviews || restaurant.reviews);
+    }
+  }, [restaurant]);
+
+  // Add this at the top of your component to log the full restaurant object
+  useEffect(() => {
+    if (restaurant) {
+      console.log('FULL RESTAURANT OBJECT:', restaurant);
+      
+      // Check all possible locations where reviews might be stored
+      console.log('Restaurant reviews property:', restaurant.reviews);
+      console.log('Restaurant eatableReviews property:', restaurant.eatableReviews);
+      
+      // Check if reviews are stored in a nested property
+      if (restaurant.data) {
+        console.log('Restaurant data.reviews:', restaurant.data.reviews);
+      }
+    }
+  }, [restaurant]);
+
+  // Add this after your review submission handler
+  const handleReviewSubmit = async (reviewData) => {
+    console.log('New review submitted:', reviewData);
+    
+    // Update the local state with the new review
+    setRestaurant(prevRestaurant => {
+      // Create a new array with all existing reviews plus the new one
+      const updatedReviews = [...(prevRestaurant.reviews || []), reviewData];
+      
+      // Return the updated restaurant object
+      return {
+        ...prevRestaurant,
+        reviews: updatedReviews,
+        eatableReviews: updatedReviews
+      };
+    });
+    
+    // Refresh the sorted reviews
+    setSortedReviews(prev => {
+      const updated = [...prev, reviewData];
+      return sortReviews(updated, sortOption);
+    });
+  };
+
+  // Add this function before your component or inside it
+  const sortReviews = (reviews, sortOption) => {
+    if (!reviews || reviews.length === 0) {
+      return [];
+    }
+    
+    const reviewsCopy = [...reviews];
+    
+    switch (sortOption) {
+      case 'newest':
+        return reviewsCopy.sort((a, b) => new Date(b.date) - new Date(a.date));
+      case 'oldest':
+        return reviewsCopy.sort((a, b) => new Date(a.date) - new Date(b.date));
+      case 'highest':
+        return reviewsCopy.sort((a, b) => b.rating - a.rating);
+      case 'lowest':
+        return reviewsCopy.sort((a, b) => a.rating - b.rating);
+      default:
+        return reviewsCopy;
+    }
+  };
+
+  // Then in your useEffect where you load reviews, add:
+  useEffect(() => {
+    if (restaurant && restaurant.reviews) {
+      const sorted = sortReviews(restaurant.reviews, sortOption);
+      setSortedReviews(sorted);
+    }
+  }, [restaurant, sortOption]);
 
   if (isLoading) {
     return (
@@ -656,13 +774,31 @@ export default function RestaurantDetailsPage() {
           </button>
         </div>
 
-        {/* Accommodations */}
+        {/* Accommodations with enhanced debugging */}
         <div style={{ 
           display: 'flex', 
           marginTop: '12px', 
           marginBottom: '16px' 
         }}>
-          {restaurant.accommodations?.chefAvailable && (
+          {(() => {
+            // Get reviews from any possible location
+            const reviews = restaurant.eatableReviews || restaurant.reviews || 
+                           (restaurant.data && restaurant.data.reviews) || [];
+            
+            console.log('Reviews array length:', reviews.length);
+            console.log('Full reviews array:', reviews);
+            
+            // Check for chefAvailable in different possible locations
+            const hasChefAvailable = reviews.some(review => {
+              console.log('Checking review for chef available:', review);
+              return review.chefAvailable === true || 
+                     review.accommodations?.chefAvailable === true ||
+                     review.allergenData?.chefManagerAvailable === true;
+            });
+            
+            console.log('Details page - Chef available showing:', hasChefAvailable);
+            return hasChefAvailable;
+          })() && (
             <div style={{ 
               display: 'flex', 
               alignItems: 'center', 
@@ -671,16 +807,7 @@ export default function RestaurantDetailsPage() {
               marginRight: '12px',
               position: 'relative',
               cursor: 'help'
-            }}
-            onMouseEnter={(e) => {
-              const tooltip = e.currentTarget.querySelector('.tooltip');
-              if (tooltip) tooltip.style.display = 'block';
-            }}
-            onMouseLeave={(e) => {
-              const tooltip = e.currentTarget.querySelector('.tooltip');
-              if (tooltip) tooltip.style.display = 'none';
-            }}
-            >
+            }}>
               <ChefHat size={16} style={{ marginRight: '4px' }} />
               <span>Chef available</span>
               <div 
@@ -717,7 +844,21 @@ export default function RestaurantDetailsPage() {
               </div>
             </div>
           )}
-          {restaurant.accommodations?.allergenMenu && (
+          
+          {(() => {
+            // Get reviews from either eatableReviews or reviews property
+            const reviews = restaurant.eatableReviews || restaurant.reviews || [];
+            
+            // Check for allergenMenu in different possible locations
+            const hasAllergenMenu = reviews.some(review => 
+              review.allergenMenu === true || 
+              review.accommodations?.allergenMenu === true ||
+              review.allergenData?.allergenMenuAvailable === true
+            );
+            
+            console.log('Details page - Allergen menu showing:', hasAllergenMenu);
+            return hasAllergenMenu;
+          })() && (
             <div style={{ 
               display: 'flex', 
               alignItems: 'center', 
@@ -726,16 +867,7 @@ export default function RestaurantDetailsPage() {
               marginRight: '12px',
               position: 'relative',
               cursor: 'help'
-            }}
-            onMouseEnter={(e) => {
-              const tooltip = e.currentTarget.querySelector('.tooltip');
-              if (tooltip) tooltip.style.display = 'block';
-            }}
-            onMouseLeave={(e) => {
-              const tooltip = e.currentTarget.querySelector('.tooltip');
-              if (tooltip) tooltip.style.display = 'none';
-            }}
-            >
+            }}>
               <FileText size={16} style={{ marginRight: '4px' }} />
               <span>Allergen menu</span>
               <div 
@@ -1393,7 +1525,7 @@ export default function RestaurantDetailsPage() {
         onClose={() => setIsReviewModalOpen(false)}
         restaurantName={restaurant?.name}
         restaurantId={id}
-        onReviewSubmitted={handleReviewSubmitted}
+        onReviewSubmitted={handleReviewSubmit}
       />
     </div>
   );

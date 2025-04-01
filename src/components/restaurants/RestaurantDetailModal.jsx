@@ -83,13 +83,27 @@ export default function RestaurantDetailModal({ restaurant, onClose }) {
           <div className="mb-6">
             <h3 className="text-lg font-semibold mb-3">Allergen Accommodations</h3>
             <div className="flex flex-wrap gap-4">
-              <div className={`flex items-center ${restaurant.accommodations?.chefAvailable ? 'text-green-600' : 'text-gray-400'}`}>
+              <div className={`flex items-center ${
+                restaurant.eatableReviews && restaurant.eatableReviews.some(review => 
+                  review.accommodations?.chefAvailable === true
+                ) ? 'text-green-600' : 'text-gray-400'}`}>
                 <ChefHat className="w-5 h-5 mr-2" />
-                <span>{restaurant.accommodations?.chefAvailable ? 'Chef available' : 'No chef available'}</span>
+                <span>{
+                  restaurant.eatableReviews && restaurant.eatableReviews.some(review => 
+                    review.accommodations?.chefAvailable === true
+                  ) ? 'Chef available' : 'No chef available'
+                }</span>
               </div>
-              <div className={`flex items-center ${restaurant.accommodations?.allergenMenu ? 'text-green-600' : 'text-gray-400'}`}>
+              <div className={`flex items-center ${
+                restaurant.eatableReviews && restaurant.eatableReviews.some(review => 
+                  review.accommodations?.allergenMenu === true
+                ) ? 'text-green-600' : 'text-gray-400'}`}>
                 <FileText className="w-5 h-5 mr-2" />
-                <span>{restaurant.accommodations?.allergenMenu ? 'Allergen menu' : 'No allergen menu'}</span>
+                <span>{
+                  restaurant.eatableReviews && restaurant.eatableReviews.some(review => 
+                    review.accommodations?.allergenMenu === true
+                  ) ? 'Allergen menu' : 'No allergen menu'
+                }</span>
               </div>
             </div>
           </div>

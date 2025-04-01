@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Heart, Star, ChefHat, FileText } from 'lucide-react';
 import { useFavorites } from '../../context/FavoritesContext';
 import { useNavigate } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 
 // Placeholder restaurant image URL
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fDB8fHww&w=1000&q=80";
@@ -12,14 +14,104 @@ const TEAL_COLOR = "#0d9488";
 // With this URL that points to the Google "G" icon
 const googleLogoUrl = "https://www.gstatic.com/images/branding/product/1x/googleg_48dp.png";
 
+// Add this helper function at the top of your file
+function validateReviewStructure(reviews) {
+  if (!Array.isArray(reviews)) {
+    console.error('Reviews is not an array:', reviews);
+    return false;
+  }
+  
+  // Check if reviews have the expected structure
+  const hasValidStructure = reviews.every(review => {
+    const hasAccommodations = review.accommodations !== undefined;
+    if (!hasAccommodations) {
+      console.warn('Review missing accommodations property:', review);
+    }
+    return hasAccommodations;
+  });
+  
+  return hasValidStructure;
+}
+
 const RestaurantCard = ({ restaurant, onClick }) => {
   const { name, image, cuisines, eatableReview, accommodations } = restaurant;
   const { isFavorite, toggleFavorite } = useFavorites();
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoaded, setReviewsLoaded] = useState(false);
 
   const handleMouseEnter = () => setIsHovered(true);
   const handleMouseLeave = () => setIsHovered(false);
+
+  // Fetch reviews for this specific restaurant
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        console.log(`Fetching reviews for ${restaurant.name} (ID: ${restaurant.id})`);
+        
+        // Get the restaurant document from Firestore
+        const restaurantRef = doc(db, 'restaurants', restaurant.id.toString());
+        const restaurantDoc = await getDoc(restaurantRef);
+        
+        if (restaurantDoc.exists()) {
+          const firestoreData = restaurantDoc.data();
+          console.log(`Found Firestore data for ${restaurant.name}:`, firestoreData);
+          
+          // Set the reviews
+          setReviews(firestoreData.reviews || []);
+        } else {
+          console.log(`No Firestore document found for ${restaurant.name}`);
+          setReviews([]);
+        }
+      } catch (error) {
+        console.error(`Error fetching reviews for ${restaurant.name}:`, error);
+        setReviews([]);
+      } finally {
+        setReviewsLoaded(true);
+      }
+    };
+
+    fetchReviews();
+  }, [restaurant.id, restaurant.name]);
+
+  // Enhanced debugging for restaurant reviews
+  console.log('RestaurantCard - Restaurant:', restaurant.name);
+  console.log('RestaurantCard - Has reviews from props?', !!restaurant.reviews);
+  console.log('RestaurantCard - Has eatableReviews from props?', !!restaurant.eatableReviews);
+  console.log('RestaurantCard - Has reviews from Firestore?', reviews.length > 0);
+  
+  // Get reviews from any possible location, prioritizing our directly fetched reviews
+  const allReviews = reviews.length > 0 ? reviews : 
+                    restaurant.eatableReviews || restaurant.reviews || 
+                    (restaurant.data && restaurant.data.reviews) || [];
+  
+  console.log('RestaurantCard - All reviews array:', allReviews);
+  
+  // Check for accommodations
+  const hasChefAvailable = allReviews.some(review => {
+    console.log('Checking review for chef available:', review);
+    return review.chefAvailable === true || 
+           review.accommodations?.chefAvailable === true ||
+           review.allergenData?.chefManagerAvailable === true;
+  });
+  
+  const hasAllergenMenu = allReviews.some(review => 
+    review.allergenMenu === true || 
+    review.accommodations?.allergenMenu === true ||
+    review.allergenData?.allergenMenuAvailable === true
+  );
+  
+  console.log(`${restaurant.name}: Chef available:`, hasChefAvailable);
+  console.log(`${restaurant.name}: Allergen menu:`, hasAllergenMenu);
+  
+  // Validate review structure
+  const hasValidReviews = restaurant.eatableReviews && 
+    validateReviewStructure(restaurant.eatableReviews);
+  
+  if (restaurant.eatableReviews && !hasValidReviews) {
+    console.error('Restaurant has invalid review structure:', restaurant.name);
+  }
 
   if (!restaurant) {
     return <div style={{ padding: '16px', backgroundColor: 'white', borderRadius: '8px', margin: '8px 0' }}>Loading restaurant data...</div>;
@@ -271,10 +363,17 @@ const RestaurantCard = ({ restaurant, onClick }) => {
         </div>
 
         {/* Accommodations */}
-        <div style={{ display: 'flex', marginTop: '12px', marginBottom: '8px' }}>
-          {accommodations?.chefAvailable && (
+        <div style={{ display: 'flex', marginTop: '12px', marginBottom: '8px', gap: '12px' }}>
+          {hasChefAvailable && (
             <div 
-              style={{...accommodationStyle, position: 'relative'}}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                position: 'relative',
+                color: '#0d9488',
+                fontSize: '12px'
+              }}
               onMouseEnter={(e) => {
                 const tooltip = e.currentTarget.querySelector('.tooltip');
                 if (tooltip) tooltip.style.display = 'block';
@@ -284,8 +383,8 @@ const RestaurantCard = ({ restaurant, onClick }) => {
                 if (tooltip) tooltip.style.display = 'none';
               }}
             >
-              <ChefHat size={16} style={{ marginRight: '4px' }} />
-              <span>Chef available</span>
+              <ChefHat size={16} />
+              <span style={{ marginTop: '4px' }}>Chef available</span>
               <div 
                 className="tooltip"
                 style={{
@@ -296,13 +395,12 @@ const RestaurantCard = ({ restaurant, onClick }) => {
                   transform: 'translateX(-50%)',
                   backgroundColor: '#27272a',
                   color: 'white',
-                  padding: '6px 10px',
-                  borderRadius: '4px',
-                  fontSize: '12px',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  fontSize: '14px',
                   whiteSpace: 'nowrap',
                   zIndex: 10,
-                  marginBottom: '8px',
-                  boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                  marginBottom: '8px'
                 }}
               >
                 One or more users has reported chef availability
@@ -320,9 +418,17 @@ const RestaurantCard = ({ restaurant, onClick }) => {
               </div>
             </div>
           )}
-          {accommodations?.allergenMenu && (
+          
+          {hasAllergenMenu && (
             <div 
-              style={{...accommodationStyle, position: 'relative'}}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                position: 'relative',
+                color: '#0d9488',
+                fontSize: '12px'
+              }}
               onMouseEnter={(e) => {
                 const tooltip = e.currentTarget.querySelector('.tooltip');
                 if (tooltip) tooltip.style.display = 'block';
@@ -332,8 +438,8 @@ const RestaurantCard = ({ restaurant, onClick }) => {
                 if (tooltip) tooltip.style.display = 'none';
               }}
             >
-              <FileText size={16} style={{ marginRight: '4px' }} />
-              <span>Allergen menu</span>
+              <FileText size={16} />
+              <span style={{ marginTop: '4px' }}>Allergen menu</span>
               <div 
                 className="tooltip"
                 style={{
@@ -344,16 +450,15 @@ const RestaurantCard = ({ restaurant, onClick }) => {
                   transform: 'translateX(-50%)',
                   backgroundColor: '#27272a',
                   color: 'white',
-                  padding: '6px 10px',
-                  borderRadius: '4px',
-                  fontSize: '12px',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  fontSize: '14px',
                   whiteSpace: 'nowrap',
                   zIndex: 10,
-                  marginBottom: '8px',
-                  boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                  marginBottom: '8px'
                 }}
               >
-                One or more users has reported an allergen menu
+                One or more users has reported allergen menu availability
                 <div style={{
                   position: 'absolute',
                   top: '100%',
@@ -373,8 +478,7 @@ const RestaurantCard = ({ restaurant, onClick }) => {
         {/* eatABLE Review */}
         <div style={{ marginTop: '12px', marginBottom: '12px' }}>
           <div style={reviewHeaderStyle}>
-            <span style={{ marginRight: '8px' }}>🍴</span>
-            <span style={{ fontWeight: '600', fontSize: '14px', marginRight: '8px' }}>eatABLE Review</span>
+            <span style={{ marginRight: '8px' }}>eatABLE Review</span>
             <div style={{ display: 'flex' }}>
               {[...Array(5)].map((_, i) => (
                 <Star
