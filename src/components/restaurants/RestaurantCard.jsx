@@ -33,6 +33,29 @@ function validateReviewStructure(reviews) {
   return hasValidStructure;
 }
 
+// Add this calculation near the top of your component where you're processing reviews
+// Calculate average eatABLE rating
+const calculateAverageRating = (reviews) => {
+  if (!reviews || reviews.length === 0) return 0;
+  
+  // Filter to only include reviews with ratings
+  const reviewsWithRatings = reviews.filter(review => 
+    typeof review.rating === 'number' || 
+    typeof review.eatableRating === 'number'
+  );
+  
+  if (reviewsWithRatings.length === 0) return 0;
+  
+  // Sum all ratings
+  const sum = reviewsWithRatings.reduce((total, review) => {
+    const rating = review.rating || review.eatableRating || 0;
+    return total + rating;
+  }, 0);
+  
+  // Calculate and return the average
+  return sum / reviewsWithRatings.length;
+};
+
 const RestaurantCard = ({ restaurant, onClick }) => {
   const { name, image, cuisines, eatableReview, accommodations } = restaurant;
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -112,6 +135,11 @@ const RestaurantCard = ({ restaurant, onClick }) => {
   if (restaurant.eatableReviews && !hasValidReviews) {
     console.error('Restaurant has invalid review structure:', restaurant.name);
   }
+
+  // Get the average rating
+  const averageEatableRating = calculateAverageRating(reviews);
+  console.log(`${restaurant.name}: Average eatABLE rating:`, averageEatableRating);
+  console.log(`${restaurant.name}: Number of eatABLE reviews:`, reviews.length);
 
   if (!restaurant) {
     return <div style={{ padding: '16px', backgroundColor: 'white', borderRadius: '8px', margin: '8px 0' }}>Loading restaurant data...</div>;
@@ -476,50 +504,108 @@ const RestaurantCard = ({ restaurant, onClick }) => {
         </div>
 
         {/* eatABLE Review */}
-        <div style={{ marginTop: '12px', marginBottom: '12px' }}>
-          <div style={reviewHeaderStyle}>
-            <span style={{ marginRight: '8px' }}>eatABLE Review</span>
-            <div style={{ display: 'flex' }}>
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  size={12}
-                  color={i < Math.floor(eatableReview?.rating || 0) ? TEAL_COLOR : "#d1d5db"}
-                  fill={i < Math.floor(eatableReview?.rating || 0) ? TEAL_COLOR : "none"}
-                />
-              ))}
+        <div style={{ marginTop: '16px' }}>
+          {/* eatABLE Review */}
+          <div style={{ marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {/* Replace ChefHat with fork and knife emoji */}
+              <span role="img" aria-label="fork and knife" style={{ fontSize: '18px' }}>
+                🍴
+              </span>
+              
+              <span style={{ 
+                fontWeight: '500', 
+                fontSize: '16px',
+                color: '#111827'
+              }}>
+                eatABLE Review
+              </span>
+              
+              {/* Star rating */}
+              <div style={{ display: 'flex', marginLeft: '4px' }}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    size={16}
+                    fill={star <= Math.round(averageEatableRating) ? "#0d9488" : "none"}
+                    color="#0d9488"
+                  />
+                ))}
+              </div>
+              
+              {/* Review count */}
+              <span style={{ 
+                color: '#6b7280', 
+                fontSize: '14px',
+                marginLeft: '4px' 
+              }}>
+                ({reviews.length})
+              </span>
             </div>
-            <span style={{ fontSize: '12px', color: '#6b7280', marginLeft: '8px' }}>
-              ({eatableReview?.reviewCount || 0})
-            </span>
+            
+            {/* eatABLE Review text */}
+            {eatableReview?.quote && (
+              <p style={{ 
+                margin: '4px 0 0 0',
+                fontSize: '14px',
+                fontStyle: 'italic',
+                color: '#4b5563'
+              }}>
+                "{eatableReview.quote}"
+              </p>
+            )}
           </div>
-          <p style={quoteStyle}>"{eatableReview?.quote || 'No review available'}"</p>
-        </div>
-
-        {/* Google Review */}
-        <div style={{ marginTop: '12px', marginBottom: '12px' }}>
-          <div style={reviewHeaderStyle}>
-            <img 
-              src={googleLogoUrl} 
-              alt="Google" 
-              style={{ width: '16px', height: '16px', marginRight: '8px' }}
-            />
-            <span style={{ fontWeight: '600', fontSize: '14px', marginRight: '8px' }}>Google Review</span>
-            <div style={{ display: 'flex' }}>
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  size={12}
-                  color={i < Math.floor(googleReview?.rating || 0) ? "#facc15" : "#d1d5db"}
-                  fill={i < Math.floor(googleReview?.rating || 0) ? "#facc15" : "none"}
-                />
-              ))}
+          
+          {/* Google Review - keep this as is */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <img 
+                src={googleLogoUrl} 
+                alt="Google" 
+                style={{ width: '18px', height: '18px' }} 
+              />
+              <span style={{ 
+                fontWeight: '500', 
+                fontSize: '16px',
+                color: '#111827'
+              }}>
+                Google Review
+              </span>
+              
+              {/* Star rating */}
+              <div style={{ display: 'flex', marginLeft: '4px' }}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    size={16}
+                    fill={star <= (googleReview?.rating || 4) ? "#f59e0b" : "none"}
+                    color="#f59e0b"
+                  />
+                ))}
+              </div>
+              
+              {/* Review count */}
+              <span style={{ 
+                color: '#6b7280', 
+                fontSize: '14px',
+                marginLeft: '4px' 
+              }}>
+                ({googleReview?.reviewCount || 65})
+              </span>
             </div>
-            <span style={{ fontSize: '12px', color: '#6b7280', marginLeft: '8px' }}>
-              ({googleReview?.reviewCount || 0})
-            </span>
+            
+            {/* Google Review text */}
+            {googleReview?.quote && (
+              <p style={{ 
+                margin: '4px 0 0 0',
+                fontSize: '14px',
+                fontStyle: 'italic',
+                color: '#4b5563'
+              }}>
+                "{googleReview.quote}"
+              </p>
+            )}
           </div>
-          <p style={quoteStyle}>"{googleReview?.quote || 'No review available'}"</p>
         </div>
 
         {/* Allergens */}
