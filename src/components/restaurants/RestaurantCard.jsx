@@ -327,9 +327,36 @@ const RestaurantCard = ({ restaurant, onClick }) => {
             style={imageStyle}
             onError={(e) => {
               e.target.src = PLACEHOLDER_IMAGE;
-              e.target.onerror = null;
             }}
           />
+          
+          {/* Favorite Button - MOVED HERE */}
+          <button 
+            style={{
+              position: 'absolute',
+              top: '8px',
+              right: '8px',
+              padding: '8px',
+              borderRadius: '50%',
+              border: 'none',
+              background: 'rgba(255, 255, 255, 0.8)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleFavorite(restaurant);
+            }}
+          >
+            <Heart 
+              color={isFavorite(id) ? "#EB4D4D" : "currentColor"}
+              fill={isFavorite(id) ? "#EB4D4D" : "none"}
+              size={20}
+            />
+          </button>
         </div>
         
         {/* Contact information section */}
@@ -418,21 +445,6 @@ const RestaurantCard = ({ restaurant, onClick }) => {
               ))}
             </div>
           </div>
-          
-          {/* Favorite Button */}
-          <button 
-            style={btnStyle}
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleFavorite(restaurant);
-            }}
-          >
-            <Heart 
-              color={isFavorite(id) ? "#EB4D4D" : "currentColor"}
-              fill={isFavorite(id) ? "#EB4D4D" : "none"}
-              size={20}
-            />
-          </button>
         </div>
 
         {/* Accommodations */}
