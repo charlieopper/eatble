@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Star, ChefHat, FileText } from 'lucide-react';
+import { Heart, Star, ChefHat, FileText, Clock, Phone, MapPin, Globe } from 'lucide-react';
 import { useFavorites } from '../../context/FavoritesContext';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
@@ -358,206 +358,90 @@ const RestaurantCard = ({ restaurant, onClick }) => {
             />
           </button>
         </div>
-        
+
         {/* Contact information section */}
         <div style={{ 
           flex: 1,
           paddingLeft: '16px',
           paddingTop: '12px'
         }}>
-          {/* Hours */}
-          <div style={{ marginBottom: '12px' }}>
+          {/* Hours and Neighborhood */}
+          <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
             <span style={{ 
-              fontSize: '14px',
-              color: '#4b5563',
-              display: 'block'
+              fontSize: '13px',
+              color: hours.toLowerCase().includes('open') ? '#000000' : '#dc2626',
+              marginRight: '8px'
             }}>
               {hours}
             </span>
+            <span style={{
+              fontSize: '13px',
+              color: '#4b5563',
+            }}>
+              • 📍 Hayes Valley
+            </span>
           </div>
-
-          {/* Phone */}
-          <div style={{ marginBottom: '12px' }}>
-            <a 
-              href={`tel:${phone}`}
-              style={{ 
-                color: '#2563eb', 
-                textDecoration: 'none',
-                fontSize: '14px',
-                display: 'block'
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {phone}
-            </a>
-          </div>
-
-          {/* Address */}
-          <div style={{ marginBottom: '12px' }}>
-            <a 
-              href={mapUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              style={{ 
-                color: '#2563eb', 
-                textDecoration: 'none',
-                fontSize: '14px',
-                display: 'block'
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {address}
-            </a>
-          </div>
-
-          {/* Website URL */}
-          {website && (
-            <div style={{ marginBottom: '12px' }}>
-              <a 
-                href={website} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                style={{ 
-                  color: '#2563eb', 
-                  textDecoration: 'none',
-                  fontSize: '14px',
-                  display: 'block'
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {website}
-              </a>
-            </div>
-          )}
         </div>
       </div>
       
       {/* Right column - All other content */}
       <div style={contentStyle}>
-        <div style={headerStyle}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap' }}>
-              <h3 style={{ ...titleStyle, marginRight: '8px', marginBottom: '0' }}>{name}</h3>
-              {cuisines.map((cuisine, index) => (
-                <span key={index} style={cuisineTagStyle}>
-                  {cuisine}
-                </span>
-              ))}
-            </div>
+        {/* Restaurant name and cuisines */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap' }}>
+            <h3 style={{ ...titleStyle, marginRight: '8px', marginBottom: '0' }}>{name}</h3>
           </div>
-        </div>
-
-        {/* Accommodations */}
-        <div style={{ display: 'flex', marginTop: '12px', marginBottom: '8px', gap: '16px' }}>
-          {hasChefAvailable && (
-            <div 
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                position: 'relative',
-                color: '#0d9488',
-                fontSize: '14px'
-              }}
-              onMouseEnter={(e) => {
-                const tooltip = e.currentTarget.querySelector('.tooltip');
-                if (tooltip) tooltip.style.display = 'block';
-              }}
-              onMouseLeave={(e) => {
-                const tooltip = e.currentTarget.querySelector('.tooltip');
-                if (tooltip) tooltip.style.display = 'none';
-              }}
-            >
-              <ChefHat size={20} />
-              <span style={{ marginTop: '4px', fontWeight: '500' }}>Chef available</span>
-              <div 
-                className="tooltip"
-                style={{
-                  display: 'none',
-                  position: 'absolute',
-                  bottom: '100%',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  backgroundColor: '#27272a',
-                  color: 'white',
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                  whiteSpace: 'nowrap',
-                  zIndex: 10,
-                  marginBottom: '8px'
-                }}
-              >
-                One or more users has reported chef availability
-                <div style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: '0',
-                  height: '0',
-                  borderLeft: '6px solid transparent',
-                  borderRight: '6px solid transparent',
-                  borderTop: '6px solid #27272a'
-                }}></div>
-              </div>
-            </div>
-          )}
           
-          {hasAllergenMenu && (
-            <div 
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
+          {/* Accommodations - Fix mobile display */}
+          <div style={{ 
+            display: 'flex', 
+            gap: '8px',
+            marginLeft: window.innerWidth <= 640 ? '0' : '8px',
+            flexWrap: 'wrap', // Allow wrapping on small screens
+            maxWidth: '100%',
+            alignItems: 'center',
+            marginTop: window.innerWidth <= 640 ? '4px' : '0'
+          }}>
+            {hasChefAvailable && (
+              <div style={{
+                display: 'inline-flex',
                 alignItems: 'center',
-                position: 'relative',
-                color: '#0d9488',
-                fontSize: '14px'
-              }}
-              onMouseEnter={(e) => {
-                const tooltip = e.currentTarget.querySelector('.tooltip');
-                if (tooltip) tooltip.style.display = 'block';
-              }}
-              onMouseLeave={(e) => {
-                const tooltip = e.currentTarget.querySelector('.tooltip');
-                if (tooltip) tooltip.style.display = 'none';
-              }}
-            >
-              <FileText size={20} />
-              <span style={{ marginTop: '4px', fontWeight: '500' }}>Allergen menu</span>
-              <div 
-                className="tooltip"
-                style={{
-                  display: 'none',
-                  position: 'absolute',
-                  bottom: '100%',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  backgroundColor: '#27272a',
-                  color: 'white',
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                  whiteSpace: 'nowrap',
-                  zIndex: 10,
-                  marginBottom: '8px'
-                }}
-              >
-                One or more users has reported allergen menu availability
-                <div style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: '0',
-                  height: '0',
-                  borderLeft: '6px solid transparent',
-                  borderRight: '6px solid transparent',
-                  borderTop: '6px solid #27272a'
-                }}></div>
+                padding: '4px 8px',
+                backgroundColor: '#ccfbf1',
+                border: '1px solid #99f6e4',
+                borderRadius: '9999px',
+                fontSize: '13px',
+                fontWeight: 'bold',
+                color: TEAL_COLOR,
+                whiteSpace: 'nowrap',
+                marginBottom: '4px', // Add spacing between wrapped items
+                maxWidth: '100%' // Ensure it doesn't overflow
+              }}>
+                <ChefHat size={14} style={{ marginRight: '4px', flexShrink: 0 }} />
+                Chef available
               </div>
-            </div>
-          )}
+            )}
+            
+            {hasAllergenMenu && (
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                padding: '4px 8px',
+                backgroundColor: '#ccfbf1',
+                border: '1px solid #99f6e4',
+                borderRadius: '9999px',
+                fontSize: '13px',
+                fontWeight: 'bold',
+                color: TEAL_COLOR,
+                whiteSpace: 'nowrap',
+                marginBottom: '4px', // Add spacing between wrapped items
+                maxWidth: '100%' // Ensure it doesn't overflow
+              }}>
+                <FileText size={14} style={{ marginRight: '4px', flexShrink: 0 }} />
+                Allergen menu
+              </div>
+            )}
+          </div>
         </div>
 
         {/* eatABLE Review */}
@@ -662,11 +546,9 @@ const RestaurantCard = ({ restaurant, onClick }) => {
                 "{googleReview.quote}"
               </p>
             )}
-          </div>
-        </div>
 
-        {/* Allergens */}
-        {allergens && allergens.length > 0 && (
+          {/* Allergens */}
+          {allergens && allergens.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '12px' }}>
             {allergens.map((allergen, index) => {
               console.log("Allergen item:", allergen);
@@ -717,6 +599,8 @@ const RestaurantCard = ({ restaurant, onClick }) => {
             })}
           </div>
         )}
+          </div>
+        </div>
       </div>
     </div>
   );
