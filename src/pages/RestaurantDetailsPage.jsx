@@ -808,8 +808,8 @@ export default function RestaurantDetailsPage() {
               position: 'relative',
               cursor: 'help'
             }}>
-              <ChefHat size={16} style={{ marginRight: '4px' }} />
-              <span>Chef available</span>
+              <ChefHat size={20} style={{ marginRight: '4px' }} />
+              <span className="mt-1 text-sm font-medium">Chef available</span>
               <div 
                 className="tooltip"
                 style={{
@@ -868,8 +868,8 @@ export default function RestaurantDetailsPage() {
               position: 'relative',
               cursor: 'help'
             }}>
-              <FileText size={16} style={{ marginRight: '4px' }} />
-              <span>Allergen menu</span>
+              <FileText size={20} style={{ marginRight: '4px' }} />
+              <span className="mt-1 text-sm font-medium">Allergen menu</span>
               <div 
                 className="tooltip"
                 style={{

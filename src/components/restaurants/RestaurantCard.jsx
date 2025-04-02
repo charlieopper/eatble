@@ -391,7 +391,7 @@ const RestaurantCard = ({ restaurant, onClick }) => {
         </div>
 
         {/* Accommodations */}
-        <div style={{ display: 'flex', marginTop: '12px', marginBottom: '8px', gap: '12px' }}>
+        <div style={{ display: 'flex', marginTop: '12px', marginBottom: '8px', gap: '16px' }}>
           {hasChefAvailable && (
             <div 
               style={{
@@ -400,7 +400,7 @@ const RestaurantCard = ({ restaurant, onClick }) => {
                 alignItems: 'center',
                 position: 'relative',
                 color: '#0d9488',
-                fontSize: '12px'
+                fontSize: '14px'
               }}
               onMouseEnter={(e) => {
                 const tooltip = e.currentTarget.querySelector('.tooltip');
@@ -411,8 +411,8 @@ const RestaurantCard = ({ restaurant, onClick }) => {
                 if (tooltip) tooltip.style.display = 'none';
               }}
             >
-              <ChefHat size={16} />
-              <span style={{ marginTop: '4px' }}>Chef available</span>
+              <ChefHat size={20} />
+              <span style={{ marginTop: '4px', fontWeight: '500' }}>Chef available</span>
               <div 
                 className="tooltip"
                 style={{
@@ -455,7 +455,7 @@ const RestaurantCard = ({ restaurant, onClick }) => {
                 alignItems: 'center',
                 position: 'relative',
                 color: '#0d9488',
-                fontSize: '12px'
+                fontSize: '14px'
               }}
               onMouseEnter={(e) => {
                 const tooltip = e.currentTarget.querySelector('.tooltip');
@@ -466,8 +466,8 @@ const RestaurantCard = ({ restaurant, onClick }) => {
                 if (tooltip) tooltip.style.display = 'none';
               }}
             >
-              <FileText size={16} />
-              <span style={{ marginTop: '4px' }}>Allergen menu</span>
+              <FileText size={20} />
+              <span style={{ marginTop: '4px', fontWeight: '500' }}>Allergen menu</span>
               <div 
                 className="tooltip"
                 style={{
