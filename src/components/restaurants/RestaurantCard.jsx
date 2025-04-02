@@ -332,31 +332,76 @@ const RestaurantCard = ({ restaurant, onClick }) => {
           />
         </div>
         
-        {/* Hours, Contact and Address relocated here */}
-        <div style={{
-          padding: '12px',
-          fontSize: '14px',
-          color: '#4b5563'
+        {/* Contact information section */}
+        <div style={{ 
+          flex: 1,
+          paddingLeft: '16px',
+          paddingTop: '12px'
         }}>
-          <div>{hours}</div>
-          <a 
-            href={`tel:${phone}`} 
-            style={{ color: '#2563eb', textDecoration: 'none' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {phone}
-          </a>
-          <div style={{ marginTop: '4px' }}>
+          {/* Hours */}
+          <div style={{ marginBottom: '12px' }}>
+            <span style={{ 
+              fontSize: '14px',
+              color: '#4b5563',
+              display: 'block'
+            }}>
+              {hours}
+            </span>
+          </div>
+
+          {/* Phone */}
+          <div style={{ marginBottom: '12px' }}>
+            <a 
+              href={`tel:${phone}`}
+              style={{ 
+                color: '#2563eb', 
+                textDecoration: 'none',
+                fontSize: '14px',
+                display: 'block'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {phone}
+            </a>
+          </div>
+
+          {/* Address */}
+          <div style={{ marginBottom: '12px' }}>
             <a 
               href={mapUrl} 
               target="_blank" 
               rel="noopener noreferrer"
-              style={{ color: '#2563eb', textDecoration: 'none' }}
+              style={{ 
+                color: '#2563eb', 
+                textDecoration: 'none',
+                fontSize: '14px',
+                display: 'block'
+              }}
               onClick={(e) => e.stopPropagation()}
             >
               {address}
             </a>
           </div>
+
+          {/* Website URL */}
+          {website && (
+            <div style={{ marginBottom: '12px' }}>
+              <a 
+                href={website} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ 
+                  color: '#2563eb', 
+                  textDecoration: 'none',
+                  fontSize: '14px',
+                  display: 'block'
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {website}
+              </a>
+            </div>
+          )}
         </div>
       </div>
       
