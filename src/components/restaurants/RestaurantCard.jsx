@@ -452,7 +452,11 @@ const RestaurantCard = ({ restaurant, onClick }) => {
                   color: '#2563eb', 
                   textDecoration: 'none',
                   fontSize: '14px',
-                  display: 'block'
+                  display: 'block',
+                  maxWidth: '200px',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
