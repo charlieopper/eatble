@@ -396,29 +396,70 @@ const RestaurantCard = ({ restaurant, onClick }) => {
           paddingLeft: '16px',
           paddingTop: '12px'
         }}>
-          {/* Hours and Neighborhood */}
-          <div style={{ 
-            marginBottom: '12px', 
-            display: 'flex', 
-            flexDirection: window.innerWidth <= 640 ? 'column' : 'row',
-            alignItems: window.innerWidth <= 640 ? 'flex-start' : 'center',
-            justifyContent: window.innerWidth <= 640 ? 'flex-start' : 'center',
-            width: '100%',
-            gap: '4px'
-          }}>
+          {/* Hours */}
+          <div style={{ marginBottom: '12px' }}>
             <span style={{ 
-              fontSize: '13px',
-              color: hours.toLowerCase().includes('open') ? '#000000' : '#dc2626',
+              fontSize: '14px',
+              color: '#4b5563',
+              display: 'block'
             }}>
               {hours}
             </span>
-            <span style={{
-              fontSize: '13px',
-              color: '#000000',
-            }}>
-              {window.innerWidth <= 640 ? '📍 Hayes Valley' : '• 📍 Hayes Valley'}
-            </span>
           </div>
+
+          {/* Phone */}
+          <div style={{ marginBottom: '12px' }}>
+            <a 
+              href={`tel:${phone}`}
+              style={{ 
+                color: '#2563eb', 
+                textDecoration: 'none',
+                fontSize: '14px',
+                display: 'block'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {phone}
+            </a>
+          </div>
+
+          {/* Address */}
+          <div style={{ marginBottom: '12px' }}>
+            <a 
+              href={mapUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{ 
+                color: '#2563eb', 
+                textDecoration: 'none',
+                fontSize: '14px',
+                display: 'block'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {address}
+            </a>
+          </div>
+
+          {/* Website URL */}
+          {website && (
+            <div style={{ marginBottom: '12px' }}>
+              <a 
+                href={website} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ 
+                  color: '#2563eb', 
+                  textDecoration: 'none',
+                  fontSize: '14px',
+                  display: 'block'
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {website}
+              </a>
+            </div>
+          )}
         </div>
       </div>
       
@@ -434,7 +475,7 @@ const RestaurantCard = ({ restaurant, onClick }) => {
           <div style={{ 
             display: 'flex', 
             gap: '8px',
-            marginLeft: window.innerWidth <= 640 ? '0' : '8px',
+            marginLeft: window.innerWidth <= 640 ? '22px' : '0',
             flexWrap: 'wrap', // Allow wrapping on small screens
             maxWidth: '100%',
             alignItems: 'center',
