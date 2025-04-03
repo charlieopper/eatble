@@ -207,6 +207,8 @@ const RestaurantCard = ({ restaurant, onClick }) => {
     cursor: 'pointer',
     display: 'flex',
     flexDirection: 'row',
+    maxWidth: window.innerWidth <= 640 ? '100%' : '1400px',  // Add max-width for desktop
+    margin: window.innerWidth <= 640 ? '0 0 16px 0' : '0 auto 16px auto',  // Center on desktop
     ...(isHovered ? cardHoverStyle : {})
   };
 

@@ -380,78 +380,65 @@ export default function SearchPage() {
         </div>
 
         {/* Search and Filter Controls */}
-        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '10px 0', marginBottom: '24px' }}>
-          <tbody>
-            <tr>
-              <td style={{ width: '55%', paddingRight: '10px' }}>
-                <div style={{ position: 'relative' }}>
-                  <Search style={{
-                    position: 'absolute',
-                    left: '12px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: '#9ca3af',
-                    width: '20px',
-                    height: '20px'
-                  }} />
-                  <input
-                    type="text"
-                    placeholder="Search restaurants or cuisines"
-                    style={{
-                      width: '100%',
-                      paddingLeft: '40px',
-                      paddingRight: '12px',
-                      paddingTop: '8px',
-                      paddingBottom: '8px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '6px',
-                      outline: 'none',
-                      boxSizing: 'border-box'
-                    }}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-              </td>
-              <td style={{ width: '35%', paddingRight: '10px' }}>
-                <select
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    backgroundColor: 'white',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    appearance: 'auto',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    boxSizing: 'border-box'
-                  }}
-                  value={sortOption}
-                  onChange={(e) => setSortOption(e.target.value)}
-                >
-                  <option value="Highest Rated">Highest Rated</option>
-                  <option value="Distance">Distance</option>
-                  <option value="Most Reviews">Most Reviews</option>
-                </select>
-              </td>
-              <td style={{ width: '10%' }}>
-                <button style={{
-                  width: '100%',
-                  padding: '8px',
-                  backgroundColor: 'white',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '6px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxSizing: 'border-box'
-                }}>
-                  <Filter size={20} />
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div style={{ 
+          width: '900px',  // Match the restaurant card width
+          margin: '0 auto 24px auto',  // Center the controls
+          display: 'flex',
+          gap: '16px'
+        }}>
+          <div style={{ 
+            width: '65%',
+            position: 'relative' 
+          }}>
+            <Search style={{
+              position: 'absolute',
+              left: '12px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: '#9ca3af',
+              width: '20px',
+              height: '20px'
+            }} />
+            <input
+              type="text"
+              placeholder="Search restaurants or cuisines"
+              style={{
+                width: '100%',
+                paddingLeft: '40px',
+                paddingRight: '12px',
+                paddingTop: '8px',
+                paddingBottom: '8px',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                outline: 'none',
+                boxSizing: 'border-box'
+              }}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <div style={{ width: '35%' }}>
+            <select
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                backgroundColor: 'white',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                appearance: 'auto',
+                cursor: 'pointer',
+                outline: 'none',
+                boxSizing: 'border-box'
+              }}
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value)}
+            >
+              <option value="Highest Rated">Highest Rated</option>
+              <option value="Distance">Distance</option>
+              <option value="Most Reviews">Most Reviews</option>
+            </select>
+          </div>
+        </div>
 
         {/* View Mode Content */}
         {viewMode === 'list' ? (
