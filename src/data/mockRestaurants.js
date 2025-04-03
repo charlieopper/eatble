@@ -305,6 +305,81 @@ export const mockRestaurants = [
         rating: { count: 3, average: 3.7 } 
       }
     ]
+  },
+  {
+    place_id: "zunchi-cafe",
+    name: "Zunchi Cafe",
+    rating: 4.7,
+    user_ratings_total: 342,
+    eatableRating: 4.9,
+    types: ["italian_restaurant", "restaurant"],
+    price_level: 3,
+    opening_hours: {
+      open_now: true,
+      periods: [{ close: { time: "2200" } }],
+      weekday_text: [
+        "Monday: 11:00 AM – 10:00 PM",
+        "Tuesday: 11:00 AM – 10:00 PM",
+        "Wednesday: 11:00 AM – 10:00 PM",
+        "Thursday: 11:00 AM – 10:00 PM",
+        "Friday: 11:00 AM – 11:00 PM",
+        "Saturday: 11:00 AM – 11:00 PM",
+        "Sunday: 12:00 PM – 9:00 PM"
+      ]
+    },
+    formatted_phone_number: "(555) 123-4567",
+    formatted_address: "123 Main St, Anytown, USA",
+    website: "https://italianbistronyc.com",
+    eatableReviews: [
+      {
+        id: "review-1",
+        user: "FoodLover123",
+        rating: 5,
+        text: "Amazing pasta and gluten-free options!",
+        date: "2023-05-15T12:00:00Z",
+        allergens: ["Gluten", "Dairy"]
+      },
+      {
+        id: "review-2",
+        user: "PastaFan",
+        rating: 4,
+        text: "Great food but be careful if you have nut allergies.",
+        date: "2023-06-20T14:30:00Z",
+        allergens: ["Tree Nuts", "Dairy"]
+      }
+    ],
+    allergens: [
+      { 
+        name: 'Peanuts', 
+        icon: '🥜',
+        rating: { count: 3, average: 4.7 } 
+      },
+      { 
+        name: 'Tree nuts', 
+        icon: '🌰',
+        rating: { count: 2, average: 5.0 }
+      },
+      { 
+        name: 'Dairy', 
+        icon: '🥛',
+        rating: { count: 4, average: 4.2 } 
+      },
+      { 
+        name: 'Gluten', 
+        icon: '🌾',
+        rating: { count: 5, average: 4.8 } 
+      },
+      { 
+        name: 'Shellfish', 
+        icon: '🦐',
+        rating: { count: 2, average: 4.5 } 
+      },
+      { 
+        name: 'Soy', 
+        icon: '🫘',
+        rating: { count: 3, average: 4.1 } 
+      }
+    ]
   }
 ];
 

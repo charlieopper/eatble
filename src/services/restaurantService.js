@@ -397,6 +397,26 @@ const sampleRestaurants = [
         name: 'Tree nuts', 
         icon: '🌰',
         rating: { count: 2, average: 5.0 }
+      },
+      { 
+        name: 'Dairy', 
+        icon: '🥛',
+        rating: { count: 4, average: 4.2 } 
+      },
+      { 
+        name: 'Gluten', 
+        icon: '🌾',
+        rating: { count: 5, average: 4.8 } 
+      },
+      { 
+        name: 'Shellfish', 
+        icon: '🦐',
+        rating: { count: 2, average: 4.5 } 
+      },
+      { 
+        name: 'Soy', 
+        icon: '🫘',
+        rating: { count: 3, average: 4.1 } 
       }
     ],
     accommodations: {

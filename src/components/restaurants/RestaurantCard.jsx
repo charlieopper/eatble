@@ -153,7 +153,38 @@ const RestaurantCard = ({ restaurant, onClick }) => {
     address = '123 Main St, San Francisco, CA 94105', // Placeholder address
     website,
     googleReview = { rating: 0, reviewCount: 0, quote: 'No reviews yet' },
-    allergens = [],
+    allergens = [
+      { 
+        name: 'Peanuts', 
+        icon: '🥜',
+        rating: { count: 3, average: 4.7 } 
+      },
+      { 
+        name: 'Tree nuts', 
+        icon: '🌰',
+        rating: { count: 2, average: 5.0 }
+      },
+      { 
+        name: 'Dairy', 
+        icon: '🥛',
+        rating: { count: 4, average: 4.2 } 
+      },
+      { 
+        name: 'Gluten', 
+        icon: '🌾',
+        rating: { count: 5, average: 4.8 } 
+      },
+      { 
+        name: 'Shellfish', 
+        icon: '🦐',
+        rating: { count: 2, average: 4.5 } 
+      },
+      { 
+        name: 'Soy', 
+        icon: '🫘',
+        rating: { count: 3, average: 4.1 } 
+      }
+    ],
   } = restaurant;
 
   // Create map URL for the address
@@ -366,19 +397,26 @@ const RestaurantCard = ({ restaurant, onClick }) => {
           paddingTop: '12px'
         }}>
           {/* Hours and Neighborhood */}
-          <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
+          <div style={{ 
+            marginBottom: '12px', 
+            display: 'flex', 
+            flexDirection: window.innerWidth <= 640 ? 'column' : 'row',
+            alignItems: window.innerWidth <= 640 ? 'flex-start' : 'center',
+            justifyContent: window.innerWidth <= 640 ? 'flex-start' : 'center',
+            width: '100%',
+            gap: '4px'
+          }}>
             <span style={{ 
               fontSize: '13px',
               color: hours.toLowerCase().includes('open') ? '#000000' : '#dc2626',
-              marginRight: '8px'
             }}>
               {hours}
             </span>
             <span style={{
               fontSize: '13px',
-              color: '#4b5563',
+              color: '#000000',
             }}>
-              • 📍 Hayes Valley
+              {window.innerWidth <= 640 ? '📍 Hayes Valley' : '• 📍 Hayes Valley'}
             </span>
           </div>
         </div>
@@ -549,7 +587,19 @@ const RestaurantCard = ({ restaurant, onClick }) => {
 
           {/* Allergens */}
           {allergens && allergens.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '12px' }}>
+          <div style={{ 
+            display: window.innerWidth <= 640 ? 'grid' : 'flex',
+            ...(window.innerWidth <= 640 ? {
+              gridTemplateColumns: 'repeat(2, 1fr)', // Grid for mobile
+            } : {
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+            }),
+            gap: '4px',
+            width: '100%',
+            marginTop: '12px',
+            marginBottom: '12px'
+          }}>
             {allergens.map((allergen, index) => {
               console.log("Allergen item:", allergen);
               return (
@@ -564,8 +614,7 @@ const RestaurantCard = ({ restaurant, onClick }) => {
                     borderRadius: '9999px',
                     fontSize: '12px',
                     color: TEAL_COLOR,
-                    marginRight: '4px',
-                    marginBottom: '4px'
+                    width: 'fit-content' // Ensures pills only take up needed space
                   }}
                 >
                   {allergen.icon && (
