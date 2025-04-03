@@ -465,21 +465,23 @@ const RestaurantCard = ({ restaurant, onClick }) => {
       
       {/* Right column - All other content */}
       <div style={contentStyle}>
-        {/* Restaurant name and cuisines */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap' }}>
-            <h3 style={{ ...titleStyle, marginRight: '8px', marginBottom: '0',  fontSize: '24px' }}>{name}</h3>
-          </div>
+        {/* Restaurant name and accommodation pills container */}
+        <div style={{
+          display: 'flex',
+          flexDirection: window.innerWidth <= 640 ? 'column' : 'row',
+          alignItems: window.innerWidth <= 640 ? 'flex-start' : 'center',
+          width: '100%',
+          justifyContent: window.innerWidth <= 640 ? 'flex-start' : 'space-between'
+        }}>
+          <h2 style={{ margin: 0, fontSize: '30px' }}>{name}</h2>
           
-          {/* Accommodations - Fix mobile display */}
+          {/* Accommodation pills */}
           <div style={{ 
             display: 'flex', 
-            gap: '8px',
-            marginLeft: window.innerWidth <= 640 ? '22px' : '0',
-            flexWrap: 'wrap', // Allow wrapping on small screens
-            maxWidth: '100%',
-            alignItems: 'center',
-            marginTop: window.innerWidth <= 640 ? '4px' : '0'
+            gap: '4px',
+            marginLeft: window.innerWidth <= 640 ? '0' : '8px',
+            marginTop: window.innerWidth <= 640 ? '8px' : '0',
+            flexWrap: 'wrap'
           }}>
             {hasChefAvailable && (
               <div style={{
