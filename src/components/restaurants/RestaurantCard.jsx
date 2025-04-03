@@ -468,7 +468,7 @@ const RestaurantCard = ({ restaurant, onClick }) => {
         {/* Restaurant name and cuisines */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap' }}>
-            <h3 style={{ ...titleStyle, marginRight: '8px', marginBottom: '0' }}>{name}</h3>
+            <h3 style={{ ...titleStyle, marginRight: '8px', marginBottom: '0',  fontSize: '24px' }}>{name}</h3>
           </div>
           
           {/* Accommodations - Fix mobile display */}
@@ -625,21 +625,28 @@ const RestaurantCard = ({ restaurant, onClick }) => {
                 "{googleReview.quote}"
               </p>
             )}
+          </div>
+        </div>
 
-          {/* Allergens */}
-          {allergens && allergens.length > 0 && (
+        {/* Allergens section */}
+        <div>
+          <h3 style={{ 
+            fontSize: '16px', 
+            fontWeight: '600',
+            marginBottom: '8px'
+          }}>
+            Allergies Reviewed
+          </h3>
           <div style={{ 
             display: window.innerWidth <= 640 ? 'grid' : 'flex',
             ...(window.innerWidth <= 640 ? {
-              gridTemplateColumns: 'repeat(2, 1fr)', // Grid for mobile
+              gridTemplateColumns: 'repeat(2, 1fr)',
             } : {
               flexDirection: 'row',
               flexWrap: 'wrap',
             }),
             gap: '4px',
             width: '100%',
-            marginTop: '12px',
-            marginBottom: '12px'
           }}>
             {allergens.map((allergen, index) => {
               console.log("Allergen item:", allergen);
@@ -687,8 +694,6 @@ const RestaurantCard = ({ restaurant, onClick }) => {
                 </span>
               );
             })}
-          </div>
-        )}
           </div>
         </div>
       </div>
