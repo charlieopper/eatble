@@ -12,9 +12,7 @@ jest.mock('react-hot-toast');
 // Import the function to test from HomePage
 // Since this function is defined inside HomePage, we need to extract it
 const checkFirestorePermissions = async () => {
-  try {
-    console.log('Checking Firestore permissions...');
-    
+  try {    
     // Try to write to a test document
     const testDocRef = doc(db, 'test', 'permissions-test');
     await setDoc(testDocRef, { 
@@ -22,7 +20,6 @@ const checkFirestorePermissions = async () => {
       test: 'This is a test document to check permissions'
     });
     
-    console.log('Firestore write successful - permissions are working');
     toast.success('Firestore permissions are working correctly');
     
     // Clean up the test document

@@ -51,12 +51,10 @@ const MapView = ({ restaurants, onSelectRestaurant, center = defaultCenter }) =>
   // Store map instance when it loads
   const onMapLoad = useCallback((map) => {
     mapRef.current = map;
-    console.log('Map loaded successfully');
   }, []);
 
   // Handle marker click
   const handleMarkerClick = useCallback((restaurant) => {
-    console.log('Marker clicked:', restaurant);
     setSelectedMarker(restaurant);
   }, []);
 
@@ -148,9 +146,7 @@ const MapView = ({ restaurants, onSelectRestaurant, center = defaultCenter }) =>
   // Fit bounds to show all markers
   useEffect(() => {
     if (!isLoaded || !mapRef.current || restaurants.length === 0) return;
-    
-    console.log('Adjusting map bounds to fit all restaurants:', restaurants);
-    
+        
     const bounds = new window.google.maps.LatLngBounds();
     restaurants.forEach(restaurant => {
       if (restaurant.lat && restaurant.lng) {
@@ -220,8 +216,6 @@ const MapView = ({ restaurants, onSelectRestaurant, center = defaultCenter }) =>
       </div>
     );
   }
-
-  console.log('Rendering map with restaurants:', restaurants);
 
   return (
     <div style={{ height: '100%', width: '100%', position: 'relative' }}>

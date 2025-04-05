@@ -220,16 +220,13 @@ export default function HomePage() {
   
   // Update social login function
   const handleSocialLogin = async (provider) => {
-    console.log('🚀 handleSocialLogin started with provider:', provider);
     setError('');
     setIsLoading(true);
     
     try {
       if (provider === 'Google') {
-        console.log('📱 Attempting Google login...');
         try {
           const user = await loginWithGoogle();
-          console.log('✅ Google login successful:', user);
           toast.success('Google login successful!');
         } catch (googleError) {
           console.error('❌ Google auth error:', googleError);
@@ -237,10 +234,8 @@ export default function HomePage() {
           return;
         }
       } else if (provider === 'Facebook') {
-        console.log('📘 Attempting Facebook login...');
         try {
           const result = await debugDirectFacebookLogin();
-          console.log('✅ Facebook login result:', result);
         } catch (fbError) {
           console.error('❌ Facebook auth error:', fbError);
           toast.error(`Facebook login failed: ${fbError.message}`);
@@ -258,7 +253,6 @@ export default function HomePage() {
       toast.error(error.message);
     } finally {
       setIsLoading(false);
-      console.log('🏁 handleSocialLogin completed');
     }
   };
 
@@ -319,11 +313,9 @@ export default function HomePage() {
       
       // Try to sign in with Facebook
       const result = await signInWithPopup(auth, facebookProvider);
-      console.log('Facebook auth result:', result);
       
       // Extract user info
       const user = result.user;
-      console.log('Facebook user:', user);
       
       // If successful, show success message
       toast.success('Facebook authentication successful!');
@@ -380,7 +372,6 @@ export default function HomePage() {
 
   // Update the handleFacebookButtonClick function
   const handleFacebookButtonClick = () => {
-    console.log('Facebook button clicked');
     try {
       handleFacebookLogin();
     } catch (error) {
@@ -391,22 +382,15 @@ export default function HomePage() {
 
   // Add this function for direct debugging
   const debugDirectFacebookLogin = async () => {
-    console.log('🔍 Starting direct Facebook login debug');
     try {
-      console.log('📦 Importing FacebookAuthProvider...');
       const { FacebookAuthProvider } = await import('firebase/auth');
       
-      console.log('🔨 Creating new Facebook provider...');
       const directProvider = new FacebookAuthProvider();
-      console.log('✅ Created Facebook provider:', directProvider);
       
-      console.log('🔑 Adding scopes...');
       directProvider.addScope('email');
       directProvider.addScope('public_profile');
       
-      console.log('🚀 Initiating Facebook popup...');
       const result = await signInWithPopup(auth, directProvider);
-      console.log('✅ Facebook login successful! Result:', result);
       
       toast.success('Facebook login successful!');
       return result;
@@ -435,12 +419,8 @@ export default function HomePage() {
 
   // Add this function to test toast
   const testToast = () => {
-    console.log('Testing toast functions');
     toast.success('This is a success toast');
-    
-    // Check if other toast methods exist
-    console.log('Toast methods:', Object.keys(toast));
-    
+        
     // Try to use toast.error
     try {
       toast.error('This is an error toast');
@@ -452,7 +432,6 @@ export default function HomePage() {
   // Add this function to check and fix Firestore permissions
   const checkFirestorePermissions = async () => {
     try {
-      console.log('Checking Firestore permissions...');
       
       // Try to write to a test document
       const testDocRef = doc(db, 'test', 'permissions-test');
@@ -461,7 +440,6 @@ export default function HomePage() {
         test: 'This is a test document to check permissions'
       });
       
-      console.log('Firestore write successful - permissions are working');
       toast.success('Firestore permissions are working correctly');
       
       // Clean up the test document

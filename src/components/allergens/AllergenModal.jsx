@@ -12,7 +12,6 @@ export default function AllergenModal({ isOpen, onClose }) {
   const [isUpdating, setIsUpdating] = useState(false);
 
   const handleSaveAllergens = async () => {
-    console.log('Starting save process...');
     setIsUpdating(true);
     
     try {

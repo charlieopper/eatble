@@ -35,8 +35,6 @@ export const ReviewsProvider = ({ children }) => {
       setError(null);
       
       try {
-        console.log('Fetching reviews for user:', user.uid);
-        console.log('Current page:', currentPage);
         
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         const userReviews = userDoc.data()?.reviews || [];
@@ -45,12 +43,6 @@ export const ReviewsProvider = ({ children }) => {
         const startIndex = (currentPage - 1) * REVIEWS_PER_PAGE;
         const endIndex = startIndex + REVIEWS_PER_PAGE;
         const paginatedReviews = userReviews.slice(startIndex, endIndex);
-        
-        console.log('Fetched reviews:', {
-          total: userReviews.length,
-          current: paginatedReviews.length,
-          hasMore: endIndex < userReviews.length
-        });
 
         setReviews(paginatedReviews);
         setHasMore(endIndex < userReviews.length);
@@ -73,44 +65,37 @@ export const ReviewsProvider = ({ children }) => {
     }
 
     try {
-      console.log('Starting review save process...');
       
       // Check and create/update restaurant document
       const restaurantRef = doc(db, 'restaurants', reviewData.restaurantId);
       const restaurantDoc = await getDoc(restaurantRef);
       
       if (!restaurantDoc.exists()) {
-        console.log('Creating new restaurant document');
         await setDoc(restaurantRef, {
           id: reviewData.restaurantId,
           name: reviewData.restaurantName,
           reviews: [reviewData]
         });
       } else {
-        console.log('Updating existing restaurant document');
         await updateDoc(restaurantRef, {
           reviews: arrayUnion(reviewData)
         });
       }
-      console.log('Saved to restaurant document');
 
       // Check and create/update user document
       const userRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userRef);
       
       if (!userDoc.exists()) {
-        console.log('Creating new user document');
         await setDoc(userRef, {
           uid: user.uid,
           reviews: [reviewData]
         });
       } else {
-        console.log('Updating existing user document');
         await updateDoc(userRef, {
           reviews: arrayUnion(reviewData)
         });
       }
-      console.log('Saved to user document');
 
       // Update local state
       setReviews(prev => [reviewData, ...prev]);

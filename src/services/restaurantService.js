@@ -712,9 +712,7 @@ const restaurantService = {
   getRestaurants: async (page = 1, limit = 5) => {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 800));
-    
-    console.log('getRestaurants called with page:', page, 'limit:', limit);
-    
+        
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
     

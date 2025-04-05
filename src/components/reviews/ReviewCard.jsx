@@ -10,16 +10,6 @@ export default function ReviewCard({ review, showRestaurantName = true }) {
   const [isHovered, setIsHovered] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const navigate = useNavigate();
-
-  // Keep only one console log for essential debugging
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Review:', { 
-      id: review.id, 
-      restaurant: review.restaurantName, 
-      rating: review.rating 
-    });
-  }
-
   const handleRestaurantClick = () => {
     const restaurantIds = {
       'Zunchi Cafe': '1',

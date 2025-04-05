@@ -70,21 +70,16 @@ const RestaurantCard = ({ restaurant, onClick }) => {
   // Fetch reviews for this specific restaurant
   useEffect(() => {
     const fetchReviews = async () => {
-      try {
-        console.log(`Fetching reviews for ${restaurant.name} (ID: ${restaurant.id})`);
-        
+      try {        
         // Get the restaurant document from Firestore
         const restaurantRef = doc(db, 'restaurants', restaurant.id.toString());
         const restaurantDoc = await getDoc(restaurantRef);
         
         if (restaurantDoc.exists()) {
           const firestoreData = restaurantDoc.data();
-          console.log(`Found Firestore data for ${restaurant.name}:`, firestoreData);
-          
           // Set the reviews
           setReviews(firestoreData.reviews || []);
         } else {
-          console.log(`No Firestore document found for ${restaurant.name}`);
           setReviews([]);
         }
       } catch (error) {
@@ -97,23 +92,14 @@ const RestaurantCard = ({ restaurant, onClick }) => {
 
     fetchReviews();
   }, [restaurant.id, restaurant.name]);
-
-  // Enhanced debugging for restaurant reviews
-  console.log('RestaurantCard - Restaurant:', restaurant.name);
-  console.log('RestaurantCard - Has reviews from props?', !!restaurant.reviews);
-  console.log('RestaurantCard - Has eatableReviews from props?', !!restaurant.eatableReviews);
-  console.log('RestaurantCard - Has reviews from Firestore?', reviews.length > 0);
   
   // Get reviews from any possible location, prioritizing our directly fetched reviews
   const allReviews = reviews.length > 0 ? reviews : 
                     restaurant.eatableReviews || restaurant.reviews || 
                     (restaurant.data && restaurant.data.reviews) || [];
   
-  console.log('RestaurantCard - All reviews array:', allReviews);
-  
   // Check for accommodations
   const hasChefAvailable = allReviews.some(review => {
-    console.log('Checking review for chef available:', review);
     return review.chefAvailable === true || 
            review.accommodations?.chefAvailable === true ||
            review.allergenData?.chefManagerAvailable === true;
@@ -124,10 +110,6 @@ const RestaurantCard = ({ restaurant, onClick }) => {
     review.accommodations?.allergenMenu === true ||
     review.allergenData?.allergenMenuAvailable === true
   );
-  
-  console.log(`${restaurant.name}: Chef available:`, hasChefAvailable);
-  console.log(`${restaurant.name}: Allergen menu:`, hasAllergenMenu);
-  
   // Validate review structure
   const hasValidReviews = restaurant.eatableReviews && 
     validateReviewStructure(restaurant.eatableReviews);
@@ -138,9 +120,7 @@ const RestaurantCard = ({ restaurant, onClick }) => {
 
   // Get the average rating
   const averageEatableRating = calculateAverageRating(reviews);
-  console.log(`${restaurant.name}: Average eatABLE rating:`, averageEatableRating);
-  console.log(`${restaurant.name}: Number of eatABLE reviews:`, reviews.length);
-
+  
   if (!restaurant) {
     return <div style={{ padding: '16px', backgroundColor: 'white', borderRadius: '8px', margin: '8px 0' }}>Loading restaurant data...</div>;
   }
@@ -325,12 +305,6 @@ const RestaurantCard = ({ restaurant, onClick }) => {
       </div>
     );
   };
-
-  // Add this console log at the top of your component to debug
-  console.log("Google logo path:", googleLogoUrl);
-
-  // Add this near the top of your component
-  console.log("Restaurant allergens:", allergens);
 
   return (
     <div 
@@ -657,7 +631,6 @@ const RestaurantCard = ({ restaurant, onClick }) => {
             width: '100%',
           }}>
             {allergens.map((allergen, index) => {
-              console.log("Allergen item:", allergen);
               return (
                 <span 
                   key={index} 

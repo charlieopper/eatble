@@ -56,7 +56,6 @@ export default function RestaurantDetailsPage() {
   const { deleteReview } = useReviews();
 
   // Log the restaurantId to make sure we have it
-  console.log('Current restaurantId:', id);
 
   // Define handleDeleteReview at the component level, before any JSX
   const handleDeleteReview = async (reviewId) => {
@@ -76,13 +75,11 @@ export default function RestaurantDetailsPage() {
         const data = await restaurantService.getRestaurantById(id);
         
         // Then, fetch the latest reviews from Firestore
-        console.log(`Fetching Firestore data for restaurant ID: ${id}`);
         const restaurantRef = doc(db, 'restaurants', id.toString());
         const restaurantDoc = await getDoc(restaurantRef);
         
         if (restaurantDoc.exists()) {
           const firestoreData = restaurantDoc.data();
-          console.log('Firestore data for restaurant:', firestoreData);
           
           // Merge the Firestore data with the basic restaurant data
           const mergedData = {
@@ -91,10 +88,8 @@ export default function RestaurantDetailsPage() {
             eatableReviews: firestoreData.reviews || []
           };
           
-          console.log('Merged restaurant data with reviews:', mergedData);
           setRestaurant(mergedData);
         } else {
-          console.log('No Firestore document found for this restaurant');
           setRestaurant(data);
         }
         
@@ -114,25 +109,19 @@ export default function RestaurantDetailsPage() {
   useEffect(() => {
     const loadRestaurantReviews = async () => {
       if (!id) {
-        console.log('No restaurantId available');
         return;
       }
       
       setIsLoadingReviews(true);
       
       try {
-        console.log('Fetching reviews for restaurant:', id);
         const restaurantRef = doc(db, 'restaurants', id);
         const restaurantDoc = await getDoc(restaurantRef);
-        
-        console.log('Restaurant document exists:', restaurantDoc.exists());
-        
+                
         if (restaurantDoc.exists()) {
           const restaurantData = restaurantDoc.data();
-          console.log('Restaurant data:', restaurantData);
           
           const reviews = restaurantData?.reviews || [];
-          console.log('Found reviews:', reviews);
           
           // Sort reviews by date (newest first)
           const sortedReviews = reviews.sort((a, b) => 
@@ -141,7 +130,6 @@ export default function RestaurantDetailsPage() {
           
           setRestaurantReviews(sortedReviews);
         } else {
-          console.log('Restaurant document not found');
           setRestaurantReviews([]);
         }
       } catch (error) {
@@ -157,7 +145,6 @@ export default function RestaurantDetailsPage() {
 
   // Function to refresh reviews after submission
   const handleReviewSubmitted = (newReview) => {
-    console.log('New review submitted:', newReview);
     // Update the local reviews state immediately
     setRestaurantReviews(prevReviews => [newReview, ...prevReviews]);
   };
@@ -176,31 +163,18 @@ export default function RestaurantDetailsPage() {
 
   const handleHelpfulClick = async (reviewId) => {
     if (!user) {
-      console.log('❌ No user logged in');
       toast.error('Please log in to mark reviews as helpful');
       return;
     }
 
     try {
       console.group('🎯 Helpful Click Process');
-      console.log('Starting helpful click:', {
-        reviewId,
-        userId: user.uid,
-        timestamp: new Date().toISOString()
-      });
 
       const review = restaurantReviews.find(r => r.id === reviewId);
-      console.log('📝 Found review:', review);
 
       // 1. Get the restaurant document
       const restaurantRef = doc(db, 'restaurants', review.restaurantId);
       const restaurantDoc = await getDoc(restaurantRef);
-
-      console.log('🏪 Restaurant document:', {
-        exists: restaurantDoc.exists(),
-        id: review.restaurantId,
-        data: restaurantDoc.data()
-      });
 
       if (!restaurantDoc.exists()) {
         console.error('❌ Restaurant document not found');
@@ -211,24 +185,12 @@ export default function RestaurantDetailsPage() {
       const userRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userRef);
 
-      console.log('👤 User document:', {
-        exists: userDoc.exists(),
-        data: userDoc.exists() ? userDoc.data() : null
-      });
-
       // Check if user has already marked this helpful
       const reviews = restaurantDoc.data().reviews || [];
       const targetReview = reviews.find(r => r.id === reviewId);
       const hasMarkedHelpful = targetReview?.helpfulUsers?.includes(user.uid);
 
-      console.log('🔍 Helpful check:', {
-        hasMarkedHelpful,
-        currentHelpfulCount: targetReview?.helpfulCount || 0,
-        currentHelpfulUsers: targetReview?.helpfulUsers || []
-      });
-
       if (hasMarkedHelpful) {
-        console.log('⚠️ User attempting duplicate helpful click');
         console.groupEnd();
         toast('You\'ve already marked this review as helpful', {
           icon: '👍',
@@ -253,11 +215,6 @@ export default function RestaurantDetailsPage() {
           : r
       );
 
-      console.log('📝 Updating restaurant document with:', {
-        reviewId,
-        newHelpfulCount: (targetReview?.helpfulCount || 0) + 1,
-        updatedHelpfulUsers: [...(targetReview?.helpfulUsers || []), user.uid]
-      });
 
       await updateDoc(restaurantRef, {
         reviews: updatedReviews
@@ -265,20 +222,15 @@ export default function RestaurantDetailsPage() {
 
       // 4. Update or create user document with helpfulReviews
       if (!userDoc.exists()) {
-        console.log('👤 Creating new user document');
         await setDoc(userRef, {
           uid: user.uid,
           helpfulReviews: [reviewId]
         });
       } else {
-        console.log('👤 Updating existing user document');
         await updateDoc(userRef, {
           helpfulReviews: arrayUnion(reviewId)
         });
       }
-
-      console.log('✅ Successfully updated both documents');
-
       // 5. Update local state
       setRestaurantReviews(prev => 
         prev.map(r => 
@@ -295,7 +247,6 @@ export default function RestaurantDetailsPage() {
       // Update helpfulReviews Set for UI state
       setHelpfulReviews(prev => new Set([...prev, reviewId]));
       
-      console.log('🔄 Updated local state');
       console.groupEnd();
       
       toast.success('Thanks for your feedback!');
@@ -355,47 +306,24 @@ export default function RestaurantDetailsPage() {
   // Add debugging in the component
   useEffect(() => {
     if (restaurant) {
-      console.log('RestaurantDetailsPage - Restaurant:', restaurant.name);
-      console.log('RestaurantDetailsPage - Has eatableReviews?', !!restaurant.eatableReviews);
+     
       if (restaurant.eatableReviews) {
-        console.log('RestaurantDetailsPage - Review structure:', 
-          restaurant.eatableReviews.map(r => ({
-            id: r.id,
-            chefAvailable: r.accommodations?.chefAvailable,
-            allergenMenu: r.accommodations?.allergenMenu
-          }))
-        );
       }
     }
   }, [restaurant]);
 
-  // Add this debugging at the top of your component or in useEffect
-  useEffect(() => {
-    if (restaurant) {
-      console.log('RestaurantDetailsPage - Full restaurant object:', restaurant);
-      console.log('RestaurantDetailsPage - Reviews array:', restaurant.eatableReviews || restaurant.reviews);
-    }
-  }, [restaurant]);
 
   // Add this at the top of your component to log the full restaurant object
   useEffect(() => {
     if (restaurant) {
-      console.log('FULL RESTAURANT OBJECT:', restaurant);
-      
-      // Check all possible locations where reviews might be stored
-      console.log('Restaurant reviews property:', restaurant.reviews);
-      console.log('Restaurant eatableReviews property:', restaurant.eatableReviews);
-      
       // Check if reviews are stored in a nested property
       if (restaurant.data) {
-        console.log('Restaurant data.reviews:', restaurant.data.reviews);
       }
     }
   }, [restaurant]);
 
   // Add this after your review submission handler
   const handleReviewSubmit = async (reviewData) => {
-    console.log('New review submitted:', reviewData);
     
     // Update the local state with the new review
     setRestaurant(prevRestaurant => {
@@ -507,7 +435,6 @@ export default function RestaurantDetailsPage() {
   const mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(restaurant.address || '')}`;
 
   const getAllergenData = (allergen) => {
-    console.log('getAllergenData input:', allergen);
 
     // If allergen is already an object with name property
     if (typeof allergen === 'object' && allergen.name) {
@@ -531,13 +458,11 @@ export default function RestaurantDetailsPage() {
         emoji: allergenMap[allergen.name]?.emoji || '⚠️',
         rating: allergen.rating // Preserve the rating if it exists
       };
-      console.log('Returning object result:', result);
       return result;
     }
 
     // If allergen is null or undefined
     if (!allergen) {
-      console.log('Allergen is null/undefined');
       return { name: 'Unknown', emoji: '⚠️' };
     }
 
@@ -558,9 +483,7 @@ export default function RestaurantDetailsPage() {
     };
 
     const normalizedAllergen = String(allergen).trim();
-    console.log('Processing string allergen:', normalizedAllergen);
     const result = allergenMap[normalizedAllergen] || { name: allergen, emoji: '⚠️' };
-    console.log('Returning string result:', result);
     return result;
   };
 
@@ -821,18 +744,13 @@ export default function RestaurantDetailsPage() {
             const reviews = restaurant.eatableReviews || restaurant.reviews || 
                            (restaurant.data && restaurant.data.reviews) || [];
             
-            console.log('Reviews array length:', reviews.length);
-            console.log('Full reviews array:', reviews);
-            
             // Check for chefAvailable in different possible locations
             const hasChefAvailable = reviews.some(review => {
-              console.log('Checking review for chef available:', review);
               return review.chefAvailable === true || 
                      review.accommodations?.chefAvailable === true ||
                      review.allergenData?.chefManagerAvailable === true;
             });
             
-            console.log('Details page - Chef available showing:', hasChefAvailable);
             return hasChefAvailable;
           })() && (
             <div style={{ 
@@ -892,7 +810,6 @@ export default function RestaurantDetailsPage() {
               review.allergenData?.allergenMenuAvailable === true
             );
             
-            console.log('Details page - Allergen menu showing:', hasAllergenMenu);
             return hasAllergenMenu;
           })() && (
             <div style={{ 
@@ -1339,14 +1256,6 @@ export default function RestaurantDetailsPage() {
           ) : sortedReviews.length > 0 ? (
             <div className="reviews-list">
               {sortedReviews.map((review) => {
-                // Add debugging logs
-                console.log('Review:', {
-                  reviewId: review.id,
-                  reviewUserId: review.userId,
-                  currentUserId: user?.uid,
-                  isMatch: user?.uid === review.userId
-                });
-
                 return (
                   <div 
                     key={review.id}

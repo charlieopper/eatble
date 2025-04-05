@@ -65,9 +65,7 @@ const updateReview = (reviewId, updatedData) => {
 
 // Submit review to Firebase (mock implementation)
 const submitReview = async (restaurantId, reviewData) => {
-  try {
-    console.log('Mock submitting review to Firebase:', { restaurantId, reviewData });
-    
+  try {    
     // Create a mock review ID
     const reviewId = `mock-review-${Date.now()}`;
     

@@ -45,13 +45,11 @@ export default function AccountSettingsModal({ isOpen, onClose }) {
   // Reauthenticate user before sensitive operations
   const reauthenticate = async (currentPassword) => {
     try {
-      console.log('Attempting to reauthenticate user');
       const credential = EmailAuthProvider.credential(
         user.email,
         currentPassword
       );
       await reauthenticateWithCredential(user, credential);
-      console.log('Reauthentication successful');
       return true;
     } catch (error) {
       console.error('Reauthentication failed:', error);
@@ -63,13 +61,11 @@ export default function AccountSettingsModal({ isOpen, onClose }) {
   const handleSaveChanges = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    console.log('Attempting to save changes:', { ...formData, currentPassword: '[HIDDEN]' });
 
     try {
       // Log current user document state
       const userRef = doc(db, 'users', user.uid);
       const userSnap = await getDoc(userRef);
-      console.log('Current user document before update:', userSnap.data());
 
       // Validate inputs
       if (!validateEmail(formData.email)) {
@@ -95,7 +91,6 @@ export default function AccountSettingsModal({ isOpen, onClose }) {
 
       // Log updated user document
       const updatedUserSnap = await getDoc(userRef);
-      console.log('Updated user document after changes:', updatedUserSnap.data());
 
       // Update email if changed
       if (formData.email !== user.email) {
@@ -107,7 +102,6 @@ export default function AccountSettingsModal({ isOpen, onClose }) {
         await updatePassword(user, formData.newPassword);
       }
 
-      console.log('Changes saved successfully');
       toast.success('Changes saved successfully');
       onClose();
     } catch (error) {
@@ -125,7 +119,6 @@ export default function AccountSettingsModal({ isOpen, onClose }) {
     }
 
     try {
-      console.log('Attempting to delete account');
       const isReauthenticated = await reauthenticate(formData.currentPassword);
       if (!isReauthenticated) return;
 
@@ -135,7 +128,6 @@ export default function AccountSettingsModal({ isOpen, onClose }) {
       // Delete Firebase auth user
       await deleteUser(user);
       
-      console.log('Account deleted successfully');
       toast.success('Account deleted successfully');
       await logout();
     } catch (error) {
@@ -154,18 +146,14 @@ export default function AccountSettingsModal({ isOpen, onClose }) {
     try {
       const userRef = doc(db, 'users', user.uid);
       const userSnap = await getDoc(userRef);
-      console.log('User document before password change:', userSnap.data());
-
-      console.log('Attempting to change password');
       const isReauthenticated = await reauthenticate(formData.currentPassword);
+
       if (!isReauthenticated) return;
 
       await updatePassword(user, formData.newPassword);
       
       const updatedUserSnap = await getDoc(userRef);
-      console.log('User document after password change:', updatedUserSnap.data());
 
-      console.log('Password changed successfully');
       toast.success('Password changed successfully');
       setFormData({
         ...formData,

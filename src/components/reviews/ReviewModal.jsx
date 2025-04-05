@@ -128,7 +128,6 @@ export default function ReviewModal({ isOpen, onClose, restaurantName, restauran
         userName: user.displayName || 'Anonymous'
       };
 
-      console.log('Submitting review:', reviewData);
       await addReview(reviewData);
       
       if (onReviewSubmitted) {

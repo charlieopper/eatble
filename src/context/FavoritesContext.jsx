@@ -52,7 +52,6 @@ export const FavoritesProvider = ({ children }) => {
         // Ensure local state matches Firestore
         setFavorites(firestoreFavorites);
         
-        console.log('Loaded favorites from Firestore:', firestoreFavorites);
       } catch (error) {
         console.error('Error loading favorites:', error);
         toast.error('Failed to load favorites');
@@ -86,7 +85,6 @@ export const FavoritesProvider = ({ children }) => {
           : [...prev, restaurant]
       );
 
-      console.log('Updated favorites:', isFavorited ? 'removed' : 'added', restaurant.id);
       toast.success(isFavorited ? 'Removed from favorites' : 'Added to favorites');
     } catch (error) {
       console.error('Error updating favorites:', error);
@@ -106,7 +104,6 @@ export const FavoritesProvider = ({ children }) => {
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       const firestoreFavorites = userDoc.data()?.favoriteRestaurants || [];
       setFavorites(firestoreFavorites);
-      console.log('Refreshed favorites from Firestore:', firestoreFavorites);
     } catch (error) {
       console.error('Error refreshing favorites:', error);
     }

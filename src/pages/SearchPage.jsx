@@ -40,7 +40,6 @@ export default function SearchPage() {
     setIsLoading(true);
     try {
       const result = await restaurantService.getRestaurants(1, 3); // Load fewer initially for testing
-      console.log('Initial load result:', result);
       
       // Ensure each restaurant has coordinates
       const restaurantsWithCoords = result.restaurants.map(restaurant => {
@@ -64,7 +63,6 @@ export default function SearchPage() {
       setHasMore(result.hasMore);
       setPage(1);
       
-      console.log('Restaurants with coordinates:', restaurantsWithCoords);
     } catch (error) {
       console.error('Error loading restaurants:', error);
       setHasMore(false);
@@ -75,25 +73,20 @@ export default function SearchPage() {
 
   // Function to load more restaurants when scrolling
   const loadMoreRestaurants = async () => {
-    console.log('loadMoreRestaurants called', { isLoadingMore, hasMore, page });
     
     if (isLoadingMore || !hasMore) {
-      console.log('Skipping loadMoreRestaurants', { isLoadingMore, hasMore });
       return;
     }
     
     setIsLoadingMore(true);
     setShowManualLoadMore(false);
-    console.log('Loading more restaurants, page:', page + 1);
     
     try {
       const nextPage = page + 1;
       const result = searchQuery 
         ? await restaurantService.searchRestaurants(searchQuery, nextPage, 3)
         : await restaurantService.getRestaurants(nextPage, 3);
-      
-      console.log('Got more restaurants:', result);
-      
+            
       if (result.restaurants && result.restaurants.length > 0) {
         // Add coordinates to new restaurants
         const newRestaurantsWithCoords = result.restaurants.map(restaurant => {
@@ -114,9 +107,7 @@ export default function SearchPage() {
         setRestaurants(prevRestaurants => [...prevRestaurants, ...newRestaurantsWithCoords]);
         setPage(nextPage);
         setHasMore(result.hasMore);
-        console.log('Updated state with new restaurants with coordinates');
       } else {
-        console.log('No more restaurants returned');
         setHasMore(false);
       }
     } catch (error) {
@@ -155,7 +146,6 @@ export default function SearchPage() {
       setHasMore(result.hasMore);
       setPage(1);
       
-      console.log('Search results with coordinates:', restaurantsWithCoords);
     } catch (error) {
       console.error('Error searching restaurants:', error);
     } finally {
@@ -201,16 +191,12 @@ export default function SearchPage() {
       setShowManualLoadMore(false);
       return;
     }
-    
-    console.log('Setting up Intersection Observer with hasMore:', hasMore);
-    
+        
     const observer = new IntersectionObserver(
       (entries) => {
         const [entry] = entries;
-        console.log('Intersection detected:', entry.isIntersecting, 'hasMore:', hasMore);
         
         if (entry.isIntersecting && hasMore && !isLoadingMore) {
-          console.log('Triggering loadMoreRestaurants');
           loadMoreRestaurants();
           setShowManualLoadMore(false); // Hide manual button when infinite scroll works
         }
@@ -221,7 +207,6 @@ export default function SearchPage() {
     const currentSentinel = sentinelRef.current;
     if (currentSentinel) {
       observer.observe(currentSentinel);
-      console.log('Observing sentinel element');
     }
     
     // Set a timeout to show the manual button if infinite scroll doesn't trigger
@@ -234,7 +219,6 @@ export default function SearchPage() {
     return () => {
       if (currentSentinel) {
         observer.unobserve(currentSentinel);
-        console.log('Unobserving sentinel element');
       }
       clearTimeout(timeoutId);
     };
@@ -485,7 +469,6 @@ export default function SearchPage() {
               }}>
                 <button
                   onClick={() => {
-                    console.log('Manual load more clicked');
                     loadMoreRestaurants();
                   }}
                   style={{

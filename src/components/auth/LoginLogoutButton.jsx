@@ -5,9 +5,6 @@ import toast from 'react-hot-toast';
 
 export const LoginLogoutButton = ({ setShowLoginModal }) => {
   const { user } = useAuth();
-
-  console.log('Current auth state:', user);
-
   const handleLogout = async () => {
     try {
       await signOut(auth);
