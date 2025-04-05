@@ -507,12 +507,46 @@ export default function RestaurantDetailsPage() {
   const mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(restaurant.address || '')}`;
 
   const getAllergenData = (allergen) => {
-    // Comprehensive allergen mapping with variations
+    console.log('getAllergenData input:', allergen);
+
+    // If allergen is already an object with name property
+    if (typeof allergen === 'object' && allergen.name) {
+      const allergenMap = {
+        'Peanuts': { name: 'Peanuts', emoji: '🥜' },
+        'Tree nuts': { name: 'Tree nuts', emoji: '🌰' },
+        'TreeNuts': { name: 'Tree nuts', emoji: '🌰' },
+        'Tree Nuts': { name: 'Tree nuts', emoji: '🌰' },
+        'Dairy': { name: 'Dairy', emoji: '🥛' },
+        'Eggs': { name: 'Eggs', emoji: '🥚' },
+        'Fish': { name: 'Fish', emoji: '🐟' },
+        'Shellfish': { name: 'Shellfish', emoji: '🦐' },
+        'Soy': { name: 'Soy', emoji: '🫘' },
+        'Wheat': { name: 'Wheat', emoji: '🌾' },
+        'Sesame': { name: 'Sesame', emoji: '🌱' },
+        'Gluten': { name: 'Gluten', emoji: '🍞' }
+      };
+
+      const result = {
+        name: allergen.name,
+        emoji: allergenMap[allergen.name]?.emoji || '⚠️',
+        rating: allergen.rating // Preserve the rating if it exists
+      };
+      console.log('Returning object result:', result);
+      return result;
+    }
+
+    // If allergen is null or undefined
+    if (!allergen) {
+      console.log('Allergen is null/undefined');
+      return { name: 'Unknown', emoji: '⚠️' };
+    }
+
+    // If allergen is a string
     const allergenMap = {
       'Peanuts': { name: 'Peanuts', emoji: '🥜' },
       'Tree nuts': { name: 'Tree nuts', emoji: '🌰' },
       'TreeNuts': { name: 'Tree nuts', emoji: '🌰' },
-      'Tree Nuts': { name: 'Tree nuts', emoji: '🌰' }, // Added this variation
+      'Tree Nuts': { name: 'Tree nuts', emoji: '🌰' },
       'Dairy': { name: 'Dairy', emoji: '🥛' },
       'Eggs': { name: 'Eggs', emoji: '🥚' },
       'Fish': { name: 'Fish', emoji: '🐟' },
@@ -523,9 +557,11 @@ export default function RestaurantDetailsPage() {
       'Gluten': { name: 'Gluten', emoji: '🍞' }
     };
 
-    // Normalize the allergen string to handle case and spacing variations
-    const normalizedAllergen = allergen.trim();
-    return allergenMap[normalizedAllergen] || { name: allergen, emoji: '⚠️' };
+    const normalizedAllergen = String(allergen).trim();
+    console.log('Processing string allergen:', normalizedAllergen);
+    const result = allergenMap[normalizedAllergen] || { name: allergen, emoji: '⚠️' };
+    console.log('Returning string result:', result);
+    return result;
   };
 
   return (
