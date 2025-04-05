@@ -65,44 +65,66 @@ export const ReviewsProvider = ({ children }) => {
     }
 
     try {
-      
-      // Check and create/update restaurant document
+      console.group('📝 Review Addition Process');
+      console.log('Attempting to add review:', reviewData);
+
       const restaurantRef = doc(db, 'restaurants', reviewData.restaurantId);
       const restaurantDoc = await getDoc(restaurantRef);
       
+      // Add log to show current Firestore data
+      console.log('Current Firestore restaurant data:', restaurantDoc.data());
+
       if (!restaurantDoc.exists()) {
+        console.log('Creating new restaurant document');
         await setDoc(restaurantRef, {
           id: reviewData.restaurantId,
           name: reviewData.restaurantName,
           reviews: [reviewData]
         });
+        // Verify creation
+        const verifyNew = await getDoc(restaurantRef);
+        console.log('Verified new restaurant document:', verifyNew.data());
       } else {
+        console.log('Updating existing restaurant:', {
+          id: restaurantDoc.id,
+          currentReviews: restaurantDoc.data()?.reviews?.length || 0
+        });
+        
         await updateDoc(restaurantRef, {
           reviews: arrayUnion(reviewData)
         });
+        // Verify update
+        const verifyUpdate = await getDoc(restaurantRef);
+        console.log('Verified updated restaurant document:', {
+          totalReviews: verifyUpdate.data()?.reviews?.length,
+          latestReview: verifyUpdate.data()?.reviews?.slice(-1)[0]
+        });
       }
 
-      // Check and create/update user document
       const userRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userRef);
       
       if (!userDoc.exists()) {
+        console.log('Creating new user document');
         await setDoc(userRef, {
           uid: user.uid,
           reviews: [reviewData]
         });
       } else {
+        console.log('Updating existing user document');
         await updateDoc(userRef, {
           reviews: arrayUnion(reviewData)
         });
       }
 
-      // Update local state
       setReviews(prev => [reviewData, ...prev]);
+      console.log('Review addition completed successfully');
+      console.groupEnd();
       
       return reviewData;
     } catch (error) {
       console.error('Error in addReview:', error);
+      console.groupEnd();
       throw error;
     }
   };

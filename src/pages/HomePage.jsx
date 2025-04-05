@@ -84,7 +84,6 @@ const createUserDocument = async (user, additionalData = {}) => {
       displayName: user.displayName || additionalData.username,
       allergens: additionalData.allergens || [],
       createdAt: new Date(),
-      reviewCount: 0,
       favoriteRestaurants: [],
       ...additionalData
     }, { merge: true });

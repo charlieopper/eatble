@@ -54,6 +54,17 @@ export default function RestaurantDetailsPage() {
   const [sortedReviews, setSortedReviews] = useState([]);
   const [activeDeleteModal, setActiveDeleteModal] = useState(null);
   const { deleteReview } = useReviews();
+  const [reviewStats, setReviewStats] = useState({
+    totalReviews: 0,
+    averageRating: 0,
+    distribution: {
+      5: 0,
+      4: 0,
+      3: 0,
+      2: 0,
+      1: 0
+    }
+  });
 
   // Log the restaurantId to make sure we have it
 
@@ -374,6 +385,66 @@ export default function RestaurantDetailsPage() {
       setSortedReviews(sorted);
     }
   }, [restaurant, sortOption]);
+
+  const calculateReviewStatistics = (reviews) => {
+    if (!reviews || reviews.length === 0) {
+      return {
+        totalReviews: 0,
+        averageRating: 0,
+        distribution: {
+          5: 0,
+          4: 0,
+          3: 0,
+          2: 0,
+          1: 0
+        }
+      };
+    }
+
+    // Initialize distribution object
+    const distribution = {
+      5: 0,
+      4: 0,
+      3: 0,
+      2: 0,
+      1: 0
+    };
+
+    // Count reviews for each rating
+    reviews.forEach(review => {
+      if (review.rating >= 1 && review.rating <= 5) {
+        distribution[Math.floor(review.rating)]++;
+      }
+    });
+
+    // Calculate total reviews
+    const totalReviews = reviews.length;
+
+    // Calculate average rating
+    const sumRatings = reviews.reduce((sum, review) => sum + review.rating, 0);
+    const averageRating = totalReviews > 0 ? (sumRatings / totalReviews).toFixed(1) : 0;
+
+    // Calculate percentages
+    const distributionPercentages = {};
+    Object.keys(distribution).forEach(rating => {
+      distributionPercentages[rating] = totalReviews > 0 
+        ? Math.round((distribution[rating] / totalReviews) * 100) 
+        : 0;
+    });
+
+    return {
+      totalReviews,
+      averageRating,
+      distribution: distributionPercentages
+    };
+  };
+
+  useEffect(() => {
+    if (restaurantReviews) {
+      const stats = calculateReviewStatistics(restaurantReviews);
+      setReviewStats(stats);
+    }
+  }, [restaurantReviews]);
 
   if (isLoading) {
     return (
@@ -1139,10 +1210,7 @@ export default function RestaurantDetailsPage() {
                       left: 0,
                       top: 0,
                       height: '100%',
-                      width: stars === 5 ? '85%' : 
-                             stars === 4 ? '7%' : 
-                             stars === 3 ? '5%' : 
-                             stars === 2 ? '2%' : '1%',
+                      width: `${reviewStats.distribution[stars]}%`,
                       backgroundColor: '#facc15',
                       borderRadius: '4px'
                     }}></div>
@@ -1153,10 +1221,7 @@ export default function RestaurantDetailsPage() {
                     width: '30px',
                     textAlign: 'right'
                   }}>
-                    {stars === 5 ? '85%' : 
-                     stars === 4 ? '7%' : 
-                     stars === 3 ? '5%' : 
-                     stars === 2 ? '2%' : '1%'}
+                    {reviewStats.distribution[stars]}%
                   </span>
                 </div>
               ))}
@@ -1189,10 +1254,10 @@ export default function RestaurantDetailsPage() {
                 fontWeight: 'bold',
                 marginBottom: '4px'
               }}>
-                4.9
+                {reviewStats.averageRating}
               </div>
               <div style={{ fontSize: '14px', color: '#6b7280' }}>
-                129 reviews
+                {reviewStats.totalReviews} reviews
               </div>
             </div>
           </div>
