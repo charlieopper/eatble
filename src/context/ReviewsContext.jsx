@@ -3,6 +3,7 @@ import { toast } from 'react-hot-toast';
 import { db } from '../firebase/config';
 import { doc, getDoc, updateDoc, arrayUnion, query, limit, orderBy, setDoc, collection, getDocs, where } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
+import { calculateAllergenRatings, formatAllergenRatings } from '../utils/allergens';
 
 // Create context
 export const ReviewsContext = createContext();
@@ -57,6 +58,29 @@ export const ReviewsProvider = ({ children }) => {
 
     loadReviews();
   }, [user, currentPage]);
+
+  const updateRestaurantAllergenRatings = async (restaurantId) => {
+    try {
+      console.debug('🔄 Updating allergen ratings for restaurant:', restaurantId);
+      
+      // Get all reviews for this restaurant
+      const restaurantReviews = reviews.filter(review => review.restaurantId === restaurantId);
+      
+      if (restaurantReviews.length > 0) {
+        // Calculate new allergen ratings
+        const newRatings = calculateAllergenRatings(restaurantReviews);
+        const formattedRatings = formatAllergenRatings(newRatings);
+        
+        console.debug('✅ New allergen ratings calculated:', formattedRatings);
+        
+        // Update the restaurant in your database with new allergen ratings
+        // This depends on your database structure and API
+        await updateRestaurantAllergens(restaurantId, formattedRatings);
+      }
+    } catch (error) {
+      console.error('Error updating allergen ratings:', error);
+    }
+  };
 
   const addReview = async (reviewData) => {
     if (!user) {
@@ -120,6 +144,9 @@ export const ReviewsProvider = ({ children }) => {
       setReviews(prev => [reviewData, ...prev]);
       console.log('Review addition completed successfully');
       console.groupEnd();
+      
+      // Update allergen ratings for this restaurant
+      await updateRestaurantAllergenRatings(reviewData.restaurantId);
       
       return reviewData;
     } catch (error) {

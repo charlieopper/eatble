@@ -18,6 +18,7 @@ import { useAuth } from '../context/AuthContext';
 import DeleteConfirmationModal from '../components/reviews/DeleteConfirmationModal';
 import { useReviews } from '../context/ReviewsContext';
 import { getReviewQuote } from "../utils/reviewUtils";
+import { calculateAllergenRatings, formatAllergenRatings } from '../utils/allergens';
 
 // Placeholder restaurant image URL
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fDB8fHww&w=1000&q=80";
@@ -66,6 +67,7 @@ export default function RestaurantDetailsPage() {
       1: 0
     }
   });
+  const [allergenRatings, setAllergenRatings] = useState([]);
 
   // Log the restaurantId to make sure we have it
 
@@ -334,20 +336,46 @@ export default function RestaurantDetailsPage() {
     }
   }, [restaurant]);
 
-  // Add this after your review submission handler
+  // Add this useEffect to calculate allergen ratings when reviews change
+  useEffect(() => {
+    if (restaurantReviews && restaurantReviews.length > 0) {
+      console.debug('🔄 Calculating allergen ratings from reviews:', restaurantReviews.length);
+      const ratings = calculateAllergenRatings(restaurantReviews);
+      const formattedRatings = formatAllergenRatings(ratings);
+      setAllergenRatings(formattedRatings);
+      console.debug('✅ Updated allergen ratings state:', formattedRatings);
+    }
+  }, [restaurantReviews]);
+
+  // Update the handleReviewSubmit function to recalculate allergen ratings
   const handleReviewSubmit = async (reviewData) => {
+    console.debug('📝 New review submitted:', reviewData);
     
     // Update the local state with the new review
     setRestaurant(prevRestaurant => {
       // Create a new array with all existing reviews plus the new one
       const updatedReviews = [...(prevRestaurant.reviews || []), reviewData];
       
+      // Calculate new allergen ratings
+      const newAllergenRatings = calculateAllergenRatings(updatedReviews);
+      const formattedRatings = formatAllergenRatings(newAllergenRatings);
+      
+      console.debug('🔄 Recalculated allergen ratings after new review:', formattedRatings);
+      
       // Return the updated restaurant object
       return {
         ...prevRestaurant,
         reviews: updatedReviews,
-        eatableReviews: updatedReviews
+        eatableReviews: updatedReviews,
+        allergens: formattedRatings
       };
+    });
+    
+    // Update allergen ratings state
+    setAllergenRatings(prev => {
+      const updatedReviews = [...(restaurantReviews || []), reviewData];
+      const newRatings = calculateAllergenRatings(updatedReviews);
+      return formatAllergenRatings(newRatings);
     });
     
     // Refresh the sorted reviews
@@ -1028,28 +1056,28 @@ export default function RestaurantDetailsPage() {
         </div>
 
         {/* Allergens - with updated heading */}
-        {restaurant.allergens && restaurant.allergens.length > 0 && (
+        {restaurant.allergens && (
           <div style={{ 
+            padding: '12px 0', 
             borderTop: '1px solid #e5e7eb',
-            paddingTop: '12px',
-            marginBottom: '16px'
+            marginBottom: '12px'
           }}>
             <h3 style={{ 
-              fontSize: '16px', 
-              fontWeight: '600',
-              marginBottom: '8px'
+              fontSize: '18px', 
+              fontWeight: '600', 
+              marginBottom: '12px' 
             }}>
               Allergies Reviewed
             </h3>
             <div style={{ 
               display: 'flex', 
               flexWrap: 'wrap', 
-              gap: '8px'
+              gap: '8px' 
             }}>
-              {restaurant.allergens.map((allergen, index) => (
-                <span 
+              {(allergenRatings.length > 0 ? allergenRatings : restaurant.allergens).map((allergen, index) => (
+                <span
                   key={index}
-                  style={{ 
+                  style={{
                     display: 'inline-flex',
                     alignItems: 'center',
                     padding: '4px 8px',

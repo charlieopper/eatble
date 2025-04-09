@@ -4,6 +4,7 @@ import { AllergenSelector } from '../allergens/AllergenSelector.jsx';
 import { useReviews } from '../../context/ReviewsContext';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
+import { getAllergenEmoji } from '../../utils/allergens';
 
 export default function ReviewModal({ isOpen, onClose, restaurantName, restaurantId, onReviewSubmitted }) {
   const [selectedAllergens, setSelectedAllergens] = useState([]);
@@ -112,13 +113,21 @@ export default function ReviewModal({ isOpen, onClose, restaurantName, restauran
     setError('');
     
     try {
+      // Format allergens to include name and icon
+      const formattedAllergens = selectedAllergens.map(allergen => ({
+        name: allergen,
+        icon: getAllergenEmoji(allergen)
+      }));
+      
+      console.debug('📝 Submitting review with allergens:', formattedAllergens);
+      
       const reviewData = {
         id: crypto.randomUUID(),
         restaurantId,
         restaurantName,
         rating,
         text: reviewText,
-        allergens: selectedAllergens,
+        allergens: formattedAllergens, // Use formatted allergens
         accommodations: {
           chefAvailable: chefAvailable === true,
           allergenMenu: allergenMenuAvailable === true
