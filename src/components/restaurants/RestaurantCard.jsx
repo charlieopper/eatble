@@ -4,6 +4,7 @@ import { useFavorites } from '../../context/FavoritesContext';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import { getReviewQuote } from '../../utils/reviewUtils';
 
 // Placeholder restaurant image URL
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fDB8fHww&w=1000&q=80";
@@ -546,14 +547,17 @@ const RestaurantCard = ({ restaurant, onClick }) => {
             </div>
             
             {/* eatABLE Review text */}
-            {eatableReview?.quote && (
+            {reviews?.length > 0 && (
               <p style={{ 
                 margin: '4px 0 0 0',
                 fontSize: '14px',
                 fontStyle: 'italic',
                 color: '#4b5563'
               }}>
-                "{eatableReview.quote}"
+                {(() => {
+                  const quote = getReviewQuote(reviews);
+                  return quote ? `"${quote}"` : null;
+                })()}
               </p>
             )}
           </div>

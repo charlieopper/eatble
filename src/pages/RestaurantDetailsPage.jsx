@@ -17,6 +17,7 @@ import ReviewCard from '../components/reviews/ReviewCard';
 import { useAuth } from '../context/AuthContext';
 import DeleteConfirmationModal from '../components/reviews/DeleteConfirmationModal';
 import { useReviews } from '../context/ReviewsContext';
+import { getReviewQuote } from "../utils/reviewUtils";
 
 // Placeholder restaurant image URL
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fDB8fHww&w=1000&q=80";
@@ -969,7 +970,10 @@ export default function RestaurantDetailsPage() {
             color: '#4b5563',
             margin: '0'
           }}>
-            "{restaurant.eatableReview?.quote || 'No review available'}"
+            {(() => {
+              const quote = getReviewQuote(restaurant.eatableReviews);
+              return quote ? `"${quote}"` : null;
+            })()}
           </p>
         </div>
 
