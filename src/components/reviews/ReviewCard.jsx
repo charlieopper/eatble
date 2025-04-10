@@ -142,32 +142,37 @@ export default function ReviewCard({ review, showRestaurantName = true }) {
           gap: '8px',
           alignItems: 'center'
         }}>
-          {review.allergens?.map((allergen) => (
-            <div
-              key={allergen}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                padding: '2px 8px',
-                backgroundColor: '#ccfbf1',
-                border: '1px solid #99f6e4',
-                borderRadius: '9999px',
-                fontSize: '11px',
-                color: '#0d9488',
-                height: '22px',
-                lineHeight: '18px'
-              }}
-            >
-              <span style={{ 
-                marginRight: '4px',
-                display: 'flex',
-                alignItems: 'center'
-              }}>
-                {getAllergenEmoji(allergen)}
-              </span>
-              {allergen}
-            </div>
-          ))}
+          {review.allergens?.map((allergen) => {
+            // Get the allergen name (either from the object or use the string directly)
+            const allergenName = typeof allergen === 'object' && allergen.name ? allergen.name : allergen;
+            
+            return (
+              <div
+                key={typeof allergen === 'object' ? allergen.name : allergen}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  padding: '2px 8px',
+                  backgroundColor: '#ccfbf1',
+                  border: '1px solid #99f6e4',
+                  borderRadius: '9999px',
+                  fontSize: '11px',
+                  color: '#0d9488',
+                  height: '22px',
+                  lineHeight: '18px'
+                }}
+              >
+                <span style={{ 
+                  marginRight: '4px',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}>
+                  {getAllergenEmoji(allergen)}
+                </span>
+                {allergenName}
+              </div>
+            );
+          })}
         </div>
 
         {/* Delete button */}

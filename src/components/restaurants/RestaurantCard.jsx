@@ -348,34 +348,6 @@ const RestaurantCard = ({ restaurant, onClick }) => {
               e.target.src = PLACEHOLDER_IMAGE;
             }}
           />
-          
-          {/* Favorite Button - MOVED HERE */}
-          <button 
-            style={{
-              position: 'absolute',
-              top: '8px',
-              right: '8px',
-              padding: '8px',
-              borderRadius: '50%',
-              border: 'none',
-              background: 'rgba(255, 255, 255, 0.8)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleFavorite(restaurant);
-            }}
-          >
-            <Heart 
-              color={isFavorite(id) ? "#EB4D4D" : "currentColor"}
-              fill={isFavorite(id) ? "#EB4D4D" : "none"}
-              size={20}
-            />
-          </button>
         </div>
 
         {/* Contact information section */}
@@ -465,7 +437,37 @@ const RestaurantCard = ({ restaurant, onClick }) => {
           width: '100%',
           justifyContent: window.innerWidth <= 640 ? 'flex-start' : 'space-between'
         }}>
-          <h2 style={{ margin: 0, fontSize: '30px' }}>{name}</h2>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <h2 style={{ margin: 0, fontSize: '30px' }}>{name}</h2>
+            
+            {/* Favorite Button - MOVED HERE */}
+            {toggleFavorite && isFavorite && (
+              <button 
+                style={{
+                  padding: '8px',
+                  marginLeft: '16px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: 'white',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleFavorite(restaurant);
+                }}
+              >
+                <Heart 
+                  color={isFavorite(id) ? "#EB4D4D" : "currentColor"}
+                  fill={isFavorite(id) ? "#EB4D4D" : "none"}
+                  size={20}
+                />
+              </button>
+            )}
+          </div>
           
           {/* Accommodation pills */}
           <div style={{ 
