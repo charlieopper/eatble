@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { getReviewQuote } from '../../utils/reviewUtils';
+import { calculateAllergenRatings, formatAllergenRatings } from '../../utils/allergens';
 
 // Placeholder restaurant image URL
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fDB8fHww&w=1000&q=80";
@@ -64,6 +65,7 @@ const RestaurantCard = ({ restaurant, onClick }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [reviews, setReviews] = useState([]);
   const [reviewsLoaded, setReviewsLoaded] = useState(false);
+  const [allergenRatings, setAllergenRatings] = useState([]);
 
   const handleMouseEnter = () => setIsHovered(true);
   const handleMouseLeave = () => setIsHovered(false);
@@ -122,6 +124,15 @@ const RestaurantCard = ({ restaurant, onClick }) => {
   // Get the average rating
   const averageEatableRating = calculateAverageRating(reviews);
   
+  // Calculate allergen ratings when reviews change
+  useEffect(() => {
+    if (reviews && reviews.length > 0) {
+      const ratings = calculateAllergenRatings(reviews);
+      const formattedRatings = formatAllergenRatings(ratings);
+      setAllergenRatings(formattedRatings);
+    }
+  }, [reviews]);
+
   if (!restaurant) {
     return <div style={{ padding: '16px', backgroundColor: 'white', borderRadius: '8px', margin: '8px 0' }}>Loading restaurant data...</div>;
   }
@@ -614,73 +625,75 @@ const RestaurantCard = ({ restaurant, onClick }) => {
           </div>
         </div>
 
-        {/* Allergens section */}
-        <div>
-          <h3 style={{ 
-            fontSize: '16px', 
-            fontWeight: '600',
-            marginBottom: '8px'
-          }}>
-            Allergies Reviewed
-          </h3>
-          <div style={{ 
-            display: window.innerWidth <= 640 ? 'grid' : 'flex',
-            ...(window.innerWidth <= 640 ? {
-              gridTemplateColumns: 'repeat(2, 1fr)',
-            } : {
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-            }),
-            gap: '4px',
-            width: '100%',
-          }}>
-            {allergens.map((allergen, index) => {
-              return (
-                <span 
-                  key={index} 
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    padding: '4px 8px',
-                    backgroundColor: '#ccfbf1',
-                    border: '1px solid #99f6e4',
-                    borderRadius: '9999px',
-                    fontSize: '12px',
-                    color: TEAL_COLOR,
-                    width: 'fit-content' // Ensures pills only take up needed space
-                  }}
-                >
-                  {allergen.icon && (
-                    <span style={{ marginRight: '4px' }}>
-                      {allergen.icon}
-                    </span>
-                  )}
-                  {typeof allergen === 'string' ? allergen : allergen.name}
-                  
-                  {allergen.rating && (
-                    <span 
-                      style={{
-                        marginLeft: '4px',
-                        backgroundColor: '#0d9488',
-                        color: 'white',
-                        borderRadius: '50%',
-                        width: '18px',
-                        height: '18px',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '10px',
-                        fontWeight: 'bold'
-                      }}
-                    >
-                      {allergen.rating.average}
-                    </span>
-                  )}
-                </span>
-              );
-            })}
+        {/* Allergens section - only show when there are allergen ratings */}
+        {allergenRatings.length > 0 && (
+          <div>
+            <h3 style={{ 
+              fontSize: '16px', 
+              fontWeight: '600',
+              marginBottom: '8px'
+            }}>
+              Allergies Reviewed
+            </h3>
+            <div style={{ 
+              display: window.innerWidth <= 640 ? 'grid' : 'flex',
+              ...(window.innerWidth <= 640 ? {
+                gridTemplateColumns: 'repeat(2, 1fr)',
+              } : {
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+              }),
+              gap: '4px',
+              width: '100%',
+            }}>
+              {allergenRatings.map((allergen, index) => {
+                return (
+                  <span 
+                    key={index} 
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      padding: '4px 8px',
+                      backgroundColor: '#ccfbf1',
+                      border: '1px solid #99f6e4',
+                      borderRadius: '9999px',
+                      fontSize: '12px',
+                      color: TEAL_COLOR,
+                      width: 'fit-content' // Ensures pills only take up needed space
+                    }}
+                  >
+                    {allergen.icon && (
+                      <span style={{ marginRight: '4px' }}>
+                        {allergen.icon}
+                      </span>
+                    )}
+                    {typeof allergen === 'string' ? allergen : allergen.name}
+                    
+                    {allergen.rating && (
+                      <span 
+                        style={{
+                          marginLeft: '4px',
+                          backgroundColor: '#0d9488',
+                          color: 'white',
+                          borderRadius: '50%',
+                          width: '18px',
+                          height: '18px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '10px',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        {allergen.rating.average}
+                      </span>
+                    )}
+                  </span>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

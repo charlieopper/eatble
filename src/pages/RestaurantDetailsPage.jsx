@@ -1056,7 +1056,7 @@ export default function RestaurantDetailsPage() {
         </div>
 
         {/* Allergens - with updated heading */}
-        {restaurant.allergens && (
+        {allergenRatings.length > 0 && (
           <div style={{ 
             padding: '12px 0', 
             borderTop: '1px solid #e5e7eb',
@@ -1074,7 +1074,7 @@ export default function RestaurantDetailsPage() {
               flexWrap: 'wrap', 
               gap: '8px' 
             }}>
-              {(allergenRatings.length > 0 ? allergenRatings : restaurant.allergens).map((allergen, index) => (
+              {allergenRatings.map((allergen, index) => (
                 <span
                   key={index}
                   style={{
